@@ -116,7 +116,7 @@ namespace Geometry
 
         public override string ToString()
         {
-            return $"Point3 {_X},{_Y},{_Z}";
+            return $"Point3 ({_X},{_Y},{_Z})";
         }
     }
 }

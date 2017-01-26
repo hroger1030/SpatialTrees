@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Geometry", "Geometry\Geomet
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpacialTrees", "SpacialTrees\SpacialTrees.csproj", "{2B54F51A-87D1-49CB-A2CC-C6069A480B86}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Geometry Tests", "UnitTestProject1\Geometry Tests.csproj", "{F51F16DC-1CD8-446A-94CB-BD127146487F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|.NET = Debug|.NET
@@ -117,6 +119,38 @@ Global
 		{2B54F51A-87D1-49CB-A2CC-C6069A480B86}.ReleaseSnk|Mixed Platforms.Build.0 = Release|Any CPU
 		{2B54F51A-87D1-49CB-A2CC-C6069A480B86}.ReleaseSnk|x86.ActiveCfg = Release|Any CPU
 		{2B54F51A-87D1-49CB-A2CC-C6069A480B86}.ReleaseSnk|x86.Build.0 = Release|Any CPU
+		{F51F16DC-1CD8-446A-94CB-BD127146487F}.Debug|.NET.ActiveCfg = Debug|Any CPU
+		{F51F16DC-1CD8-446A-94CB-BD127146487F}.Debug|.NET.Build.0 = Debug|Any CPU
+		{F51F16DC-1CD8-446A-94CB-BD127146487F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F51F16DC-1CD8-446A-94CB-BD127146487F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F51F16DC-1CD8-446A-94CB-BD127146487F}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{F51F16DC-1CD8-446A-94CB-BD127146487F}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{F51F16DC-1CD8-446A-94CB-BD127146487F}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{F51F16DC-1CD8-446A-94CB-BD127146487F}.Debug|x86.Build.0 = Debug|Any CPU
+		{F51F16DC-1CD8-446A-94CB-BD127146487F}.DebugSnk|.NET.ActiveCfg = Debug|Any CPU
+		{F51F16DC-1CD8-446A-94CB-BD127146487F}.DebugSnk|.NET.Build.0 = Debug|Any CPU
+		{F51F16DC-1CD8-446A-94CB-BD127146487F}.DebugSnk|Any CPU.ActiveCfg = Debug|Any CPU
+		{F51F16DC-1CD8-446A-94CB-BD127146487F}.DebugSnk|Any CPU.Build.0 = Debug|Any CPU
+		{F51F16DC-1CD8-446A-94CB-BD127146487F}.DebugSnk|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{F51F16DC-1CD8-446A-94CB-BD127146487F}.DebugSnk|Mixed Platforms.Build.0 = Debug|Any CPU
+		{F51F16DC-1CD8-446A-94CB-BD127146487F}.DebugSnk|x86.ActiveCfg = Debug|Any CPU
+		{F51F16DC-1CD8-446A-94CB-BD127146487F}.DebugSnk|x86.Build.0 = Debug|Any CPU
+		{F51F16DC-1CD8-446A-94CB-BD127146487F}.Release|.NET.ActiveCfg = Release|Any CPU
+		{F51F16DC-1CD8-446A-94CB-BD127146487F}.Release|.NET.Build.0 = Release|Any CPU
+		{F51F16DC-1CD8-446A-94CB-BD127146487F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F51F16DC-1CD8-446A-94CB-BD127146487F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F51F16DC-1CD8-446A-94CB-BD127146487F}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{F51F16DC-1CD8-446A-94CB-BD127146487F}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{F51F16DC-1CD8-446A-94CB-BD127146487F}.Release|x86.ActiveCfg = Release|Any CPU
+		{F51F16DC-1CD8-446A-94CB-BD127146487F}.Release|x86.Build.0 = Release|Any CPU
+		{F51F16DC-1CD8-446A-94CB-BD127146487F}.ReleaseSnk|.NET.ActiveCfg = Release|Any CPU
+		{F51F16DC-1CD8-446A-94CB-BD127146487F}.ReleaseSnk|.NET.Build.0 = Release|Any CPU
+		{F51F16DC-1CD8-446A-94CB-BD127146487F}.ReleaseSnk|Any CPU.ActiveCfg = Release|Any CPU
+		{F51F16DC-1CD8-446A-94CB-BD127146487F}.ReleaseSnk|Any CPU.Build.0 = Release|Any CPU
+		{F51F16DC-1CD8-446A-94CB-BD127146487F}.ReleaseSnk|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{F51F16DC-1CD8-446A-94CB-BD127146487F}.ReleaseSnk|Mixed Platforms.Build.0 = Release|Any CPU
+		{F51F16DC-1CD8-446A-94CB-BD127146487F}.ReleaseSnk|x86.ActiveCfg = Release|Any CPU
+		{F51F16DC-1CD8-446A-94CB-BD127146487F}.ReleaseSnk|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,9 +1,13 @@
 using System;
+using System.Diagnostics;
 
 namespace Geometry
 {
+    [DebuggerDisplay("Circle (c: {_Center}, r: {_Radius})")]
     public class Circle
     {
+        public static readonly Circle UnitCircle = new Circle(0f, 0f, 1f);
+
         protected Point2 _Center;
         protected float _Radius;
 
@@ -79,7 +83,7 @@ namespace Geometry
             float distance_y = circle.Center.Y - this.Center.Y;
             float sum_radius = this._Radius + circle._Radius;
 
-            if ((sum_radius * sum_radius) < Math.Abs(distance_x * distance_x + distance_y * distance_y))
+            if ((sum_radius * sum_radius) < (distance_x * distance_x + distance_y * distance_y))
                 return false;
             else
                 return true;
@@ -163,7 +167,7 @@ namespace Geometry
 
         public override string ToString()
         {
-            return $"CenterPoint {_Center}, Radius: {_Radius}";
+            return $"Circle (Center: {_Center}, Radius: {_Radius})";
         }
 
         public override bool Equals(object obj)

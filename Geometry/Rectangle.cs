@@ -4,6 +4,8 @@ namespace Geometry
 {
     public class Rectangle : IEquatable<Rectangle>
     {
+        public static readonly Rectangle UnitRectangle = new Rectangle(0f, 0f, 1f, 1f);
+
         protected float _X;
         protected float _Y;
         protected float _Width;

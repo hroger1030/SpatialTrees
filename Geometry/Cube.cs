@@ -4,7 +4,7 @@ namespace Geometry
 {
     public class Cube
     {
-        public static Cube UnitCube = new Cube(0f, 0f, 0f, 1f, 1f, 1f);
+        public static readonly Cube UnitCube = new Cube(0f, 0f, 0f, 1f, 1f, 1f);
 
         protected float _X1;
         protected float _X2;
@@ -51,7 +51,7 @@ namespace Geometry
 
         /// <summary>
         /// Returns a Point3 object coresponding to the 3d coordinates of 
-        /// a corner of the cub object. 
+        /// a corner of the cube object. 
         /// </summary>
         public Point3 this[int i]
         {
@@ -182,72 +182,59 @@ namespace Geometry
             }
         }
 
-        //public bool Intersects(Cube other)
-        //{
-        //    // checks to see if other has collided with this 
-
-        //    if (other._X1 > this._X1 && other._X1 < this._X2)
-        //    {
-
-        //        if (other._Y1 > this._Y1 && other._Y1 < this._Y2)
-        //        {
-        //            if (other._Z1 > this._Z1 && other._Z1 < this._X2)
-        //            {
-
-        //            }
-        //        }
-        //    }
-
-        //    // check to see if other completely surrounds this
-
-        //    return false;
-        //}
-
-        // Public
-
-        public override bool Equals(object obj)
+        public bool Intersects(Cube other)
         {
-            if (obj == null)
-                return false;
+            return !(X1 > other.X2 || X2 < other.X1 || Y1 > other.Y2 || Y2 < other.Y1 || Z1 > other.Z2 || X2 < other.Z1);
+            //TODO: Check all cases...
 
-            if (this.GetType() != obj.GetType())
-                return false;
+            // check to see if other completely surrounds this
 
-            Cube other = (Cube)obj;
-
-            if (this._X1 != other._X1)
-                return false;
-
-            if (this._X2 != other._X2)
-                return false;
-
-            if (this._Y1 != other._Y1)
-                return false;
-
-            if (this._Y2 != other._Y2)
-                return false;
-
-            if (this._Z1 != other._Z1)
-                return false;
-
-            if (this._Z2 != other._Z2)
-                return false;
-
-            return true;
+            return false;
         }
 
-        public override string ToString()
-        {
-            return $"X1:{_X1}, X2:{_X2}, Y1:{_Y1}, Y2:{_Y2}, Z1:{_Z1}, Z2:{_Z2}" ;
-        }
+    public override bool Equals(object obj)
+    {
+        if (obj == null)
+            return false;
 
-        public override int GetHashCode()
+        if (this.GetType() != obj.GetType())
+            return false;
+
+        Cube other = (Cube)obj;
+
+        if (_X1 != other._X1)
+            return false;
+
+        if (_X2 != other._X2)
+            return false;
+
+        if (_Y1 != other._Y1)
+            return false;
+
+        if (_Y2 != other._Y2)
+            return false;
+
+        if (_Z1 != other._Z1)
+            return false;
+
+        if (_Z2 != other._Z2)
+            return false;
+
+        return true;
+    }
+
+    public override string ToString()
+    {
+        return $"X1:{_X1}, X2:{_X2}, Y1:{_Y1}, Y2:{_Y2}, Z1:{_Z1}, Z2:{_Z2}";
+    }
+
+    public override int GetHashCode()
+    {
+        unchecked
         {
-            unchecked
-            {
-                return _X1.GetHashCode() ^ (_X2.GetHashCode() * 7) ^ (_Y1.GetHashCode() * 17)
-                    ^ (_Y2.GetHashCode() * 13) ^ (_Z1.GetHashCode() * 47) ^ (_Z2.GetHashCode() * 37);
-            }
+            return _X1.GetHashCode() ^ (_X2.GetHashCode() * 7) ^ (_Y1.GetHashCode() * 17)
+                ^ (_Y2.GetHashCode() * 13) ^ (_Z1.GetHashCode() * 47) ^ (_Z2.GetHashCode() * 37);
         }
     }
+}
 }

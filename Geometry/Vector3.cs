@@ -144,11 +144,14 @@ namespace Geometry
 
         public override string ToString()
         {
-            return $"({_X},{_Y},{_Z})";
+            return $"Vector3 ({_X},{_Y},{_Z})";
         }
 
         public bool Equals(Vector3 other)
         {
+            if (other == null)
+                return false;
+
             return other._X == _X && other._Y == _Y && other._Z == _Z;
         }
     }
