@@ -10,7 +10,7 @@ namespace SpacialTrees
 {
     public interface IMapObject
     {
-        Point2 Location { get;set; }
+        Point2 Location { get; set; }
         Rectangle BoundingBox { get; }
     }
 }

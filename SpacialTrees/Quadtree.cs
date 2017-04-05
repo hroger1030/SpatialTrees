@@ -4,10 +4,11 @@
 // Proprietary and confidential                                                 //
 //////////////////////////////////////////////////////////////////////////////////
 
-using Geometry;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+
+using Geometry;
 
 namespace SpacialTrees
 {

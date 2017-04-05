@@ -48,8 +48,8 @@
     <Compile Include="QuadtreeNode.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Geometry\Geometry.csproj">
-      <Project>{a9aa7b19-14e9-46c6-a3ec-f622a793f96b}</Project>
+    <ProjectReference Include="..\..\Geometry\Geometry\Geometry.csproj">
+      <Project>{A9AA7B19-14E9-46C6-A3EC-F622A793F96B}</Project>
       <Name>Geometry</Name>
     </ProjectReference>
   </ItemGroup>
