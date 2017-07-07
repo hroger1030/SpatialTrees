@@ -57,6 +57,10 @@
       <Project>{A9AA7B19-14E9-46C6-A3EC-F622A793F96B}</Project>
       <Name>Geometry</Name>
     </ProjectReference>
+    <ProjectReference Include="..\SpatialTrees\SpatialTrees.csproj">
+      <Project>{2b54f51a-87d1-49cb-a2cc-c6069a480b86}</Project>
+      <Name>SpatialTrees</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />

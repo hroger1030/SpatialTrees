@@ -120,18 +120,14 @@ namespace SpatialTrees
         /// 
         public bool AddItem(IMapObject item)
         {
-            Stopwatch sw = Stopwatch.StartNew();
-
             if (!WorldRectangle.Contains(item.Location))
-                throw new ArgumentException(string.Format("{0} is outside the quadtree world rectangle {1}", item.Location, WorldRectangle));
+                throw new ArgumentException($"{item.Location} is outside the quadtree world rectangle {WorldRectangle}");
 
             if (_ObjectIndex.ContainsKey(item))
             {
                 // already here, treat this as a move/update
                 _ObjectIndex[item].NodeItems.Remove(item);
             }
-
-            sw.Stop();
 
             return _TopNode.AddItem(item);
         }
@@ -195,16 +191,12 @@ namespace SpatialTrees
         /// </summary>
         public bool GetCollidingItems(Rectangle collision_box, int object_properties, ref HashSet<IMapObject> items_found)
         {
-            Stopwatch sw = Stopwatch.StartNew();
-
             if (items_found == null)
                 items_found = new HashSet<IMapObject>();
             else
                 items_found.Clear();
 
             _TopNode.GetCollidingItems(collision_box, object_properties, ref items_found);
-
-            sw.Stop();
 
             return (items_found.Count > 0);
         }
@@ -214,8 +206,6 @@ namespace SpatialTrees
         /// </summary>
         public bool GetCollidingItems(Circle collision_circle, int object_properties, ref HashSet<IMapObject> items_found)
         {
-            Stopwatch sw = Stopwatch.StartNew();
-
             if (items_found == null)
                 items_found = new HashSet<IMapObject>();
             else
