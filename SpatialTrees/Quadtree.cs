@@ -10,7 +10,7 @@ using System.Diagnostics;
 
 using Geometry;
 
-namespace SpacialTrees
+namespace SpatialTrees
 {
     /// <summary>
     /// Quadtree represents a two dimensional tree structure, and all the 
@@ -25,6 +25,7 @@ namespace SpacialTrees
     /// 
     /// note that this object supports non-balanced nodes.
     /// </summary>
+    [DebuggerDisplay("Quadtree {WorldRectangle.Width} x {WorldRectangle.Height}, {_ObjectIndex.Count} items")]
     public class Quadtree
     {
         protected readonly static int DEFAULT_MAX_DEPTH = 5;
@@ -69,13 +70,13 @@ namespace SpacialTrees
         public Quadtree(Rectangle bounding_box, int max_depth, int max_objects)
         {
             if (bounding_box == null)
-                throw new ArgumentException("Bounding Box cannot be null");
+                throw new Exception("Bounding Box cannot be null");
 
             if (max_depth < 1)
-                throw new ArgumentException("Max depth must be greater than zero.");
+                throw new Exception("Max depth must be greater than zero.");
 
             if (max_objects < 1)
-                throw new ArgumentException("Max Objects must be greater than zero.");
+                throw new Exception("Max Objects must be greater than zero.");
 
             _ObjectIndex = new Dictionary<IMapObject, QuadtreeNode>(DEFAULT_COLLECTION_SIZE);
             _TopNode = new QuadtreeNode(this, null, bounding_box);
@@ -119,14 +120,18 @@ namespace SpacialTrees
         /// 
         public bool AddItem(IMapObject item)
         {
+            Stopwatch sw = Stopwatch.StartNew();
+
             if (!WorldRectangle.Contains(item.Location))
-                throw new ArgumentException($"{item.Location} is outside the quadtree world rectangle {WorldRectangle}");
+                throw new ArgumentException(string.Format("{0} is outside the quadtree world rectangle {1}", item.Location, WorldRectangle));
 
             if (_ObjectIndex.ContainsKey(item))
             {
                 // already here, treat this as a move/update
                 _ObjectIndex[item].NodeItems.Remove(item);
             }
+
+            sw.Stop();
 
             return _TopNode.AddItem(item);
         }
@@ -188,21 +193,7 @@ namespace SpacialTrees
         /// <summary>
         /// returns a list of unique items that are colliding with the item that is passed in.
         /// </summary>
-        public bool GetCollidingItems(Rectangle collision_box, ref HashSet<IMapObject> items_found)
-        {
-            if (items_found == null)
-                items_found = new HashSet<IMapObject>();
-            else
-                items_found.Clear();
-
-            _TopNode.GetCollidingItems(collision_box, ref items_found);
-            return (items_found.Count > 0);
-        }
-
-        /// <summary>
-        /// returns a list of unique items that are colliding with the item that is passed in.
-        /// </summary>
-        public bool GetCollidingItems(Circle collision_circle, ref HashSet<IMapObject> items_found)
+        public bool GetCollidingItems(Rectangle collision_box, int object_properties, ref HashSet<IMapObject> items_found)
         {
             Stopwatch sw = Stopwatch.StartNew();
 
@@ -211,22 +202,38 @@ namespace SpacialTrees
             else
                 items_found.Clear();
 
-            _TopNode.GetCollidingItems(collision_circle, ref items_found);
+            _TopNode.GetCollidingItems(collision_box, object_properties, ref items_found);
+
+            sw.Stop();
+
+            return (items_found.Count > 0);
+        }
+
+        /// <summary>
+        /// returns a list of unique items that are colliding with the item that is passed in.
+        /// </summary>
+        public bool GetCollidingItems(Circle collision_circle, int object_properties, ref HashSet<IMapObject> items_found)
+        {
+            Stopwatch sw = Stopwatch.StartNew();
+
+            if (items_found == null)
+                items_found = new HashSet<IMapObject>();
+            else
+                items_found.Clear();
+
+            _TopNode.GetCollidingItems(collision_circle, object_properties, ref items_found);
 
             return (items_found.Count > 0);
         }
 
         public override bool Equals(object obj)
         {
-            if (obj == null)
-                return false;
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (GetType() != obj.GetType()) return false;
 
-            if (this.GetType() != obj.GetType())
-                return false;
-
-            Quadtree other = (Quadtree)obj;
-
-            return _TopNode.Equals(other._TopNode);
+            var new_obj = (Quadtree)obj;
+            return Equals(new_obj);
         }
 
         public bool Equals(Quadtree obj)

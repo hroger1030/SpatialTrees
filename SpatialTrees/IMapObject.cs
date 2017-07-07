@@ -6,10 +6,11 @@
 
 using Geometry;
 
-namespace SpacialTrees
+namespace SpatialTrees
 {
     public interface IMapObject
     {
+        int ObjectProperties { get; set; }
         Point2 Location { get; set; }
         Rectangle BoundingBox { get; }
     }

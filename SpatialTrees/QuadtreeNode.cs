@@ -4,12 +4,15 @@
 // Proprietary and confidential                                                 //
 //////////////////////////////////////////////////////////////////////////////////
 
-using Geometry;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
-namespace SpacialTrees
+using Geometry;
+
+namespace SpatialTrees
 {
+    [DebuggerDisplay("Node depth: {Depth}, Center: {_BoundingBox.Center}, {GetChildObjectCount()} items")]
     public class QuadtreeNode
     {
         private static readonly int LEAVES = 4;
@@ -146,7 +149,7 @@ namespace SpacialTrees
         /// <summary>
         /// returns a list of unique items that are colliding with the item that is passed in.
         /// </summary>
-        public void GetCollidingItems(Rectangle collision_box, ref HashSet<IMapObject> items_found)
+        public void GetCollidingItems(Rectangle collision_box, int object_properties, ref HashSet<IMapObject> items_found)
         {
             if (!_BoundingBox.Intersects(collision_box))
                 return;
@@ -155,7 +158,10 @@ namespace SpacialTrees
             {
                 foreach (var item in _NodeItems)
                 {
-                    items_found.Add(item);
+                    if ((object_properties & item.ObjectProperties) == object_properties)
+                    {
+                        items_found.Add(item);
+                    }
                 }
             }
             else
@@ -163,7 +169,7 @@ namespace SpacialTrees
                 // test each item in this node
                 foreach (var item in _NodeItems)
                 {
-                    if (collision_box.Intersects(item.BoundingBox))
+                    if (collision_box.Intersects(item.BoundingBox) && ((object_properties & item.ObjectProperties) == object_properties))
                     {
                         items_found.Add(item);
                     }
@@ -175,7 +181,7 @@ namespace SpacialTrees
                 foreach (var leaf in _Leaves)
                 {
                     if (leaf != null)
-                        leaf.GetCollidingItems(collision_box, ref items_found);
+                        leaf.GetCollidingItems(collision_box, object_properties, ref items_found);
                 }
             }
         }
@@ -183,7 +189,7 @@ namespace SpacialTrees
         /// <summary>
         /// returns a list of unique items that are colliding with the item that is passed in.
         /// </summary>
-        public void GetCollidingItems(Circle collision_circle, ref HashSet<IMapObject> items_found)
+        public void GetCollidingItems(Circle collision_circle, int object_properties, ref HashSet<IMapObject> items_found)
         {
             if (!_BoundingBox.Intersects(collision_circle))
                 return;
@@ -192,7 +198,10 @@ namespace SpacialTrees
             {
                 foreach (var item in _NodeItems)
                 {
-                    items_found.Add(item);
+                    if ((object_properties & item.ObjectProperties) == object_properties)
+                    {
+                        items_found.Add(item);
+                    }
                 }
             }
             else
@@ -200,7 +209,7 @@ namespace SpacialTrees
                 // test each item in this node
                 foreach (var item in _NodeItems)
                 {
-                    if (collision_circle.Intersects(item.BoundingBox))
+                    if (collision_circle.Intersects(item.BoundingBox) && ((object_properties & item.ObjectProperties) == object_properties))
                     {
                         items_found.Add(item);
                     }
@@ -212,7 +221,7 @@ namespace SpacialTrees
                 foreach (var leaf in _Leaves)
                 {
                     if (leaf != null)
-                        leaf.GetCollidingItems(collision_circle, ref items_found);
+                        leaf.GetCollidingItems(collision_circle, object_properties, ref items_found);
                 }
             }
         }
@@ -269,15 +278,12 @@ namespace SpacialTrees
 
         public override bool Equals(object obj)
         {
-            if (obj == null)
-                return false;
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (GetType() != obj.GetType()) return false;
 
-            if (this.GetType() != obj.GetType())
-                return false;
-
-            QuadtreeNode other = (QuadtreeNode)obj;
-
-            return this.Equals(other);
+            var new_obj = (QuadtreeNode)obj;
+            return Equals(new_obj);
         }
 
         public bool Equals(QuadtreeNode obj)

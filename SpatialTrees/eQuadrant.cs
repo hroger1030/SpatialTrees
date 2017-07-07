@@ -1,4 +1,4 @@
-﻿namespace SpacialTrees
+﻿namespace SpatialTrees
 {
     /// <summary>
     /// The quadrants are layed out starting from top right, and proceeding clockwise.
