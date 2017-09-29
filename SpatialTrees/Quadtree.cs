@@ -123,6 +123,9 @@ namespace SpatialTrees
             if (!WorldRectangle.Contains(item.Location))
                 throw new ArgumentException($"{item.Location} is outside the quadtree world rectangle {WorldRectangle}");
 
+            if (item.ObjectTypes == 0)
+                throw new Exception("Object w/o properties is being added:");
+
             if (_ObjectIndex.ContainsKey(item))
             {
                 // already here, treat this as a move/update
@@ -189,31 +192,31 @@ namespace SpatialTrees
         /// <summary>
         /// returns a list of unique items that are colliding with the item that is passed in.
         /// </summary>
-        public bool GetCollidingItems(Rectangle collision_box, int object_properties, ref HashSet<IMapObject> items_found)
+        public bool GetCollidingItems(Rectangle collisionBox, int objectTypes, ref HashSet<IMapObject> itemsFound)
         {
-            if (items_found == null)
-                items_found = new HashSet<IMapObject>();
+            if (itemsFound == null)
+                itemsFound = new HashSet<IMapObject>();
             else
-                items_found.Clear();
+                itemsFound.Clear();
 
-            _TopNode.GetCollidingItems(collision_box, object_properties, ref items_found);
+            _TopNode.GetCollidingItems(collisionBox, objectTypes, ref itemsFound);
 
-            return (items_found.Count > 0);
+            return (itemsFound.Count > 0);
         }
 
         /// <summary>
         /// returns a list of unique items that are colliding with the item that is passed in.
         /// </summary>
-        public bool GetCollidingItems(Circle collision_circle, int object_properties, ref HashSet<IMapObject> items_found)
+        public bool GetCollidingItems(Circle collisionCircle, int objectPoperties, ref HashSet<IMapObject> itemsFound)
         {
-            if (items_found == null)
-                items_found = new HashSet<IMapObject>();
+            if (itemsFound == null)
+                itemsFound = new HashSet<IMapObject>();
             else
-                items_found.Clear();
+                itemsFound.Clear();
 
-            _TopNode.GetCollidingItems(collision_circle, object_properties, ref items_found);
+            _TopNode.GetCollidingItems(collisionCircle, objectPoperties, ref itemsFound);
 
-            return (items_found.Count > 0);
+            return (itemsFound.Count > 0);
         }
 
         public override bool Equals(object obj)

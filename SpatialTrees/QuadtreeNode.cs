@@ -89,9 +89,9 @@ namespace SpatialTrees
         /// Attempts to add an item to the quadtree. Returns true if the item was added,
         /// false if the item faild to be added.
         /// </summary>
-        public bool AddItem(IMapObject new_item)
+        public bool AddItem(IMapObject mapItem)
         {
-            if (_NodeItems.Contains(new_item))
+            if (_NodeItems.Contains(mapItem))
                 return false;
 
             if (_Leaves == null)
@@ -110,25 +110,25 @@ namespace SpatialTrees
 
                     _NodeItems.Clear();
 
-                    quadrant = FindQuadrant(_BoundingBox.Center, new_item.BoundingBox.Center);
-                    _Leaves[(int)quadrant].AddItem(new_item);
+                    quadrant = FindQuadrant(_BoundingBox.Center, mapItem.BoundingBox.Center);
+                    _Leaves[(int)quadrant].AddItem(mapItem);
                 }
                 else
                 {
-                    _NodeItems.Add(new_item);
+                    _NodeItems.Add(mapItem);
 
-                    if (_Quadtree.ObjectIndex.ContainsKey(new_item))
-                        _Quadtree.ObjectIndex[new_item] = this;
+                    if (_Quadtree.ObjectIndex.ContainsKey(mapItem))
+                        _Quadtree.ObjectIndex[mapItem] = this;
                     else
-                        _Quadtree.ObjectIndex.Add(new_item, this);
+                        _Quadtree.ObjectIndex.Add(mapItem, this);
                 }
 
                 return true;
             }
             else
             {
-                eQuadrant quadrant = FindQuadrant(_BoundingBox.Center, new_item.BoundingBox.Center);
-                return _Leaves[(int)quadrant].AddItem(new_item);
+                eQuadrant quadrant = FindQuadrant(_BoundingBox.Center, mapItem.BoundingBox.Center);
+                return _Leaves[(int)quadrant].AddItem(mapItem);
             }
         }
 
@@ -149,29 +149,32 @@ namespace SpatialTrees
         /// <summary>
         /// returns a list of unique items that are colliding with the item that is passed in.
         /// </summary>
-        public void GetCollidingItems(Rectangle collision_box, int object_properties, ref HashSet<IMapObject> items_found)
+        public void GetCollidingItems(Rectangle collisionBox, int objectTypes, ref HashSet<IMapObject> itemsFound)
         {
-            if (!_BoundingBox.Intersects(collision_box))
+            if (!_BoundingBox.Intersects(collisionBox))
                 return;
 
-            if (collision_box.Contains(_BoundingBox))
+            if (_NodeItems.Count > 0)
             {
-                foreach (var item in _NodeItems)
+                if (collisionBox.Contains(_BoundingBox))
                 {
-                    if ((object_properties & item.ObjectProperties) == object_properties)
+                    foreach (var item in _NodeItems)
                     {
-                        items_found.Add(item);
+                        if ((objectTypes & item.ObjectTypes) == objectTypes)
+                        {
+                            itemsFound.Add(item);
+                        }
                     }
                 }
-            }
-            else
-            {
-                // test each item in this node
-                foreach (var item in _NodeItems)
+                else
                 {
-                    if (collision_box.Intersects(item.BoundingBox) && ((object_properties & item.ObjectProperties) == object_properties))
+                    // test each item in this node
+                    foreach (var item in _NodeItems)
                     {
-                        items_found.Add(item);
+                        if (collisionBox.Intersects(item.BoundingBox) && ((objectTypes & item.ObjectTypes) == item.ObjectTypes))
+                        {
+                            itemsFound.Add(item);
+                        }
                     }
                 }
             }
@@ -181,7 +184,7 @@ namespace SpatialTrees
                 foreach (var leaf in _Leaves)
                 {
                     if (leaf != null)
-                        leaf.GetCollidingItems(collision_box, object_properties, ref items_found);
+                        leaf.GetCollidingItems(collisionBox, objectTypes, ref itemsFound);
                 }
             }
         }
@@ -189,29 +192,32 @@ namespace SpatialTrees
         /// <summary>
         /// returns a list of unique items that are colliding with the item that is passed in.
         /// </summary>
-        public void GetCollidingItems(Circle collision_circle, int object_properties, ref HashSet<IMapObject> items_found)
+        public void GetCollidingItems(Circle collisionCircle, int objectTypes, ref HashSet<IMapObject> itemsFound)
         {
-            if (!_BoundingBox.Intersects(collision_circle))
+            if (!_BoundingBox.Intersects(collisionCircle))
                 return;
 
-            if (collision_circle.Contains(_BoundingBox))
+            if (_NodeItems.Count > 0)
             {
-                foreach (var item in _NodeItems)
+                if (collisionCircle.Contains(_BoundingBox))
                 {
-                    if ((object_properties & item.ObjectProperties) == object_properties)
+                    foreach (var item in _NodeItems)
                     {
-                        items_found.Add(item);
+                        if ((objectTypes & item.ObjectTypes) == objectTypes)
+                        {
+                            itemsFound.Add(item);
+                        }
                     }
                 }
-            }
-            else
-            {
-                // test each item in this node
-                foreach (var item in _NodeItems)
+                else
                 {
-                    if (collision_circle.Intersects(item.BoundingBox) && ((object_properties & item.ObjectProperties) == object_properties))
+                    // test each item in this node
+                    foreach (var item in _NodeItems)
                     {
-                        items_found.Add(item);
+                        if (collisionCircle.Intersects(item.BoundingBox) && ((objectTypes & item.ObjectTypes) == item.ObjectTypes))
+                        {
+                            itemsFound.Add(item);
+                        }
                     }
                 }
             }
@@ -221,7 +227,7 @@ namespace SpatialTrees
                 foreach (var leaf in _Leaves)
                 {
                     if (leaf != null)
-                        leaf.GetCollidingItems(collision_circle, object_properties, ref items_found);
+                        leaf.GetCollidingItems(collisionCircle, objectTypes, ref itemsFound);
                 }
             }
         }
@@ -258,18 +264,18 @@ namespace SpatialTrees
             return total;
         }
 
-        protected eQuadrant FindQuadrant(Point2 bounding_box_center, Point2 point)
+        protected eQuadrant FindQuadrant(Point2 boundingBoxCenter, Point2 point)
         {
-            if (point.X > bounding_box_center.X)
+            if (point.X > boundingBoxCenter.X)
             {
-                if (point.Y > bounding_box_center.Y)
+                if (point.Y > boundingBoxCenter.Y)
                     return eQuadrant.LowerRightQuadrant;
                 else
                     return eQuadrant.UpperRightQuadrant;
             }
             else
             {
-                if (point.Y > bounding_box_center.Y)
+                if (point.Y > boundingBoxCenter.Y)
                     return eQuadrant.LowerLeftQuadrant;
                 else
                     return eQuadrant.UpperLeftQuadrant;
