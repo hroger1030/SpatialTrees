@@ -4,7 +4,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{2B54F51A-87D1-49CB-A2CC-C6069A480B86}</ProjectGuid>
+    <ProjectGuid>{2677957C-0E8C-41D2-BB1F-FD5A05482944}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>SpatialTrees</RootNamespace>
