@@ -32,13 +32,13 @@ namespace SpatialTrees
         protected readonly static int DEFAULT_MAX_OBJECTS = 100;
         protected readonly static int DEFAULT_COLLECTION_SIZE = 1000;
 
-        protected Dictionary<IMapObject, QuadtreeNode> _ObjectIndex;
+        protected IDictionary<IMapObject, QuadtreeNode> _ObjectIndex;
         protected QuadtreeNode _TopNode;
         protected int _MaxDepth;
         protected int _MaxNodeObjects;
         protected object _LockObject;
 
-        public Dictionary<IMapObject, QuadtreeNode> ObjectIndex
+        public IDictionary<IMapObject, QuadtreeNode> ObjectIndex
         {
             get { return _ObjectIndex; }
         }

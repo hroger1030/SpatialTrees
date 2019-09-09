@@ -15,7 +15,7 @@ namespace SpatialTrees
     [DebuggerDisplay("Node depth: {Depth}, Center: {_BoundingBox.Center}, {GetChildObjectCount()} items")]
     public class QuadtreeNode
     {
-        private static readonly int LEAVES = 4;
+        public const int LEAVES = 4;
 
         protected Quadtree _Quadtree;
         protected QuadtreeNode _Parent;
