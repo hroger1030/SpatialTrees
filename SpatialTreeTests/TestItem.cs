@@ -18,7 +18,9 @@ namespace SpatialTreesTests
         public string Name { get; set; }
 
         public int ObjectTypes { get; set; }
+
         public Point2 Location { get; set; }
+
         public Rectangle BoundingBox
         {
             get { return new Rectangle(Location, 1f, 1f); }

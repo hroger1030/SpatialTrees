@@ -9,7 +9,7 @@ namespace SpatialTreesTests
     [TestFixture]
     public class SpatialTreesTests
     {
-        Quadtree _Quadtree;
+        private Quadtree _Quadtree;
 
         [OneTimeSetUp]
         public void Init()
@@ -26,7 +26,7 @@ namespace SpatialTreesTests
 
         [Test]
         [Category("Quadtree")]
-        public void FindItemsBasicSquare()
+        public void Quadtree_FindItemsBasicSquare_Passes()
         {
             var items_found = new HashSet<IMapObject>();
             _Quadtree.GetCollidingItems(new Rectangle(1, 1, 1, 1), (int)TestItem.Properties.Property1, ref items_found);
@@ -36,7 +36,7 @@ namespace SpatialTreesTests
 
         [Test]
         [Category("Quadtree")]
-        public void FindItemsBasicSquareOversized()
+        public void Quadtree_FindItemsBasicSquareOversized_Passes()
         {
             var items_found = new HashSet<IMapObject>();
             _Quadtree.GetCollidingItems(new Rectangle(-1, -1, 102, 102), (int)TestItem.Properties.Property1, ref items_found);
@@ -46,7 +46,7 @@ namespace SpatialTreesTests
 
         [Test]
         [Category("Quadtree")]
-        public void FindItemsBasicCircle()
+        public void Quadtree_FindItemsBasicCircle_Passes()
         {
             var items_found = new HashSet<IMapObject>();
             _Quadtree.GetCollidingItems(new Circle(1, 1, 1), (int)TestItem.Properties.Property1, ref items_found);
@@ -56,7 +56,7 @@ namespace SpatialTreesTests
 
         [Test]
         [Category("Quadtree")]
-        public void FindItemsBasicCircleOversized()
+        public void Quadtree_FindItemsBasicCircleOversized_Passes()
         {
             var items_found = new HashSet<IMapObject>();
             _Quadtree.GetCollidingItems(new Circle(50, 50, 100), (int)TestItem.Properties.Property1, ref items_found);
@@ -66,7 +66,7 @@ namespace SpatialTreesTests
 
         [Test]
         [Category("Quadtree")]
-        public void FindItemsWithMatchingProperty()
+        public void Quadtree_FindItemsWithMatchingProperty_Passes()
         {
             var items_found = new HashSet<IMapObject>();
             _Quadtree.GetCollidingItems(new Circle(3, 3, 5), (int)TestItem.Properties.Property2, ref items_found);
@@ -76,7 +76,7 @@ namespace SpatialTreesTests
 
         [Test]
         [Category("Quadtree")]
-        public void FindItemsBasicSquareTangent()
+        public void Quadtree_FindItemsBasicSquareTangent_Passes()
         {
             var items_found = new HashSet<IMapObject>();
             _Quadtree.GetCollidingItems(new Rectangle(0, 0, 1, 1), (int)TestItem.Properties.Property1, ref items_found);
@@ -86,7 +86,7 @@ namespace SpatialTreesTests
 
         [Test]
         [Category("Quadtree")]
-        public void FindItemsBasicCircleTangent()
+        public void Quadtree_FindItemsBasicCircleTangent_Passes()
         {
             var items_found = new HashSet<IMapObject>();
             _Quadtree.GetCollidingItems(new Circle(1, 2, 1), (int)TestItem.Properties.Property1, ref items_found);
