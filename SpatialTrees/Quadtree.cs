@@ -94,7 +94,7 @@ namespace SpatialTrees
             lock (_LockObject)
             {
                 // create new bounding box. note rectangle is scaled down and to the right
-                Rectangle new_boundingbox = new Rectangle(_TopNode.BoundingBox * 2);
+                var new_boundingbox = new Rectangle(_TopNode.BoundingBox * 2);
 
                 // save top object refrence
                 var old_top_node = _TopNode;
@@ -107,7 +107,7 @@ namespace SpatialTrees
                 _TopNode.Split();
 
                 // replace old branches
-                _TopNode[(int)eQuadrant.UpperLeftQuadrant] = old_top_node;
+                _TopNode[(int)EQuadrant.UpperLeftQuadrant] = old_top_node;
 
                 return true;
             }
@@ -117,7 +117,6 @@ namespace SpatialTrees
         /// Attempts to add an item to the quadtree. Returns true if the item was added,
         /// false if the item faild to be added.
         /// </summary>
-        /// 
         public bool AddItem(IMapObject item)
         {
             if (!WorldRectangle.Contains(item.Location))
@@ -221,7 +220,7 @@ namespace SpatialTrees
 
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
+            if (obj is null) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (GetType() != obj.GetType()) return false;
 

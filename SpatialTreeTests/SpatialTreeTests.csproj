@@ -1,8 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
+
     <IsPackable>false</IsPackable>
+
+    <Authors>Roger Hill</Authors>
+
+    <Company>GlobalGonquestGames</Company>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -11,16 +16,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-     <PackageReference Include="nunit" Version="3.12.0" /> 
-     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.6.1" /> 
-     <PackageReference Include="NUnit3TestAdapter" Version="3.16.1">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference> 
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.2.0" />
+    <PackageReference Include="nunit" Version="3.13.3" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.2.1" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Geometry\Geometry\Geometry.csproj" />
+    <ProjectReference Include="..\..\Geometry\GeometryLib\Geometry.csproj" />
     <ProjectReference Include="..\SpatialTrees\SpatialTrees.csproj" />
   </ItemGroup>
 

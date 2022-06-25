@@ -100,7 +100,7 @@ namespace SpatialTrees
                 {
                     Split();
 
-                    eQuadrant quadrant;
+                    EQuadrant quadrant;
 
                     foreach (var item in _NodeItems)
                     {
@@ -127,7 +127,7 @@ namespace SpatialTrees
             }
             else
             {
-                eQuadrant quadrant = FindQuadrant(_BoundingBox.Center, mapItem.BoundingBox.Center);
+                EQuadrant quadrant = FindQuadrant(_BoundingBox.Center, mapItem.BoundingBox.Center);
                 return _Leaves[(int)quadrant].AddItem(mapItem);
             }
         }
@@ -242,10 +242,10 @@ namespace SpatialTrees
             float new_width = _BoundingBox.Width / 2;
             float new_height = _BoundingBox.Height / 2;
 
-            _Leaves[(int)eQuadrant.UpperRightQuadrant] = new QuadtreeNode(_Quadtree, this, new Rectangle(_BoundingBox.Center.X, _BoundingBox.Top, new_width, new_height));
-            _Leaves[(int)eQuadrant.LowerRightQuadrant] = new QuadtreeNode(_Quadtree, this, new Rectangle(_BoundingBox.Center.X, _BoundingBox.Center.Y, new_width, new_height));
-            _Leaves[(int)eQuadrant.LowerLeftQuadrant] = new QuadtreeNode(_Quadtree, this, new Rectangle(_BoundingBox.Left, _BoundingBox.Center.Y, new_width, new_height));
-            _Leaves[(int)eQuadrant.UpperLeftQuadrant] = new QuadtreeNode(_Quadtree, this, new Rectangle(_BoundingBox.Left, _BoundingBox.Top, new_width, new_height));
+            _Leaves[(int)EQuadrant.UpperRightQuadrant] = new QuadtreeNode(_Quadtree, this, new Rectangle(_BoundingBox.Center.X, _BoundingBox.Top, new_width, new_height));
+            _Leaves[(int)EQuadrant.LowerRightQuadrant] = new QuadtreeNode(_Quadtree, this, new Rectangle(_BoundingBox.Center.X, _BoundingBox.Center.Y, new_width, new_height));
+            _Leaves[(int)EQuadrant.LowerLeftQuadrant] = new QuadtreeNode(_Quadtree, this, new Rectangle(_BoundingBox.Left, _BoundingBox.Center.Y, new_width, new_height));
+            _Leaves[(int)EQuadrant.UpperLeftQuadrant] = new QuadtreeNode(_Quadtree, this, new Rectangle(_BoundingBox.Left, _BoundingBox.Top, new_width, new_height));
         }
 
         public int GetChildObjectCount()
@@ -264,21 +264,21 @@ namespace SpatialTrees
             return total;
         }
 
-        protected eQuadrant FindQuadrant(Point2 boundingBoxCenter, Point2 point)
+        protected EQuadrant FindQuadrant(Point2 boundingBoxCenter, Point2 point)
         {
             if (point.X > boundingBoxCenter.X)
             {
                 if (point.Y > boundingBoxCenter.Y)
-                    return eQuadrant.LowerRightQuadrant;
+                    return EQuadrant.LowerRightQuadrant;
                 else
-                    return eQuadrant.UpperRightQuadrant;
+                    return EQuadrant.UpperRightQuadrant;
             }
             else
             {
                 if (point.Y > boundingBoxCenter.Y)
-                    return eQuadrant.LowerLeftQuadrant;
+                    return EQuadrant.LowerLeftQuadrant;
                 else
-                    return eQuadrant.UpperLeftQuadrant;
+                    return EQuadrant.UpperLeftQuadrant;
             }
         }
 
