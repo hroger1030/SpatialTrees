@@ -1,8 +1,9 @@
 # Spatial Trees
 
-This library is designed to allow you to very quickly generate and search a quattree, a 2d spatial index. The quadtree is optimized to allow 
-fast inserts and updates of objects, making it ideal for real time game and physics applications. The project includes a reference to another
-library I wrote to support basic geometric operations, available on this github account under the name of 'geometry'. 
+This library is designed to allow you to very quickly generate and search a quadtree, a 2d spatial index. The quadtree is optimized to allow 
+fast inserts and updates of objects, making it ideal for real-time game and physics applications. The project includes a reference to another
+library I wrote to support basic geometric operations, available on this github account under the name of 'geometry'. If you clone that repository
+next to this one onyour local machine, the solution will work without needing any changes.
 
 ## Init a spatial index
 
