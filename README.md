@@ -60,7 +60,7 @@ objects to be intermixed and selectively filtered in searches using bit flags.
 ## Octree
 
 I have an implementation of a three dimensional data structure that functions very similarly to the two dimensional structure. I have not included it with this package yet, as writing proper
-unittests to validate that it works properly is rather time consuming. Please contact me directly if you want access to this data structure, and I can make it available to you.
+unit tests to validate that it works properly is rather time consuming. Please contact me directly if you want access to this data structure, and I can make it available to you.
 
 ## License
 
