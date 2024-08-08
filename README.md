@@ -8,12 +8,12 @@ library I wrote to support basic geometric operations, available on this github 
 
 To initialize a new QuadTree, use the following code:
 
-'
+```
 var boundingBox = new Rectangle(0,0,1000,1000);
 var maxDepth = 5;
 var maxObjects = 100;
 var tree = new Quadtree(boundingBox, maxDepth, maxObjects)
-'
+```
 
 The bounding box is the outer boundary of the search space. The depth is the number of levels of 'resolution'. The more levels you add, the 
 the more the space is subdivided, the more memory is consumed. The max objects is an artificial limiter that will set the upper limit of the 
@@ -24,6 +24,7 @@ done very quickly too.
 
 The following utility methods are available on a quadtree:
 
+```
 Resize() - Changes the outer bounding box, adding a new top level node that is twice as big as the current top level node.
 
 AddItem(IMapObject item) - Adds an item to the tree.
@@ -37,19 +38,20 @@ Clear() - clears all items from the tree.
 GetCollidingItems(Rectangle collisionBox, int objectTypes, ref HashSet<IMapObject> itemsFound) - returns a list of unique items that are colliding with the rectangle that is passed in.
 
 GetCollidingItems(Circle collisionCircle, int objectProperties, ref HashSet<IMapObject> itemsFound) - returns a list of unique items that are colliding with the circle that is passed in.
+```
 
 ## Items
 
 The quadtree works with any object that implements an 'IMapObject' interface: 
 
-'    
+```   
     public interface IMapObject
     {
         int ObjectTypes { get; set; }
         Point2 Location { get; set; }
         Rectangle BoundingBox { get; }
     }
-'
+```
 
 As long as your objects implement these properties, you can add anything you want to the structure with little effort. The object types property is intended to allow differing types of
 objects to be intermixed and selectively filtered in searches using bit flags. 
