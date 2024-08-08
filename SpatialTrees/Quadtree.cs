@@ -67,21 +67,21 @@ namespace SpatialTrees
 
         public Quadtree(Rectangle area) : this(area, DEFAULT_MAX_DEPTH, DEFAULT_MAX_OBJECTS) { }
 
-        public Quadtree(Rectangle bounding_box, int max_depth, int max_objects)
+        public Quadtree(Rectangle boundingBox, int maxDepth, int maxObjects)
         {
-            if (bounding_box == null)
+            if (boundingBox == null)
                 throw new Exception("Bounding Box cannot be null");
 
-            if (max_depth < 1)
+            if (maxDepth < 1)
                 throw new Exception("Max depth must be greater than zero.");
 
-            if (max_objects < 1)
+            if (maxObjects < 1)
                 throw new Exception("Max Objects must be greater than zero.");
 
             _ObjectIndex = new Dictionary<IMapObject, QuadtreeNode>(DEFAULT_COLLECTION_SIZE);
-            _TopNode = new QuadtreeNode(this, null, bounding_box);
-            _MaxDepth = max_depth;
-            _MaxNodeObjects = max_objects;
+            _TopNode = new QuadtreeNode(this, null, boundingBox);
+            _MaxDepth = maxDepth;
+            _MaxNodeObjects = maxObjects;
             _LockObject = new object();
         }
 

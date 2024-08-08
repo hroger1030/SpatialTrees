@@ -1,8 +1,7 @@
-﻿using System.Collections.Generic;
-
-using Geometry;
+﻿using Geometry;
 using NUnit.Framework;
 using SpatialTrees;
+using System.Collections.Generic;
 
 namespace SpatialTreesTests
 {
@@ -28,70 +27,77 @@ namespace SpatialTreesTests
         [Category("Quadtree")]
         public void Quadtree_FindItemsBasicSquare_Passes()
         {
-            var items_found = new HashSet<IMapObject>();
-            _Quadtree.GetCollidingItems(new Rectangle(1, 1, 1, 1), (int)TestItem.Properties.Property1, ref items_found);
+            var itemsFound = new HashSet<IMapObject>();
+            var searchArea = new Rectangle(1, 1, 1, 1);
+            _Quadtree.GetCollidingItems(searchArea, (int)TestItem.Properties.Property1, ref itemsFound);
 
-            Assert.IsTrue(items_found.Count == 1);
+            Assert.That(itemsFound.Count == 1, Is.True);
         }
 
         [Test]
         [Category("Quadtree")]
         public void Quadtree_FindItemsBasicSquareOversized_Passes()
         {
-            var items_found = new HashSet<IMapObject>();
-            _Quadtree.GetCollidingItems(new Rectangle(-1, -1, 102, 102), (int)TestItem.Properties.Property1, ref items_found);
+            var itemsFound = new HashSet<IMapObject>();
+            var searchArea = new Rectangle(-1, -1, 102, 102);
+            _Quadtree.GetCollidingItems(searchArea, (int)TestItem.Properties.Property1, ref itemsFound);
 
-            Assert.IsTrue(items_found.Count == 3);
+            Assert.That(itemsFound.Count == 3, Is.True);
         }
 
         [Test]
         [Category("Quadtree")]
         public void Quadtree_FindItemsBasicCircle_Passes()
         {
-            var items_found = new HashSet<IMapObject>();
-            _Quadtree.GetCollidingItems(new Circle(1, 1, 1), (int)TestItem.Properties.Property1, ref items_found);
+            var itemsFound = new HashSet<IMapObject>();
+            var searchArea = new Circle(1, 1, 1);
+            _Quadtree.GetCollidingItems(searchArea, (int)TestItem.Properties.Property1, ref itemsFound);
 
-            Assert.IsTrue(items_found.Count == 1);
+            Assert.That(itemsFound.Count == 3, Is.True);
         }
 
         [Test]
         [Category("Quadtree")]
         public void Quadtree_FindItemsBasicCircleOversized_Passes()
         {
-            var items_found = new HashSet<IMapObject>();
-            _Quadtree.GetCollidingItems(new Circle(50, 50, 100), (int)TestItem.Properties.Property1, ref items_found);
+            var itemsFound = new HashSet<IMapObject>();
+            var searchArea = new Circle(50, 50, 100);
+            _Quadtree.GetCollidingItems(searchArea, (int)TestItem.Properties.Property1, ref itemsFound);
 
-            Assert.IsTrue(items_found.Count == 3);
+            Assert.That(itemsFound.Count == 3, Is.True);
         }
 
         [Test]
         [Category("Quadtree")]
         public void Quadtree_FindItemsWithMatchingProperty_Passes()
         {
-            var items_found = new HashSet<IMapObject>();
-            _Quadtree.GetCollidingItems(new Circle(3, 3, 5), (int)TestItem.Properties.Property2, ref items_found);
+            var itemsFound = new HashSet<IMapObject>();
+            var searchArea = new Circle(3, 3, 5);
+            _Quadtree.GetCollidingItems(searchArea, (int)TestItem.Properties.Property2, ref itemsFound);
 
-            Assert.IsTrue(items_found.Count == 1);
+            Assert.That(itemsFound.Count == 1, Is.True);
         }
 
         [Test]
         [Category("Quadtree")]
         public void Quadtree_FindItemsBasicSquareTangent_Passes()
         {
-            var items_found = new HashSet<IMapObject>();
-            _Quadtree.GetCollidingItems(new Rectangle(0, 0, 1, 1), (int)TestItem.Properties.Property1, ref items_found);
+            var itemsFound = new HashSet<IMapObject>();
+            var searchArea = new Rectangle(0, 0, 1, 1);
+            _Quadtree.GetCollidingItems(searchArea, (int)TestItem.Properties.Property1, ref itemsFound);
 
-            Assert.IsTrue(items_found.Count == 1);
+            Assert.That(itemsFound.Count == 1, Is.True);
         }
 
         [Test]
         [Category("Quadtree")]
         public void Quadtree_FindItemsBasicCircleTangent_Passes()
         {
-            var items_found = new HashSet<IMapObject>();
-            _Quadtree.GetCollidingItems(new Circle(1, 2, 1), (int)TestItem.Properties.Property1, ref items_found);
+            var itemsFound = new HashSet<IMapObject>();
+            var searchArea = new Circle(1, 2, 1);
+            _Quadtree.GetCollidingItems(searchArea, (int)TestItem.Properties.Property1, ref itemsFound);
 
-            Assert.IsTrue(items_found.Count == 1);
+            Assert.That(itemsFound.Count == 1, Is.True);
         }
     }
 }
