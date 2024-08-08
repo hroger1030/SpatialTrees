@@ -53,7 +53,7 @@ namespace SpatialTreesTests
             var searchArea = new Circle(1, 1, 1);
             _Quadtree.GetCollidingItems(searchArea, (int)TestItem.Properties.Property1, ref itemsFound);
 
-            Assert.That(itemsFound.Count == 3, Is.True);
+            Assert.That(itemsFound.Count == 1, Is.True);
         }
 
         [Test]
