@@ -1,0 +1,123 @@
+/*
+The MIT License (MIT)
+
+Copyright (c) 2017 Roger Hill
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
+(the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge,
+publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do
+so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*/
+
+using Geometry;
+using NUnit.Framework;
+using SpatialTrees;
+using System;
+using System.Collections.Generic;
+
+namespace SpatialTreesTests
+{
+    [TestFixture]
+    [Category("Octree")]
+    public class OctreeAddItemTests
+    {
+        private Octree _Octree;
+
+        [SetUp]
+        public void Setup()
+        {
+            _Octree = new Octree(new Cube(0, 0, 0, 100, 100, 100), 5, 10);
+        }
+
+        [Test]
+        public void AddItem_ValidItem_ReturnsTrueAndIsIndexed()
+        {
+            var item = new TestVolumeItem("A", 10, 10, 10, (int)TestVolumeItem.Properties.Property1);
+
+            var result = _Octree.AddItem(item);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(result, Is.True);
+                Assert.That(_Octree.ObjectIndex.ContainsKey(item), Is.True);
+            });
+        }
+
+        [Test]
+        public void AddItem_LocationOutsideWorldCube_ThrowsArgumentException()
+        {
+            var item = new TestVolumeItem("Outside", 500, 500, 500, (int)TestVolumeItem.Properties.Property1);
+
+            Assert.Throws<ArgumentException>(() => _Octree.AddItem(item));
+        }
+
+        [Test]
+        public void AddItem_ZeroObjectTypes_Throws()
+        {
+            var item = new TestVolumeItem("NoType", 10, 10, 10, 0);
+
+            Assert.Throws<Exception>(() => _Octree.AddItem(item));
+        }
+
+        [Test]
+        public void AddItem_SameReferenceAddedTwiceAtNewLocation_TreatedAsUpdate()
+        {
+            var item = new TestVolumeItem("Moving", 10, 10, 10, (int)TestVolumeItem.Properties.Property1);
+            _Octree.AddItem(item);
+
+            item.Location = new Point3(90, 90, 90);
+            _Octree.AddItem(item);
+
+            Assert.That(_Octree.ObjectIndex.Count, Is.EqualTo(1));
+
+            var itemsFound = new HashSet<IMapObject3d>();
+            _Octree.GetCollidingItems(new Cube(0, 0, 0, 100, 100, 100), (int)TestVolumeItem.Properties.Property1, ref itemsFound);
+
+            Assert.That(itemsFound, Has.Count.EqualTo(1));
+        }
+
+        [Test]
+        public void AddItem_ExceedingMaxObjects_SplitsRootIntoOctantsWithCorrectMembership()
+        {
+            var tree = new Octree(new Cube(0, 0, 0, 100, 100, 100), 5, 6);
+
+            var upperRightNear = new TestVolumeItem("URN", 75, 25, 25, (int)TestVolumeItem.Properties.Property1);
+            var lowerRightNear = new TestVolumeItem("LRN", 75, 75, 25, (int)TestVolumeItem.Properties.Property1);
+            var lowerLeftNear = new TestVolumeItem("LLN", 25, 75, 25, (int)TestVolumeItem.Properties.Property1);
+            var upperLeftNear = new TestVolumeItem("ULN", 25, 25, 25, (int)TestVolumeItem.Properties.Property1);
+            var upperRightFar = new TestVolumeItem("URF", 75, 25, 75, (int)TestVolumeItem.Properties.Property1);
+            var lowerRightFar = new TestVolumeItem("LRF", 75, 75, 75, (int)TestVolumeItem.Properties.Property1);
+            var lowerLeftFar = new TestVolumeItem("LLF", 25, 75, 75, (int)TestVolumeItem.Properties.Property1);
+            var upperLeftFar = new TestVolumeItem("ULF", 25, 25, 75, (int)TestVolumeItem.Properties.Property1);
+
+            tree.AddItem(upperRightNear);
+            tree.AddItem(lowerRightNear);
+            tree.AddItem(lowerLeftNear);
+            tree.AddItem(upperLeftNear);
+            tree.AddItem(upperRightFar);
+            tree.AddItem(lowerRightFar);
+            tree.AddItem(lowerLeftFar);
+            tree.AddItem(upperLeftFar); // 8th item pushes count above maxObjects(6), triggering Split()
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(tree.TopNode[(int)eOctant.UpperRightNear].NodeItems, Does.Contain(upperRightNear));
+                Assert.That(tree.TopNode[(int)eOctant.LowerRightNear].NodeItems, Does.Contain(lowerRightNear));
+                Assert.That(tree.TopNode[(int)eOctant.LowerLeftNear].NodeItems, Does.Contain(lowerLeftNear));
+                Assert.That(tree.TopNode[(int)eOctant.UpperLeftNear].NodeItems, Does.Contain(upperLeftNear));
+                Assert.That(tree.TopNode[(int)eOctant.UpperRightFar].NodeItems, Does.Contain(upperRightFar));
+                Assert.That(tree.TopNode[(int)eOctant.LowerRightFar].NodeItems, Does.Contain(lowerRightFar));
+                Assert.That(tree.TopNode[(int)eOctant.LowerLeftFar].NodeItems, Does.Contain(lowerLeftFar));
+                Assert.That(tree.TopNode[(int)eOctant.UpperLeftFar].NodeItems, Does.Contain(upperLeftFar));
+                Assert.That(tree.TopNode.GetChildObjectCount(), Is.EqualTo(8));
+            });
+        }
+    }
+}

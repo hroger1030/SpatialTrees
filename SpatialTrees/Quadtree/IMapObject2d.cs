@@ -20,7 +20,7 @@ using Geometry;
 
 namespace SpatialTrees
 {
-    public interface IMapObject
+    public interface IMapObject2d
     {
         int ObjectTypes { get; set; }
         Point2 Location { get; set; }

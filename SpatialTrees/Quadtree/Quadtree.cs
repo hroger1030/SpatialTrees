@@ -16,11 +16,10 @@ FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TOR
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+using Geometry;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-
-using Geometry;
 
 namespace SpatialTrees
 {
@@ -44,13 +43,13 @@ namespace SpatialTrees
         protected readonly static int DEFAULT_MAX_OBJECTS = 100;
         protected readonly static int DEFAULT_COLLECTION_SIZE = 1000;
 
-        protected IDictionary<IMapObject, QuadtreeNode> _ObjectIndex;
+        protected IDictionary<IMapObject2d, QuadtreeNode> _ObjectIndex;
         protected QuadtreeNode _TopNode;
         protected int _MaxDepth;
         protected int _MaxNodeObjects;
         protected object _LockObject;
 
-        public IDictionary<IMapObject, QuadtreeNode> ObjectIndex
+        public IDictionary<IMapObject2d, QuadtreeNode> ObjectIndex
         {
             get { return _ObjectIndex; }
         }
@@ -90,7 +89,7 @@ namespace SpatialTrees
             if (maxObjects < 1)
                 throw new Exception("Max Objects must be greater than zero.");
 
-            _ObjectIndex = new Dictionary<IMapObject, QuadtreeNode>(DEFAULT_COLLECTION_SIZE);
+            _ObjectIndex = new Dictionary<IMapObject2d, QuadtreeNode>(DEFAULT_COLLECTION_SIZE);
             _TopNode = new QuadtreeNode(this, null, boundingBox);
             _MaxDepth = maxDepth;
             _MaxNodeObjects = maxObjects;
@@ -119,7 +118,7 @@ namespace SpatialTrees
                 _TopNode.Split();
 
                 // replace old branches
-                _TopNode[(int)EQuadrant.UpperLeftQuadrant] = old_top_node;
+                _TopNode[(int)eQuadrant.UpperLeftQuadrant] = old_top_node;
 
                 return true;
             }
@@ -129,7 +128,7 @@ namespace SpatialTrees
         /// Attempts to add an item to the quadtree. Returns true if the item was added,
         /// false if the item faild to be added.
         /// </summary>
-        public bool AddItem(IMapObject item)
+        public bool AddItem(IMapObject2d item)
         {
             if (!WorldRectangle.Contains(item.Location))
                 throw new ArgumentException($"{item.Location} is outside the quadtree world rectangle {WorldRectangle}");
@@ -151,7 +150,7 @@ namespace SpatialTrees
         /// bounding box has changed in size, too. Returns true if item was moved,
         /// false if item could not be moved.
         /// </summary>
-        public bool MoveItem(IMapObject item)
+        public bool MoveItem(IMapObject2d item)
         {
             if (_ObjectIndex.ContainsKey(item))
             {
@@ -176,7 +175,7 @@ namespace SpatialTrees
             return AddItem(item);
         }
 
-        public bool RemoveItem(IMapObject item)
+        public bool RemoveItem(IMapObject2d item)
         {
             if (_ObjectIndex.ContainsKey(item))
             {
@@ -203,10 +202,10 @@ namespace SpatialTrees
         /// <summary>
         /// returns a list of unique items that are colliding with the item that is passed in.
         /// </summary>
-        public bool GetCollidingItems(Rectangle collisionBox, int objectTypes, ref HashSet<IMapObject> itemsFound)
+        public bool GetCollidingItems(Rectangle collisionBox, int objectTypes, ref HashSet<IMapObject2d> itemsFound)
         {
             if (itemsFound == null)
-                itemsFound = new HashSet<IMapObject>();
+                itemsFound = new HashSet<IMapObject2d>();
             else
                 itemsFound.Clear();
 
@@ -218,10 +217,10 @@ namespace SpatialTrees
         /// <summary>
         /// returns a list of unique items that are colliding with the item that is passed in.
         /// </summary>
-        public bool GetCollidingItems(Circle collisionCircle, int objectPoperties, ref HashSet<IMapObject> itemsFound)
+        public bool GetCollidingItems(Circle collisionCircle, int objectPoperties, ref HashSet<IMapObject2d> itemsFound)
         {
             if (itemsFound == null)
-                itemsFound = new HashSet<IMapObject>();
+                itemsFound = new HashSet<IMapObject2d>();
             else
                 itemsFound.Clear();
 

@@ -50,7 +50,7 @@ namespace SpatialTreesTests
             // so indexing an in-range quadrant on an unsplit node throws instead of returning null.
             var tree = new Quadtree(new Rectangle(0, 0, 100, 100), 5, 10);
 
-            Assert.Throws<NullReferenceException>(() => { var _ = tree.TopNode[(int)EQuadrant.UpperRightQuadrant]; });
+            Assert.Throws<NullReferenceException>(() => { var _ = tree.TopNode[(int)eQuadrant.UpperRightQuadrant]; });
         }
 
         [Test]
@@ -76,7 +76,7 @@ namespace SpatialTreesTests
             var tree = new Quadtree(new Rectangle(0, 0, 100, 100), 5, 10);
             tree.TopNode.Split();
 
-            Assert.That(tree.TopNode[(int)EQuadrant.UpperRightQuadrant].Depth, Is.EqualTo(2));
+            Assert.That(tree.TopNode[(int)eQuadrant.UpperRightQuadrant].Depth, Is.EqualTo(2));
         }
 
         [Test]
@@ -104,7 +104,7 @@ namespace SpatialTreesTests
             Assert.Multiple(() =>
             {
                 Assert.That(tree.TopNode.GetChildObjectCount(), Is.EqualTo(3));
-                Assert.Throws<NullReferenceException>(() => { var _ = tree.TopNode[(int)EQuadrant.UpperRightQuadrant]; });
+                Assert.Throws<NullReferenceException>(() => { var _ = tree.TopNode[(int)eQuadrant.UpperRightQuadrant]; });
             });
         }
     }

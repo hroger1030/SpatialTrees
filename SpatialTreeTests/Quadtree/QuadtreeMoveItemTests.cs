@@ -59,7 +59,7 @@ namespace SpatialTreesTests
             item.Location = new Point2(20, 20);
             var result = _Quadtree.MoveItem(item);
 
-            var itemsFound = new HashSet<IMapObject>();
+            var itemsFound = new HashSet<IMapObject2d>();
             _Quadtree.GetCollidingItems(new Rectangle(19, 19, 2, 2), (int)TestItem.Properties.Property1, ref itemsFound);
 
             Assert.Multiple(() =>

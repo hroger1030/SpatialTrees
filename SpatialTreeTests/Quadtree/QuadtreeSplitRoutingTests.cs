@@ -44,10 +44,10 @@ namespace SpatialTreesTests
 
             Assert.Multiple(() =>
             {
-                Assert.That(tree.TopNode[(int)EQuadrant.UpperRightQuadrant].NodeItems, Does.Contain(upperRight));
-                Assert.That(tree.TopNode[(int)EQuadrant.LowerRightQuadrant].NodeItems, Does.Contain(lowerRight));
-                Assert.That(tree.TopNode[(int)EQuadrant.LowerLeftQuadrant].NodeItems, Does.Contain(lowerLeft));
-                Assert.That(tree.TopNode[(int)EQuadrant.UpperLeftQuadrant].NodeItems, Does.Contain(upperLeft));
+                Assert.That(tree.TopNode[(int)eQuadrant.UpperRightQuadrant].NodeItems, Does.Contain(upperRight));
+                Assert.That(tree.TopNode[(int)eQuadrant.LowerRightQuadrant].NodeItems, Does.Contain(lowerRight));
+                Assert.That(tree.TopNode[(int)eQuadrant.LowerLeftQuadrant].NodeItems, Does.Contain(lowerLeft));
+                Assert.That(tree.TopNode[(int)eQuadrant.UpperLeftQuadrant].NodeItems, Does.Contain(upperLeft));
             });
         }
 
@@ -67,16 +67,16 @@ namespace SpatialTreesTests
             tree.AddItem(c);
             tree.AddItem(d);
 
-            var upperRightChild = tree.TopNode[(int)EQuadrant.UpperRightQuadrant];
+            var upperRightChild = tree.TopNode[(int)eQuadrant.UpperRightQuadrant];
 
             Assert.Multiple(() =>
             {
                 Assert.That(upperRightChild.GetChildObjectCount(), Is.EqualTo(4));
                 // second-level split: A/C (x=60, left half) and B/D (x=90, right half) must separate
-                Assert.That(upperRightChild[(int)EQuadrant.UpperRightQuadrant].NodeItems, Does.Contain(b));
-                Assert.That(upperRightChild[(int)EQuadrant.LowerRightQuadrant].NodeItems, Does.Contain(d));
-                Assert.That(upperRightChild[(int)EQuadrant.LowerLeftQuadrant].NodeItems, Does.Contain(c));
-                Assert.That(upperRightChild[(int)EQuadrant.UpperLeftQuadrant].NodeItems, Does.Contain(a));
+                Assert.That(upperRightChild[(int)eQuadrant.UpperRightQuadrant].NodeItems, Does.Contain(b));
+                Assert.That(upperRightChild[(int)eQuadrant.LowerRightQuadrant].NodeItems, Does.Contain(d));
+                Assert.That(upperRightChild[(int)eQuadrant.LowerLeftQuadrant].NodeItems, Does.Contain(c));
+                Assert.That(upperRightChild[(int)eQuadrant.UpperLeftQuadrant].NodeItems, Does.Contain(a));
             });
         }
 
@@ -91,7 +91,7 @@ namespace SpatialTreesTests
             tree.AddItem(new TestItem("C", 60, 40, (int)TestItem.Properties.Property1));
             tree.AddItem(new TestItem("D", 90, 40, (int)TestItem.Properties.Property1));
 
-            var itemsFound = new HashSet<IMapObject>();
+            var itemsFound = new HashSet<IMapObject2d>();
             tree.GetCollidingItems(new Rectangle(89, 9, 2, 2), (int)TestItem.Properties.Property1, ref itemsFound);
 
             Assert.That(itemsFound, Does.Contain(target));

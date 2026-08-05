@@ -16,41 +16,16 @@ FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TOR
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-using SpatialTrees;
-using Geometry;
-using System;
-
-namespace SpatialTreesTests
+namespace SpatialTrees
 {
-    internal class TestItem : IMapObject
+    /// <summary>
+    /// The quadrants are layed out starting from top right, and proceeding clockwise.
+    /// </summary>
+    public enum eQuadrant
     {
-        [Flags]
-        public enum Properties
-        {
-            Property1 = 1,
-            Property2 = 2,
-            Property3 = 4,
-            All = int.MaxValue,
-        }
-
-        public string Name { get; set; }
-
-        public int ObjectTypes { get; set; }
-
-        public Point2 Location { get; set; }
-
-        public Rectangle BoundingBox
-        {
-            get { return new Rectangle(Location, 1f, 1f); }
-        }
-
-        public TestItem() { }
-
-        public TestItem(string name, float x, float y, int objectTypes)
-        {
-            Name = name;
-            Location = new Point2(x, y);
-            ObjectTypes = objectTypes;
-        }
+        UpperRightQuadrant = 0,
+        LowerRightQuadrant = 1,
+        LowerLeftQuadrant = 2,
+        UpperLeftQuadrant = 3
     }
 }

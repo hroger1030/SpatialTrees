@@ -1,46 +1,45 @@
-﻿/*
+/*
 The MIT License (MIT)
 
 Copyright (c) 2017 Roger Hill
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files 
-(the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, 
-publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do 
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
+(the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge,
+publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do
 so, subject to the following conditions:
 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF 
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE 
-FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+using Geometry;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 
-using Geometry;
-
 namespace SpatialTrees
 {
     [DebuggerDisplay("Node depth: {Depth}, Center: {_BoundingBox.Center}, {GetChildObjectCount()} items")]
-    public class QuadtreeNode
+    public class OctreeNode
     {
-        public const int LEAVES = 4;
+        public const int LEAVES = 8;
 
-        protected Quadtree _Quadtree;
-        protected QuadtreeNode _Parent;
-        protected QuadtreeNode[] _Leaves;
-        protected Rectangle _BoundingBox;
-        protected HashSet<IMapObject> _NodeItems;
+        protected Octree _Octree;
+        protected OctreeNode _Parent;
+        protected OctreeNode[] _Leaves;
+        protected Cube _BoundingBox;
+        protected HashSet<IMapObject3d> _NodeItems;
 
-        public Rectangle BoundingBox
+        public Cube BoundingBox
         {
             get { return _BoundingBox; }
         }
 
-        public HashSet<IMapObject> NodeItems
+        public HashSet<IMapObject3d> NodeItems
         {
             get { return _NodeItems; }
         }
@@ -50,7 +49,7 @@ namespace SpatialTrees
             get
             {
                 int depth = 1;
-                QuadtreeNode current_node = this;
+                OctreeNode current_node = this;
 
                 while (current_node._Parent != null)
                 {
@@ -62,7 +61,7 @@ namespace SpatialTrees
             }
         }
 
-        public QuadtreeNode this[int i]
+        public OctreeNode this[int i]
         {
             get
             {
@@ -72,7 +71,7 @@ namespace SpatialTrees
                 }
                 else
                 {
-                    throw new IndexOutOfRangeException("QuadtreePointNode " + i.ToString() + " does not exist.");
+                    throw new IndexOutOfRangeException("OctreeNode " + i.ToString() + " does not exist.");
                 }
             }
             set
@@ -83,64 +82,64 @@ namespace SpatialTrees
                 }
                 else
                 {
-                    throw new IndexOutOfRangeException("QuadtreePointNode " + i.ToString() + " does not exist.");
+                    throw new IndexOutOfRangeException("OctreeNode " + i.ToString() + " does not exist.");
                 }
             }
         }
 
-        public QuadtreeNode(Quadtree quadtree, QuadtreeNode parent, Rectangle bounding_box)
+        public OctreeNode(Octree octree, OctreeNode parent, Cube bounding_box)
         {
-            _Quadtree = quadtree;
+            _Octree = octree;
             _Parent = parent;
             _Leaves = null;
             _BoundingBox = bounding_box;
-            _NodeItems = new HashSet<IMapObject>();
+            _NodeItems = new HashSet<IMapObject3d>();
         }
 
         /// <summary>
-        /// Attempts to add an item to the quadtree. Returns true if the item was added,
+        /// Attempts to add an item to the octree. Returns true if the item was added,
         /// false if the item faild to be added.
         /// </summary>
-        public bool AddItem(IMapObject mapItem)
+        public bool AddItem(IMapObject3d mapItem)
         {
             if (_NodeItems.Contains(mapItem))
                 return false;
 
             if (_Leaves == null)
             {
-                if (_NodeItems.Count > _Quadtree.MaxNodeObjects && this.Depth < _Quadtree.MaxDepth)
+                if (_NodeItems.Count > _Octree.MaxNodeObjects && this.Depth < _Octree.MaxDepth)
                 {
                     Split();
 
-                    EQuadrant quadrant;
+                    eOctant octant;
 
                     foreach (var item in _NodeItems)
                     {
-                        quadrant = FindQuadrant(_BoundingBox.Center, item.BoundingBox.Center);
-                        _Leaves[(int)quadrant].AddItem(item);
+                        octant = FindOctant(_BoundingBox.Center, item.BoundingBox.Center);
+                        _Leaves[(int)octant].AddItem(item);
                     }
 
                     _NodeItems.Clear();
 
-                    quadrant = FindQuadrant(_BoundingBox.Center, mapItem.BoundingBox.Center);
-                    _Leaves[(int)quadrant].AddItem(mapItem);
+                    octant = FindOctant(_BoundingBox.Center, mapItem.BoundingBox.Center);
+                    _Leaves[(int)octant].AddItem(mapItem);
                 }
                 else
                 {
                     _NodeItems.Add(mapItem);
 
-                    if (_Quadtree.ObjectIndex.ContainsKey(mapItem))
-                        _Quadtree.ObjectIndex[mapItem] = this;
+                    if (_Octree.ObjectIndex.ContainsKey(mapItem))
+                        _Octree.ObjectIndex[mapItem] = this;
                     else
-                        _Quadtree.ObjectIndex.Add(mapItem, this);
+                        _Octree.ObjectIndex.Add(mapItem, this);
                 }
 
                 return true;
             }
             else
             {
-                EQuadrant quadrant = FindQuadrant(_BoundingBox.Center, mapItem.BoundingBox.Center);
-                return _Leaves[(int)quadrant].AddItem(mapItem);
+                eOctant octant = FindOctant(_BoundingBox.Center, mapItem.BoundingBox.Center);
+                return _Leaves[(int)octant].AddItem(mapItem);
             }
         }
 
@@ -161,7 +160,7 @@ namespace SpatialTrees
         /// <summary>
         /// returns a list of unique items that are colliding with the item that is passed in.
         /// </summary>
-        public void GetCollidingItems(Rectangle collisionBox, int objectTypes, ref HashSet<IMapObject> itemsFound)
+        public void GetCollidingItems(Cube collisionBox, int objectTypes, ref HashSet<IMapObject3d> itemsFound)
         {
             if (!_BoundingBox.Intersects(collisionBox))
                 return;
@@ -204,14 +203,14 @@ namespace SpatialTrees
         /// <summary>
         /// returns a list of unique items that are colliding with the item that is passed in.
         /// </summary>
-        public void GetCollidingItems(Circle collisionCircle, int objectTypes, ref HashSet<IMapObject> itemsFound)
+        public void GetCollidingItems(Sphere collisionSphere, int objectTypes, ref HashSet<IMapObject3d> itemsFound)
         {
-            if (!_BoundingBox.Intersects(collisionCircle))
+            if (!_BoundingBox.Intersects(collisionSphere))
                 return;
 
             if (_NodeItems.Count > 0)
             {
-                if (collisionCircle.Contains(_BoundingBox))
+                if (collisionSphere.Contains(_BoundingBox))
                 {
                     foreach (var item in _NodeItems)
                     {
@@ -226,7 +225,7 @@ namespace SpatialTrees
                     // test each item in this node
                     foreach (var item in _NodeItems)
                     {
-                        if (collisionCircle.Intersects(item.BoundingBox) && ((objectTypes & item.ObjectTypes) == objectTypes))
+                        if (collisionSphere.Intersects(item.BoundingBox) && ((objectTypes & item.ObjectTypes) == objectTypes))
                         {
                             itemsFound.Add(item);
                         }
@@ -239,7 +238,7 @@ namespace SpatialTrees
                 foreach (var leaf in _Leaves)
                 {
                     if (leaf != null)
-                        leaf.GetCollidingItems(collisionCircle, objectTypes, ref itemsFound);
+                        leaf.GetCollidingItems(collisionSphere, objectTypes, ref itemsFound);
                 }
             }
         }
@@ -249,15 +248,21 @@ namespace SpatialTrees
             if (_Leaves != null)
                 throw new Exception("Node already split");
 
-            _Leaves = new QuadtreeNode[LEAVES];
+            _Leaves = new OctreeNode[LEAVES];
 
-            float new_width = _BoundingBox.Width / 2;
-            float new_height = _BoundingBox.Height / 2;
+            var center = _BoundingBox.Center;
+            float x1 = _BoundingBox.X1, y1 = _BoundingBox.Y1, z1 = _BoundingBox.Z1;
+            float x2 = _BoundingBox.X2, y2 = _BoundingBox.Y2, z2 = _BoundingBox.Z2;
+            float cx = center.X, cy = center.Y, cz = center.Z;
 
-            _Leaves[(int)EQuadrant.UpperRightQuadrant] = new QuadtreeNode(_Quadtree, this, new Rectangle(_BoundingBox.Center.X, _BoundingBox.Top, new_width, new_height));
-            _Leaves[(int)EQuadrant.LowerRightQuadrant] = new QuadtreeNode(_Quadtree, this, new Rectangle(_BoundingBox.Center.X, _BoundingBox.Center.Y, new_width, new_height));
-            _Leaves[(int)EQuadrant.LowerLeftQuadrant] = new QuadtreeNode(_Quadtree, this, new Rectangle(_BoundingBox.Left, _BoundingBox.Center.Y, new_width, new_height));
-            _Leaves[(int)EQuadrant.UpperLeftQuadrant] = new QuadtreeNode(_Quadtree, this, new Rectangle(_BoundingBox.Left, _BoundingBox.Top, new_width, new_height));
+            _Leaves[(int)eOctant.UpperRightNear] = new OctreeNode(_Octree, this, new Cube(cx, y1, z1, x2, cy, cz));
+            _Leaves[(int)eOctant.LowerRightNear] = new OctreeNode(_Octree, this, new Cube(cx, cy, z1, x2, y2, cz));
+            _Leaves[(int)eOctant.LowerLeftNear] = new OctreeNode(_Octree, this, new Cube(x1, cy, z1, cx, y2, cz));
+            _Leaves[(int)eOctant.UpperLeftNear] = new OctreeNode(_Octree, this, new Cube(x1, y1, z1, cx, cy, cz));
+            _Leaves[(int)eOctant.UpperRightFar] = new OctreeNode(_Octree, this, new Cube(cx, y1, cz, x2, cy, z2));
+            _Leaves[(int)eOctant.LowerRightFar] = new OctreeNode(_Octree, this, new Cube(cx, cy, cz, x2, y2, z2));
+            _Leaves[(int)eOctant.LowerLeftFar] = new OctreeNode(_Octree, this, new Cube(x1, cy, cz, cx, y2, z2));
+            _Leaves[(int)eOctant.UpperLeftFar] = new OctreeNode(_Octree, this, new Cube(x1, y1, cz, cx, cy, z2));
         }
 
         public int GetChildObjectCount()
@@ -276,21 +281,21 @@ namespace SpatialTrees
             return total;
         }
 
-        protected EQuadrant FindQuadrant(Point2 boundingBoxCenter, Point2 point)
+        protected eOctant FindOctant(Point3 boundingBoxCenter, Point3 point)
         {
             if (point.X > boundingBoxCenter.X)
             {
                 if (point.Y > boundingBoxCenter.Y)
-                    return EQuadrant.LowerRightQuadrant;
+                    return point.Z > boundingBoxCenter.Z ? eOctant.LowerRightFar : eOctant.LowerRightNear;
                 else
-                    return EQuadrant.UpperRightQuadrant;
+                    return point.Z > boundingBoxCenter.Z ? eOctant.UpperRightFar : eOctant.UpperRightNear;
             }
             else
             {
                 if (point.Y > boundingBoxCenter.Y)
-                    return EQuadrant.LowerLeftQuadrant;
+                    return point.Z > boundingBoxCenter.Z ? eOctant.LowerLeftFar : eOctant.LowerLeftNear;
                 else
-                    return EQuadrant.UpperLeftQuadrant;
+                    return point.Z > boundingBoxCenter.Z ? eOctant.UpperLeftFar : eOctant.UpperLeftNear;
             }
         }
 
@@ -300,11 +305,11 @@ namespace SpatialTrees
             if (ReferenceEquals(this, obj)) return true;
             if (GetType() != obj.GetType()) return false;
 
-            var new_obj = (QuadtreeNode)obj;
+            var new_obj = (OctreeNode)obj;
             return Equals(new_obj);
         }
 
-        public bool Equals(QuadtreeNode obj)
+        public bool Equals(OctreeNode obj)
         {
             return GetHashCode() == obj.GetHashCode();
         }

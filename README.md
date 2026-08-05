@@ -1,7 +1,8 @@
 # Spatial Trees
 
-This library lets you quickly build and search a quadtree, a 2D spatial index. The quadtree is optimized for fast inserts and
-updates of objects, making it well suited to real-time game and physics applications.
+This library lets you quickly build and search a quadtree (2D) or octree (3D) spatial index. Both are optimized for fast
+inserts and updates of objects, making them well suited to real-time game and physics applications. The octree mirrors the
+quadtree's design one dimension up — same API shape, same splitting behavior, just with a Z axis added.
 
 ## Table of contents
 
@@ -12,6 +13,8 @@ updates of objects, making it well suited to real-time game and physics applicat
   - [Building and testing](#building-and-testing)
   - [Creating a quadtree](#creating-a-quadtree)
   - [Items](#items)
+  - [Creating an octree](#creating-an-octree)
+  - [Volume items](#volume-items)
   - [License](#license)
 
 The project references another library of mine, `Geometry`, which provides basic geometric primitives (points, rectangles,
@@ -30,14 +33,26 @@ SpatialTrees/
 ├── SpatialTrees.sln
 ├── SpatialTrees/              # library project
 │   ├── SpatialTrees.csproj
-│   ├── IMapObject.cs
-│   ├── Quadtree.cs
-│   ├── QuadtreeNode.cs
-│   └── eQuadrant.cs
+│   ├── Quadtree/
+│   │   ├── IMapObject.cs
+│   │   ├── Quadtree.cs
+│   │   ├── QuadtreeNode.cs
+│   │   └── eQuadrant.cs
+│   └── Octree/
+│       ├── IMapObject3d.cs
+│       ├── Octree.cs
+│       ├── OctreeNode.cs
+│       └── eOctant.cs
 └── SpatialTreeTests/          # NUnit test project
     ├── SpatialTreeTests.csproj
-    ├── SpatialTreesTests.cs
-    └── TestItem.cs
+    ├── Quadtree/
+    │   ├── SpatialTreesTests.cs
+    │   ├── TestItem.cs
+    │   └── ...                # AddItem/MoveItem/RemoveItem/Clear/Resize/etc. test fixtures
+    └── Octree/
+        ├── OctreeCollisionTests.cs
+        ├── TestVolumeItem.cs
+        └── ...                # same fixture layout as Quadtree, one dimension up
 ```
 
 ## Building and testing
@@ -110,6 +125,35 @@ public interface IMapObject
 
 As long as your objects implement these members, you can add anything you want to the structure with little effort. The
 `ObjectTypes` property lets you intermix different kinds of objects and selectively filter them in searches using bit flags.
+
+## Creating an octree
+
+The `Octree` is the three-dimensional counterpart to the `Quadtree` — same constructor shape, same methods, same splitting
+and filtering behavior, just with a `Cube`/`Sphere`/`Point3` in place of `Rectangle`/`Circle`/`Point2`:
+
+```csharp
+var boundingBox = new Cube(0, 0, 0, 1000, 1000, 1000);
+var maxDepth = 5;
+var maxObjects = 100;
+var tree = new Octree(boundingBox, maxDepth, maxObjects);
+```
+
+It exposes the same set of methods as `Quadtree` — `Resize()`, `AddItem(IMapObject3d item)`, `MoveItem(IMapObject3d item)`,
+`RemoveItem(IMapObject3d item)`, `Clear()`, and two `GetCollidingItems` overloads (one for a `Cube` search volume, one for a
+`Sphere`). A node splits into 8 octants instead of 4 quadrants once it holds more than `maxObjects` items.
+
+## Volume items
+
+The octree works with any object that implements the `IMapObject3d` interface:
+
+```csharp
+public interface IMapObject3d
+{
+    int ObjectTypes { get; set; }
+    Point3 Location { get; set; }
+    Cube BoundingBox { get; }
+}
+```
 
 ## License
 
