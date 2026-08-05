@@ -1,8 +1,20 @@
-﻿//////////////////////////////////////////////////////////////////////////////////
-// Copyright (C) Global Conquest Games, LLC - All Rights Reserved               //
-// Unauthorized copying of this file, via any medium is strictly prohibited     //
-// Proprietary and confidential                                                 //
-//////////////////////////////////////////////////////////////////////////////////
+﻿/*
+The MIT License (MIT)
+
+Copyright (c) 2017 Roger Hill
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files 
+(the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, 
+publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do 
+so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF 
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE 
+FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*/
 
 using System;
 using System.Collections.Generic;
@@ -86,20 +98,20 @@ namespace SpatialTrees
         }
 
         /// <summary>
-        /// Resizes world by adding a new top level node. Calling this will increase map by 4x. 
-        /// Old top node becomes bottom left node, since rectangle is screen oriented.
+        /// Resizes world by adding a new top level node. Calling this will increase map by 4x.
+        /// Old top node becomes the upper left node, since rectangle is screen oriented.
         /// </summary>
         public bool Resize()
         {
             lock (_LockObject)
             {
-                // create new bounding box. note rectangle is scaled down and to the right
+                // create new bounding box. note rectangle keeps its top-left corner and grows down and to the right
                 var new_boundingbox = new Rectangle(_TopNode.BoundingBox * 2);
 
                 // save top object refrence
                 var old_top_node = _TopNode;
 
-                // replace bottom right branch of quadtree with old tree
+                // replace upper left branch of quadtree with old tree
                 _TopNode = new QuadtreeNode(this, null, new_boundingbox);
                 _MaxDepth++;
 

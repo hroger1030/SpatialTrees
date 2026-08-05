@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.2.32602.215
+# Visual Studio Version 18
+VisualStudioVersion = 18.8.12023.21 stable
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SpatialTrees", "SpatialTrees\SpatialTrees.csproj", "{7B91275D-1FAF-45F4-8D48-27A03938DAFE}"
 EndProject
@@ -13,6 +13,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Geometry", "..\Geometry\Geo
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Files", "Solution Files", "{38AFC7A7-2647-4464-B385-26FDB30FDCA9}"
 	ProjectSection(SolutionItems) = preProject
+		.gitignore = .gitignore
+		CLAUDE.md = CLAUDE.md
+		LICENSE.txt = LICENSE.txt
 		README.md = README.md
 	EndProjectSection
 EndProject

@@ -1,68 +1,117 @@
 # Spatial Trees
 
-This library is designed to allow you to very quickly generate and search a quadtree, a 2d spatial index. The quadtree is optimized to allow 
-fast inserts and updates of objects, making it ideal for real-time game and physics applications. The project includes a reference to another
-library I wrote to support basic geometric operations, available on this github account under the name of 'geometry'. If you clone that repository
-next to this one onyour local machine, the solution will work without needing any changes.
+This library lets you quickly build and search a quadtree, a 2D spatial index. The quadtree is optimized for fast inserts and
+updates of objects, making it well suited to real-time game and physics applications.
 
-## Init a spatial index
+## Table of contents
 
-To initialize a new QuadTree, use the following code:
+- [Spatial Trees](#spatial-trees)
+  - [Table of contents](#table-of-contents)
+  - [Requirements](#requirements)
+  - [Project layout](#project-layout)
+  - [Building and testing](#building-and-testing)
+  - [Creating a quadtree](#creating-a-quadtree)
+  - [Items](#items)
+  - [License](#license)
+
+The project references another library of mine, `Geometry`, which provides basic geometric primitives (points, rectangles,
+circles, etc.) and is available on this same GitHub account. Clone the `Geometry` repository as a sibling of this one — e.g.
+`../Geometry` relative to this repo's root — and the solution will build without any further changes.
+
+## Requirements
+
+- .NET 10 SDK
+- The `Geometry` library, cloned next to this repository (see above)
+
+## Project layout
 
 ```
-var boundingBox = new Rectangle(0,0,1000,1000);
+SpatialTrees/
+├── SpatialTrees.sln
+├── SpatialTrees/              # library project
+│   ├── SpatialTrees.csproj
+│   ├── IMapObject.cs
+│   ├── Quadtree.cs
+│   ├── QuadtreeNode.cs
+│   └── eQuadrant.cs
+└── SpatialTreeTests/          # NUnit test project
+    ├── SpatialTreeTests.csproj
+    ├── SpatialTreesTests.cs
+    └── TestItem.cs
+```
+
+## Building and testing
+
+```
+dotnet build SpatialTrees.sln
+dotnet test SpatialTrees.sln
+```
+
+Unit tests are written with NUnit and live in the `SpatialTreeTests` project.
+
+## Creating a quadtree
+
+To initialize a new quadtree, use the following code:
+
+```csharp
+var boundingBox = new Rectangle(0, 0, 1000, 1000);
 var maxDepth = 5;
 var maxObjects = 100;
-var tree = new Quadtree(boundingBox, maxDepth, maxObjects)
+var tree = new Quadtree(boundingBox, maxDepth, maxObjects);
 ```
 
-The bounding box is the outer boundary of the search space. The depth is the number of levels of 'resolution'. The more levels you add, the 
-the more the space is subdivided, the more memory is consumed. The max objects is an artificial limiter that will set the upper limit of the 
-number of objects that can be added. Set this as big as you want if you have a lot of RAM or CPU to burn. 
+- `boundingBox` is the outer boundary of the search space.
+- `maxDepth` is the number of levels of "resolution". The more levels you add, the more finely the space is subdivided, and the
+  more memory is consumed.
+- `maxObjects` is a per-node limit on how many objects a node holds before it splits. Set it as high as you like if you have
+  memory and CPU to spare.
 
-The search uses binary space partitioning, which is very, very fast. The objects are also indexed so that moving them in the index can be 
-done very quickly too. 
+Searches use binary space partitioning, which is very fast. Objects are indexed internally, so moving them within the tree is
+also quick.
 
-The following utility methods are available on a quadtree:
+The following methods are available on a `Quadtree`:
 
 ```
-Resize() - Changes the outer bounding box, adding a new top level node that is twice as big as the current top level node.
+Resize()
+    Doubles the outer bounding box by adding a new top-level node.
 
-AddItem(IMapObject item) - Adds an item to the tree.
+AddItem(IMapObject item)
+    Adds an item to the tree.
 
-MoveItem(IMapObject item) - Moves item in tree. Does checks for collisions. Returns true if the item was moved, false if it could not be moved.
+MoveItem(IMapObject item)
+    Moves an item in the tree, checking for collisions. Returns true if the item was moved,
+    false if it could not be moved.
 
-RemoveItem(IMapObject item) - removes the specified item.
+RemoveItem(IMapObject item)
+    Removes the specified item.
 
-Clear() - clears all items from the tree.
+Clear()
+    Removes all items from the tree.
 
-GetCollidingItems(Rectangle collisionBox, int objectTypes, ref HashSet<IMapObject> itemsFound) - returns a list of unique items that are colliding with the rectangle that is passed in.
+GetCollidingItems(Rectangle collisionBox, int objectTypes, ref HashSet<IMapObject> itemsFound)
+    Returns a list of unique items colliding with the given rectangle.
 
-GetCollidingItems(Circle collisionCircle, int objectProperties, ref HashSet<IMapObject> itemsFound) - returns a list of unique items that are colliding with the circle that is passed in.
+GetCollidingItems(Circle collisionCircle, int objectTypes, ref HashSet<IMapObject> itemsFound)
+    Returns a list of unique items colliding with the given circle.
 ```
 
 ## Items
 
-The quadtree works with any object that implements an 'IMapObject' interface: 
+The quadtree works with any object that implements the `IMapObject` interface:
 
-```   
-    public interface IMapObject
-    {
-        int ObjectTypes { get; set; }
-        Point2 Location { get; set; }
-        Rectangle BoundingBox { get; }
-    }
+```csharp
+public interface IMapObject
+{
+    int ObjectTypes { get; set; }
+    Point2 Location { get; set; }
+    Rectangle BoundingBox { get; }
+}
 ```
 
-As long as your objects implement these properties, you can add anything you want to the structure with little effort. The object types property is intended to allow differing types of
-objects to be intermixed and selectively filtered in searches using bit flags. 
-
-## Octree
-
-I have an implementation of a three dimensional data structure that functions very similarly to the two dimensional structure. I have not included it with this package yet, as writing proper
-unit tests to validate that it works properly is rather time consuming. Please contact me directly if you want access to this data structure, and I can make it available to you.
+As long as your objects implement these members, you can add anything you want to the structure with little effort. The
+`ObjectTypes` property lets you intermix different kinds of objects and selectively filter them in searches using bit flags.
 
 ## License
 
-This library is covered with the MIT license, and you can do pretty much anything you want with it, except claim it as your own work. Go build something cool with this and sell it for a lot 
-of money. 
+This library is covered by the MIT license — do pretty much anything you want with it, except claim it as your own work. Go
+build something cool with it, and sell it for a lot of money.
