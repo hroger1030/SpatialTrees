@@ -34,11 +34,6 @@ namespace SpatialTrees
     /// as _leaf[octant_index-1]
     ///
     /// note that this object supports non-balanced nodes.
-    ///
-    /// THREADING: this class is not thread safe and is intended for single-threaded
-    /// use only. Callers that touch it from multiple threads must serialize access
-    /// themselves. Thread-safe variants of both spatial trees are planned.
-    /// </summary>
     [DebuggerDisplay("Octree {WorldCube.Width} x {WorldCube.Height} x {WorldCube.Depth}, {ObjectIndex.Count} items")]
     public class Octree
     {
@@ -60,7 +55,7 @@ namespace SpatialTrees
         }
 
         // default world is the unit cube (0,0,0)-(1,1,1); Quadtree() mirrors this with the unit rectangle
-        public Octree() : this(new Cube(0f, 0f, 0f, 1f, 1f, 1f), DEFAULT_MAX_DEPTH, DEFAULT_MAX_OBJECTS) { }
+        public Octree() : this(Cube.UnitCube, DEFAULT_MAX_DEPTH, DEFAULT_MAX_OBJECTS) { }
 
         public Octree(Cube volume) : this(volume, DEFAULT_MAX_DEPTH, DEFAULT_MAX_OBJECTS) { }
 
@@ -79,6 +74,51 @@ namespace SpatialTrees
             TopNode = new OctreeNode(this, null, boundingBox);
             MaxDepth = maxDepth;
             MaxNodeObjects = maxObjects;
+        }
+
+        /// <summary>
+        /// Builds an octree from all of its items in one bottom-up pass: partition by
+        /// octant, assemble the nodes from the leaves up. Faster and lighter than the
+        /// same items through <see cref="AddItem"/> - no leaf split-and-redistribute, and
+        /// the index and leaf lists are sized exactly. Build-once only; use AddItem for
+        /// changes afterwards. Items must be distinct references and pass the same checks
+        /// AddItem enforces (world-bounds centre, non-zero object type), or this throws.
+        /// </summary>
+        public static Octree Build(Cube boundingBox, int maxDepth, int maxObjects, IReadOnlyCollection<IMapObject3d> items)
+        {
+            ArgumentNullException.ThrowIfNull(items);
+
+            var tree = new Octree(boundingBox, maxDepth, maxObjects, expectedItemCount: items.Count);
+
+            if (items.Count == 0)
+                return tree;
+
+            // two ping-pong buffers (each level partitions one into the other) plus a
+            // one-byte-per-item class cache so the scatter pass skips re-doing the
+            // geometry. All three die with this method.
+            var front = new IMapObject3d[items.Count];
+            var back = new IMapObject3d[items.Count];
+            var buckets = new byte[items.Count];
+
+            int n = 0;
+            foreach (var item in items)
+            {
+                tree.ValidateForInsert(item);
+                front[n++] = item;
+            }
+
+            tree.TopNode.BulkLoad(front, back, buckets, 0, n);
+
+            return tree;
+        }
+
+        /// <summary>
+        /// As <see cref="Build(Cube, int, int, IReadOnlyCollection{IMapObject3d})"/>
+        /// using the default depth and per-node object limits.
+        /// </summary>
+        public static Octree Build(Cube boundingBox, IReadOnlyCollection<IMapObject3d> items)
+        {
+            return Build(boundingBox, DEFAULT_MAX_DEPTH, DEFAULT_MAX_OBJECTS, items);
         }
 
         /// <summary>

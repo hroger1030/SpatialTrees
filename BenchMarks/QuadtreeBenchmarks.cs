@@ -65,6 +65,12 @@ namespace BenchMarks
         }
 
         [Benchmark]
+        public Quadtree BuildBulk()
+        {
+            return Quadtree.Build(WorldData.World2d(), MaxDepth, MaxObjects, _items);
+        }
+
+        [Benchmark]
         public int QueryRectangle()
         {
             int hits = 0;

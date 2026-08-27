@@ -63,6 +63,12 @@ namespace BenchMarks
         }
 
         [Benchmark]
+        public Octree BuildBulk()
+        {
+            return Octree.Build(WorldData.World3d(), MaxDepth, MaxObjects, _items);
+        }
+
+        [Benchmark]
         public int QueryCube()
         {
             int hits = 0;

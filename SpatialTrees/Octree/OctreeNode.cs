@@ -40,9 +40,6 @@ namespace SpatialTrees
         // plus every descendant's). Maintained incrementally by StoreItem / RemoveStoredItem
         // so CollapseUpward does not have to re-walk the subtree on every remove.
         public int SubtreeCount { get; protected set; }
-
-        // bounding-box centre, cached at construction so routing does not recompute it
-        // on every level of every insert.
         public Point3 Center { get; protected set; }
 
         public bool IsSplit
@@ -84,7 +81,6 @@ namespace SpatialTrees
             Leaves = null;
             BoundingBox = bounding_box;
             Center = bounding_box.Center;
-            // NodeItems stays null until StoreItem actually puts something here
         }
 
         /// <summary>
@@ -146,9 +142,8 @@ namespace SpatialTrees
                     IMapObject3d[] scratch = ArrayPool<IMapObject3d>.Shared.Rent(moved);
                     NodeItems.CopyTo(scratch);
                     NodeItems.Clear();
-                    // these items are about to be re-stored (on a child, or back here if
-                    // they straddle); drop them from the running totals first so the
-                    // per-item StoreItem calls below re-add them exactly once.
+
+                    // these items are about to be re-stored drop them from the running totals.
                     AdjustSubtreeCount(-moved);
 
                     for (int i = 0; i < moved; i++)
@@ -420,6 +415,99 @@ namespace SpatialTrees
             // child nodes are materialised lazily by FindContainingLeaf as items route
             // into each octant; an empty octant costs only its null array slot.
             Leaves = new OctreeNode[LEAVES];
+        }
+
+        /// <summary>
+        /// Bottom-up bulk load for <see cref="Octree.Build"/>. Partitions src[lo..hi) by
+        /// child octant into dst, keeps straddlers here, recurses into each octant with
+        /// the buffers swapped. <paramref name="buckets"/> is shared recursion scratch:
+        /// the count pass writes each item's class, the scatter pass reads it. Returns
+        /// this subtree's item count and sets <see cref="SubtreeCount"/>.
+        /// </summary>
+        public int BulkLoad(IMapObject3d[] src, IMapObject3d[] dst, byte[] buckets, int lo, int hi)
+        {
+            int count = hi - lo;
+
+            // bucket 0 = straddles an octant plane (stays here); 1..LEAVES = fits that child
+            Span<int> counts = stackalloc int[LEAVES + 1];
+            for (int i = lo; i < hi; i++)
+            {
+                byte bucket = (byte)BulkBucket(src[i].BoundingBox);
+                buckets[i] = bucket;
+                counts[bucket]++;
+            }
+
+            // leaf: under the cap, at the depth limit, or nothing a split could separate
+            if (count <= Octree.MaxNodeObjects || Depth >= Octree.MaxDepth || counts[0] == count)
+            {
+                if (count > 0)
+                {
+                    NodeItems = new List<IMapObject3d>(count);
+                    for (int i = lo; i < hi; i++)
+                        StoreForBulk(src[i]);
+                }
+
+                SubtreeCount = count;
+                return count;
+            }
+
+            Split();
+
+            // counting sort src[lo..hi) -> dst[lo..hi): straddlers, then one run per octant
+            Span<int> runStart = stackalloc int[LEAVES + 1];
+            runStart[0] = lo;
+            for (int b = 1; b <= LEAVES; b++)
+                runStart[b] = runStart[b - 1] + counts[b - 1];
+
+            Span<int> cursor = stackalloc int[LEAVES + 1];
+            runStart.CopyTo(cursor);
+
+            for (int i = lo; i < hi; i++)
+                dst[cursor[buckets[i]]++] = src[i];
+
+            // straddlers stay on this node
+            int total = counts[0];
+            if (counts[0] > 0)
+            {
+                NodeItems = new List<IMapObject3d>(counts[0]);
+                for (int i = runStart[0]; i < runStart[1]; i++)
+                    StoreForBulk(dst[i]);
+            }
+
+            // recurse into each non-empty child, src/dst swapped
+            for (int o = 0; o < LEAVES; o++)
+            {
+                int childCount = counts[o + 1];
+                if (childCount == 0)
+                    continue;
+
+                var child = new OctreeNode(Octree, this, ChildBox((eOctant)o));
+                Leaves[o] = child;
+                total += child.BulkLoad(dst, src, buckets, runStart[o + 1], runStart[o + 1] + childCount);
+            }
+
+            SubtreeCount = total;
+            return total;
+        }
+
+        /// <summary>
+        /// Bulk-load classifier: 0 if <paramref name="itemBox"/> straddles an octant
+        /// plane (stays on this node), else the 1-based index of the child that contains it.
+        /// </summary>
+        public int BulkBucket(Cube itemBox)
+        {
+            eOctant octant = FindOctant(Center, itemBox.Center);
+            return ChildBox(octant).Contains(itemBox) ? (int)octant + 1 : 0;
+        }
+
+        /// <summary>
+        /// Appends an already-validated item to the pre-sized NodeItems list and points
+        /// the object index here. SubtreeCount is the bulk loader's job, not this method's.
+        /// </summary>
+        public void StoreForBulk(IMapObject3d mapItem)
+        {
+            NodeItems.Add(mapItem);
+            Octree.ObjectIndex[mapItem] = this;
         }
 
         /// <summary>

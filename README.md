@@ -89,12 +89,27 @@ var tree = new Quadtree(boundingBox, maxDepth, maxObjects);
 
 The parameterless / bounding-box-only constructors default to `maxDepth = 8`, `maxObjects = 16`.
 
+If you have every item up front, build the tree in one pass instead of adding them one at a time:
+
+```csharp
+var tree = Quadtree.Build(boundingBox, maxDepth, maxObjects, items); // items: IReadOnlyCollection<IMapObject2d>
+```
+
+`Build` partitions the items one quadrant boundary at a time and assembles the nodes bottom-up, so it does none of the
+repeated leaf split-and-redistribute work the incremental path does and sizes the internal index and each leaf's item list
+exactly. It is materially faster and lighter for the build-once case; use `AddItem` for changes afterwards. Items must be
+distinct references and each must satisfy the same rules `AddItem` enforces.
+
 Searches use binary space partitioning, which is very fast. Objects are indexed internally, so moving them within the tree is
 also quick.
 
 The following methods are available on a `Quadtree`:
 
 ```
+static Build(Rectangle boundingBox, int maxDepth, int maxObjects, IReadOnlyCollection<IMapObject2d> items)
+    Builds a tree from all of its items in one bottom-up pass. Throws ArgumentException
+    for an item outside the world or with no object type bits, same as AddItem.
+
 Resize()
     Doubles the outer bounding box by adding a new top-level node.
 
@@ -113,10 +128,10 @@ RemoveItem(IMapObject2d item)
 Clear()
     Removes all items from the tree. The world rectangle and MaxDepth are left as they are.
 
-GetCollidingItems(Rectangle collisionBox, int objectTypes, ref HashSet<IMapObject2d> itemsFound)
+GetCollidingItems(Rectangle collisionBox, int objectTypes, ref List<IMapObject2d> itemsFound)
     Returns a list of unique items colliding with the given rectangle.
 
-GetCollidingItems(Circle collisionCircle, int objectTypes, ref HashSet<IMapObject2d> itemsFound)
+GetCollidingItems(Circle collisionCircle, int objectTypes, ref List<IMapObject2d> itemsFound)
     Returns a list of unique items colliding with the given circle.
 ```
 
@@ -148,9 +163,10 @@ var maxObjects = 16;
 var tree = new Octree(boundingBox, maxDepth, maxObjects);
 ```
 
-It exposes the same set of methods as `Quadtree` — `Resize()`, `AddItem(IMapObject3d item)`, `MoveItem(IMapObject3d item)`,
-`RemoveItem(IMapObject3d item)`, `Clear()`, and two `GetCollidingItems` overloads (one for a `Cube` search volume, one for a
-`Sphere`). A node splits into 8 octants instead of 4 quadrants when it already holds `maxObjects` items and another one arrives.
+It exposes the same set of methods as `Quadtree` — `static Octree.Build(...)`, `Resize()`, `AddItem(IMapObject3d item)`,
+`MoveItem(IMapObject3d item)`, `RemoveItem(IMapObject3d item)`, `Clear()`, and two `GetCollidingItems` overloads (one for a
+`Cube` search volume, one for a `Sphere`). A node splits into 8 octants instead of 4 quadrants when it already holds
+`maxObjects` items and another one arrives.
 
 ## Volume items
 

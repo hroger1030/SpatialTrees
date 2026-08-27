@@ -33,11 +33,6 @@ namespace SpatialTrees
         public QuadtreeNode Parent { get; protected set; }
         public QuadtreeNode[] Leaves { get; protected set; }
         public Rectangle BoundingBox { get; protected set; }
-        // items held directly on this node. A List (not a HashSet): iteration during
-        // collision queries is the hot path and wins from contiguous storage; duplicate
-        // inserts are already prevented by the ContainsKey guard in Quadtree.AddItem and
-        // the Contains guard in AddItem below. Null until the first item is stored here -
-        // most interior nodes never hold anything directly, so the allocation is deferred.
         public List<IMapObject2d> NodeItems { get; protected set; }
         public int Depth { get; protected set; }
 
@@ -245,8 +240,7 @@ namespace SpatialTrees
 
         /// <summary>
         /// Removes an item stored directly on this node and keeps the subtree counts in
-        /// step. Returns false if the item was not held here. The tree's object index is
-        /// the caller's responsibility.
+        /// step. Returns false if the item was not held here. 
         /// </summary>
         public bool RemoveStoredItem(IMapObject2d mapItem)
         {
@@ -423,6 +417,104 @@ namespace SpatialTrees
             // child nodes are materialised lazily by FindContainingLeaf as items route
             // into each quadrant; an empty quadrant costs only its null array slot.
             Leaves = new QuadtreeNode[LEAVES];
+        }
+
+        /// <summary>
+        /// Bottom-up bulk load for <see cref="Quadtree.Build"/>. Partitions src[lo..hi)
+        /// by child quadrant into dst, keeps straddlers here, recurses into each quadrant
+        /// with the buffers swapped. <paramref name="buckets"/> is shared recursion
+        /// scratch: the count pass writes each item's class, the scatter pass reads it.
+        /// Returns this subtree's item count and sets <see cref="SubtreeCount"/>.
+        /// </summary>
+        public int BulkLoad(IMapObject2d[] src, IMapObject2d[] dst, byte[] buckets, int lo, int hi)
+        {
+            int count = hi - lo;
+
+            // bucket 0 = straddles a quadrant line (stays here); 1..LEAVES = fits that child
+            Span<int> counts = stackalloc int[LEAVES + 1];
+
+            for (int i = lo; i < hi; i++)
+            {
+                byte bucket = (byte)BulkBucket(src[i].BoundingBox);
+                buckets[i] = bucket;
+                counts[bucket]++;
+            }
+
+            // leaf: under the cap, at the depth limit, or nothing a split could separate
+            if (count <= Quadtree.MaxNodeObjects || Depth >= Quadtree.MaxDepth || counts[0] == count)
+            {
+                if (count > 0)
+                {
+                    NodeItems = new List<IMapObject2d>(count);
+
+                    for (int i = lo; i < hi; i++)
+                        StoreForBulk(src[i]);
+                }
+
+                SubtreeCount = count;
+                return count;
+            }
+
+            Split();
+
+            // counting sort src[lo..hi) -> dst[lo..hi): straddlers, then one run per quadrant
+            Span<int> runStart = stackalloc int[LEAVES + 1];
+            runStart[0] = lo;
+
+            for (int b = 1; b <= LEAVES; b++)
+                runStart[b] = runStart[b - 1] + counts[b - 1];
+
+            Span<int> cursor = stackalloc int[LEAVES + 1];
+            runStart.CopyTo(cursor);
+
+            for (int i = lo; i < hi; i++)
+                dst[cursor[buckets[i]]++] = src[i];
+
+            // straddlers stay on this node
+            int total = counts[0];
+
+            if (counts[0] > 0)
+            {
+                NodeItems = new List<IMapObject2d>(counts[0]);
+                for (int i = runStart[0]; i < runStart[1]; i++)
+                    StoreForBulk(dst[i]);
+            }
+
+            // recurse into each non-empty child, src/dst swapped
+            for (int q = 0; q < LEAVES; q++)
+            {
+                int childCount = counts[q + 1];
+
+                if (childCount == 0)
+                    continue;
+
+                var child = new QuadtreeNode(Quadtree, this, ChildBox((eQuadrant)q));
+                Leaves[q] = child;
+                total += child.BulkLoad(dst, src, buckets, runStart[q + 1], runStart[q + 1] + childCount);
+            }
+
+            SubtreeCount = total;
+            return total;
+        }
+
+        /// <summary>
+        /// Bulk-load classifier: 0 if <paramref name="itemBox"/> straddles a quadrant
+        /// boundary (stays on this node), else the 1-based index of the child that contains it.
+        /// </summary>
+        public int BulkBucket(Rectangle itemBox)
+        {
+            eQuadrant quadrant = FindQuadrant(Center, itemBox.Center);
+            return ChildBox(quadrant).Contains(itemBox) ? (int)quadrant + 1 : 0;
+        }
+
+        /// <summary>
+        /// Appends an already-validated item to the pre-sized NodeItems list and points
+        /// the object index here. SubtreeCount is the bulk loader's job, not this method's.
+        /// </summary>
+        public void StoreForBulk(IMapObject2d mapItem)
+        {
+            NodeItems.Add(mapItem);
+            Quadtree.ObjectIndex[mapItem] = this;
         }
 
         /// <summary>

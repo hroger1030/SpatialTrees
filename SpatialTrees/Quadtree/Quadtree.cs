@@ -35,10 +35,6 @@ namespace SpatialTrees
     /// as _leaf[quadants_index-1]
     ///
     /// note that this object supports non-balanced nodes.
-    ///
-    /// THREADING: this class is not thread safe and is intended for single-threaded
-    /// use only. Callers that touch it from multiple threads must serialize access
-    /// themselves. Thread-safe variants of both spatial trees are planned.
     /// </summary>
     [DebuggerDisplay("Quadtree {WorldRectangle.Width} x {WorldRectangle.Height}, {ObjectIndex.Count} items")]
     public class Quadtree
@@ -61,7 +57,7 @@ namespace SpatialTrees
         }
 
         // default world is the unit rectangle (0,0)-(1,1); Octree() mirrors this with the unit cube
-        public Quadtree() : this(new Rectangle(0f, 0f, 1f, 1f), DEFAULT_MAX_DEPTH, DEFAULT_MAX_OBJECTS) { }
+        public Quadtree() : this(Rectangle.UnitRectangle, DEFAULT_MAX_DEPTH, DEFAULT_MAX_OBJECTS) { }
 
         public Quadtree(Rectangle area) : this(area, DEFAULT_MAX_DEPTH, DEFAULT_MAX_OBJECTS) { }
 
@@ -80,6 +76,51 @@ namespace SpatialTrees
             TopNode = new QuadtreeNode(this, null, boundingBox);
             MaxDepth = maxDepth;
             MaxNodeObjects = maxObjects;
+        }
+
+        /// <summary>
+        /// Builds a quadtree from all of its items in one bottom-up pass: partition by
+        /// quadrant, assemble the nodes from the leaves up. Faster and lighter than the
+        /// same items through <see cref="AddItem"/> - no leaf split-and-redistribute, and
+        /// the index and leaf lists are sized exactly. Build-once only; use AddItem for
+        /// changes afterwards. Items must be distinct references and pass the same checks
+        /// AddItem enforces (world-bounds centre, non-zero object type), or this throws.
+        /// </summary>
+        public static Quadtree Build(Rectangle boundingBox, int maxDepth, int maxObjects, IReadOnlyCollection<IMapObject2d> items)
+        {
+            ArgumentNullException.ThrowIfNull(items);
+
+            var tree = new Quadtree(boundingBox, maxDepth, maxObjects, items.Count);
+
+            if (items.Count == 0)
+                return tree;
+
+            // two ping-pong buffers (each level partitions one into the other) plus a
+            // one-byte-per-item class cache so the scatter pass skips re-doing the
+            // geometry. All three die with this method.
+            var front = new IMapObject2d[items.Count];
+            var back = new IMapObject2d[items.Count];
+            var buckets = new byte[items.Count];
+
+            int n = 0;
+            foreach (var item in items)
+            {
+                tree.ValidateForInsert(item);
+                front[n++] = item;
+            }
+
+            tree.TopNode.BulkLoad(front, back, buckets, 0, n);
+
+            return tree;
+        }
+
+        /// <summary>
+        /// As <see cref="Build(Rectangle, int, int, IReadOnlyCollection{IMapObject2d})"/>
+        /// using the default depth and per-node object limits.
+        /// </summary>
+        public static Quadtree Build(Rectangle boundingBox, IReadOnlyCollection<IMapObject2d> items)
+        {
+            return Build(boundingBox, DEFAULT_MAX_DEPTH, DEFAULT_MAX_OBJECTS, items);
         }
 
         /// <summary>
@@ -154,7 +195,7 @@ namespace SpatialTrees
             if (ObjectIndex.ContainsKey(item))
             {
                 // already here, treat this as a move/update. Pull it out completely -
-                // both the node list and the object index - so the re-add below starts
+                // both the node list and the object index so the re-add below starts
                 // from a clean state instead of leaving a stale index entry. No collapse
                 // pass here: we are about to re-insert, so the item count is unchanged.
                 DetachItem(item);
@@ -164,9 +205,9 @@ namespace SpatialTrees
         }
 
         /// <summary>
-        /// Re-places an item after its position or size changed; if it was never tracked
+        /// Replaces an item after its position or size changed; if it was never tracked
         /// it is added. Same throwing contract as AddItem for an item now outside the
-        /// world - and a rejected move leaves the item where it was, tree unchanged.
+        /// world and a rejected move leaves the item where it was, tree unchanged.
         /// </summary>
         public void MoveItem(IMapObject2d item)
         {
