@@ -55,11 +55,11 @@ namespace SpatialTreesTests
         }
 
         [Test]
-        public void AddItem_ZeroObjectTypes_Throws()
+        public void AddItem_ZeroObjectTypes_ThrowsArgumentException()
         {
             var item = new TestItem("NoType", 10, 10, 0);
 
-            Assert.Throws<Exception>(() => _Quadtree.AddItem(item));
+            Assert.Throws<ArgumentException>(() => _Quadtree.AddItem(item));
         }
 
         [Test]

@@ -35,7 +35,7 @@ SpatialTrees/
 ├── SpatialTrees/              # library project
 │   ├── SpatialTrees.csproj
 │   ├── Quadtree/
-│   │   ├── IMapObject.cs
+│   │   ├── IMapObject2d.cs
 │   │   ├── Quadtree.cs
 │   │   ├── QuadtreeNode.cs
 │   │   └── eQuadrant.cs
@@ -96,33 +96,34 @@ The following methods are available on a `Quadtree`:
 Resize()
     Doubles the outer bounding box by adding a new top-level node.
 
-AddItem(IMapObject item)
-    Adds an item to the tree, or re-places it if it is already present. Throws if the
-    item's bounding-box centre is outside the world or it has no object type.
+AddItem(IMapObject2d item)
+    Adds an item to the tree, or re-places it if it is already present. Throws
+    ArgumentException if the item's bounding-box centre is outside the world or it has
+    no object type bits set.
 
-MoveItem(IMapObject item)
+MoveItem(IMapObject2d item)
     Re-places an item after its position or size changed; adds it if it was never tracked.
-    Same throwing contract as AddItem.
+    Same throwing contract as AddItem; a rejected move leaves the item where it was.
 
-RemoveItem(IMapObject item)
+RemoveItem(IMapObject2d item)
     Removes the specified item. Returns true if it was found and removed, false otherwise.
 
 Clear()
-    Removes all items from the tree.
+    Removes all items from the tree. The world rectangle and MaxDepth are left as they are.
 
-GetCollidingItems(Rectangle collisionBox, int objectTypes, ref HashSet<IMapObject> itemsFound)
+GetCollidingItems(Rectangle collisionBox, int objectTypes, ref HashSet<IMapObject2d> itemsFound)
     Returns a list of unique items colliding with the given rectangle.
 
-GetCollidingItems(Circle collisionCircle, int objectTypes, ref HashSet<IMapObject> itemsFound)
+GetCollidingItems(Circle collisionCircle, int objectTypes, ref HashSet<IMapObject2d> itemsFound)
     Returns a list of unique items colliding with the given circle.
 ```
 
 ## Items
 
-The quadtree works with any object that implements the `IMapObject` interface:
+The quadtree works with any object that implements the `IMapObject2d` interface:
 
 ```csharp
-public interface IMapObject
+public interface IMapObject2d
 {
     int ObjectTypes { get; set; }
     Point2 Location { get; set; }
@@ -147,7 +148,7 @@ var tree = new Octree(boundingBox, maxDepth, maxObjects);
 
 It exposes the same set of methods as `Quadtree` — `Resize()`, `AddItem(IMapObject3d item)`, `MoveItem(IMapObject3d item)`,
 `RemoveItem(IMapObject3d item)`, `Clear()`, and two `GetCollidingItems` overloads (one for a `Cube` search volume, one for a
-`Sphere`). A node splits into 8 octants instead of 4 quadrants once it holds more than `maxObjects` items.
+`Sphere`). A node splits into 8 octants instead of 4 quadrants when it already holds `maxObjects` items and another one arrives.
 
 ## Volume items
 

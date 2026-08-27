@@ -71,5 +71,25 @@ namespace SpatialTreesTests
 
             Assert.Throws<ArgumentException>(() => _Octree.MoveItem(item));
         }
+
+        [Test]
+        public void MoveItem_ToLocationOutsideWorldCube_LeavesItemTracked()
+        {
+            var item = new TestVolumeItem("Wanderer", 10, 10, 10, (int)TestVolumeItem.Properties.Property1);
+            _Octree.AddItem(item);
+            var original_node = _Octree.ObjectIndex[item];
+
+            item.Location = new Point3(500, 500, 500);
+
+            Assert.Throws<ArgumentException>(() => _Octree.MoveItem(item));
+
+            // the rejected move must not have dropped the item from the tree
+            Assert.Multiple(() =>
+            {
+                Assert.That(_Octree.ObjectIndex.ContainsKey(item), Is.True);
+                Assert.That(_Octree.ObjectIndex[item], Is.SameAs(original_node));
+                Assert.That(original_node.NodeItems, Does.Contain(item));
+            });
+        }
     }
 }

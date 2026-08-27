@@ -71,5 +71,25 @@ namespace SpatialTreesTests
 
             Assert.Throws<ArgumentException>(() => _Quadtree.MoveItem(item));
         }
+
+        [Test]
+        public void MoveItem_ToLocationOutsideWorldRectangle_LeavesItemTracked()
+        {
+            var item = new TestItem("Wanderer", 10, 10, (int)TestItem.Properties.Property1);
+            _Quadtree.AddItem(item);
+            var original_node = _Quadtree.ObjectIndex[item];
+
+            item.Location = new Point2(500, 500);
+
+            Assert.Throws<ArgumentException>(() => _Quadtree.MoveItem(item));
+
+            // the rejected move must not have dropped the item from the tree
+            Assert.Multiple(() =>
+            {
+                Assert.That(_Quadtree.ObjectIndex.ContainsKey(item), Is.True);
+                Assert.That(_Quadtree.ObjectIndex[item], Is.SameAs(original_node));
+                Assert.That(original_node.NodeItems, Does.Contain(item));
+            });
+        }
     }
 }

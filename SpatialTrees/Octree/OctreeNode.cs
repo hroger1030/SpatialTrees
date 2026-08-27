@@ -120,7 +120,7 @@ namespace SpatialTrees
 
         /// <summary>
         /// Adds an item into this node's subtree. A caller-facing failure (item outside
-        /// the world, no object type) is a thrown exception from Octree.AddItem, not a
+        /// the world, no object type) is an ArgumentException from Octree.AddItem, not a
         /// return value; a node that already holds the item just ignores the call.
         /// </summary>
         public void AddItem(IMapObject3d mapItem)
@@ -237,27 +237,22 @@ namespace SpatialTrees
             if (!_BoundingBox.Intersects(collisionBox))
                 return;
 
+            if (collisionBox.Contains(_BoundingBox))
+            {
+                // the query region fully contains this node, so it contains this node's
+                // whole subtree - collect everything below with no further geometry tests.
+                CollectAll(objectTypes, ref itemsFound);
+                return;
+            }
+
             if (_NodeItems.Count > 0)
             {
-                if (collisionBox.Contains(_BoundingBox))
+                // test each item in this node
+                foreach (var item in _NodeItems)
                 {
-                    foreach (var item in _NodeItems)
+                    if (collisionBox.Intersects(item.BoundingBox) && MatchesObjectTypes(objectTypes, item.ObjectTypes))
                     {
-                        if (MatchesObjectTypes(objectTypes, item.ObjectTypes))
-                        {
-                            itemsFound.Add(item);
-                        }
-                    }
-                }
-                else
-                {
-                    // test each item in this node
-                    foreach (var item in _NodeItems)
-                    {
-                        if (collisionBox.Intersects(item.BoundingBox) && MatchesObjectTypes(objectTypes, item.ObjectTypes))
-                        {
-                            itemsFound.Add(item);
-                        }
+                        itemsFound.Add(item);
                     }
                 }
             }
@@ -280,27 +275,22 @@ namespace SpatialTrees
             if (!_BoundingBox.Intersects(collisionSphere))
                 return;
 
+            if (collisionSphere.Contains(_BoundingBox))
+            {
+                // the query region fully contains this node, so it contains this node's
+                // whole subtree - collect everything below with no further geometry tests.
+                CollectAll(objectTypes, ref itemsFound);
+                return;
+            }
+
             if (_NodeItems.Count > 0)
             {
-                if (collisionSphere.Contains(_BoundingBox))
+                // test each item in this node
+                foreach (var item in _NodeItems)
                 {
-                    foreach (var item in _NodeItems)
+                    if (collisionSphere.Intersects(item.BoundingBox) && MatchesObjectTypes(objectTypes, item.ObjectTypes))
                     {
-                        if (MatchesObjectTypes(objectTypes, item.ObjectTypes))
-                        {
-                            itemsFound.Add(item);
-                        }
-                    }
-                }
-                else
-                {
-                    // test each item in this node
-                    foreach (var item in _NodeItems)
-                    {
-                        if (collisionSphere.Intersects(item.BoundingBox) && MatchesObjectTypes(objectTypes, item.ObjectTypes))
-                        {
-                            itemsFound.Add(item);
-                        }
+                        itemsFound.Add(item);
                     }
                 }
             }
@@ -311,6 +301,31 @@ namespace SpatialTrees
                 {
                     if (leaf != null)
                         leaf.GetCollidingItems(collisionSphere, objectTypes, ref itemsFound);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Adds every type-matching item in this node's whole subtree to the result set
+        /// with no spatial tests. Used by GetCollidingItems once a query region is known
+        /// to fully contain this node.
+        /// </summary>
+        public void CollectAll(int objectTypes, ref HashSet<IMapObject3d> itemsFound)
+        {
+            foreach (var item in _NodeItems)
+            {
+                if (MatchesObjectTypes(objectTypes, item.ObjectTypes))
+                {
+                    itemsFound.Add(item);
+                }
+            }
+
+            if (_Leaves != null)
+            {
+                foreach (var leaf in _Leaves)
+                {
+                    if (leaf != null)
+                        leaf.CollectAll(objectTypes, ref itemsFound);
                 }
             }
         }

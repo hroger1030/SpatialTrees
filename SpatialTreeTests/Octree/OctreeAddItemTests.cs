@@ -55,11 +55,11 @@ namespace SpatialTreesTests
         }
 
         [Test]
-        public void AddItem_ZeroObjectTypes_Throws()
+        public void AddItem_ZeroObjectTypes_ThrowsArgumentException()
         {
             var item = new TestVolumeItem("NoType", 10, 10, 10, 0);
 
-            Assert.Throws<Exception>(() => _Octree.AddItem(item));
+            Assert.Throws<ArgumentException>(() => _Octree.AddItem(item));
         }
 
         [Test]

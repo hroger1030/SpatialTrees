@@ -76,6 +76,7 @@ namespace SpatialTrees
             get { return _TopNode.BoundingBox; }
         }
 
+        // default world is the unit cube (0,0,0)-(1,1,1); Quadtree() mirrors this with the unit rectangle
         public Octree() : this(new Cube(0f, 0f, 0f, 1f, 1f, 1f), DEFAULT_MAX_DEPTH, DEFAULT_MAX_OBJECTS) { }
 
         public Octree(Cube volume) : this(volume, DEFAULT_MAX_DEPTH, DEFAULT_MAX_OBJECTS) { }
@@ -123,20 +124,32 @@ namespace SpatialTrees
         }
 
         /// <summary>
-        /// Adds an item to the octree, or re-places it if it is already present. The
-        /// operation always succeeds unless it throws: ArgumentException if the item's
-        /// bounding-box centre is outside the world, Exception if it has no object type.
+        /// Throws ArgumentException if an item cannot be placed in the tree: its
+        /// bounding-box centre is outside the world, or it carries no object type bits
+        /// (a zero mask matches no query, so the item would be invisible dead weight).
+        /// Shared by AddItem and MoveItem so a rejected move can bail out before it has
+        /// touched the tree.
         /// </summary>
-        public void AddItem(IMapObject3d item)
+        public void ValidateForInsert(IMapObject3d item)
         {
             // route and range-check off the same reference point: the tree places items by
             // BoundingBox.Center (see OctreeNode.FindOctant), so that is what has to be
             // inside the world, not the item's Location which may not track the box.
             if (!WorldCube.Contains(item.BoundingBox.Center))
-                throw new ArgumentException($"{item.BoundingBox.Center} is outside the octree world cube {WorldCube}");
+                throw new ArgumentException($"{item.BoundingBox.Center} is outside the octree world cube {WorldCube}", nameof(item));
 
             if (item.ObjectTypes == 0)
-                throw new Exception("Object w/o properties is being added:");
+                throw new ArgumentException($"{item} has no object type flags set and could never be returned by a query", nameof(item));
+        }
+
+        /// <summary>
+        /// Adds an item to the octree, or re-places it if it is already present. The
+        /// operation always succeeds unless it throws ArgumentException: the item's
+        /// bounding-box centre is outside the world, or it has no object type bits set.
+        /// </summary>
+        public void AddItem(IMapObject3d item)
+        {
+            ValidateForInsert(item);
 
             if (_ObjectIndex.ContainsKey(item))
             {
@@ -153,7 +166,7 @@ namespace SpatialTrees
         /// <summary>
         /// Re-places an item after its position or size changed; if it was never tracked
         /// it is added. Same throwing contract as AddItem for an item now outside the
-        /// world.
+        /// world - and a rejected move leaves the item where it was, tree unchanged.
         /// </summary>
         public void MoveItem(IMapObject3d item)
         {
@@ -166,6 +179,10 @@ namespace SpatialTrees
                     // we are still in the same node spatially - nothing to do.
                     return;
                 }
+
+                // the item has to move. Reject an out-of-world / typeless target now,
+                // before detaching anything, so a failed move leaves the tree intact.
+                ValidateForInsert(item);
 
                 // still here? remove item entry from node list, then collapse any
                 // now-underfull ancestors before re-inserting from the top.
@@ -214,6 +231,11 @@ namespace SpatialTrees
             }
         }
 
+        /// <summary>
+        /// Removes every item from the tree. The world cube and MaxDepth are left as they
+        /// are - any Resize() calls stay in effect, since the enlarged world is still the
+        /// world; only the contents are cleared.
+        /// </summary>
         public void Clear()
         {
             _ObjectIndex.Clear();
