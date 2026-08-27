@@ -136,34 +136,73 @@ namespace SpatialTrees
                 {
                     Split();
 
-                    eOctant octant;
-
-                    foreach (var item in _NodeItems)
-                    {
-                        octant = FindOctant(_BoundingBox.Center, item.BoundingBox.Center);
-                        _Leaves[(int)octant].AddItem(item);
-                    }
-
+                    // redistribute existing items into the new leaves. An item whose
+                    // bounding box does not fit entirely inside a single child straddles
+                    // an octant boundary and has to stay on this node, so pull everything
+                    // off first and let RouteItem decide where each one lands.
+                    var items_to_route = new List<IMapObject3d>(_NodeItems);
                     _NodeItems.Clear();
 
-                    octant = FindOctant(_BoundingBox.Center, mapItem.BoundingBox.Center);
-                    _Leaves[(int)octant].AddItem(mapItem);
+                    foreach (var item in items_to_route)
+                        RouteItem(item);
+
+                    RouteItem(mapItem);
                 }
                 else
                 {
-                    _NodeItems.Add(mapItem);
-
-                    if (_Octree.ObjectIndex.ContainsKey(mapItem))
-                        _Octree.ObjectIndex[mapItem] = this;
-                    else
-                        _Octree.ObjectIndex.Add(mapItem, this);
+                    StoreItem(mapItem);
                 }
             }
             else
             {
-                eOctant octant = FindOctant(_BoundingBox.Center, mapItem.BoundingBox.Center);
-                _Leaves[(int)octant].AddItem(mapItem);
+                RouteItem(mapItem);
             }
+        }
+
+        /// <summary>
+        /// Routes an item into the child leaf that fully contains its bounding box. If no
+        /// single child contains it (the item straddles an octant boundary) the item is
+        /// stored on this node instead, so that collision queries touching only one of the
+        /// neighbouring octants still find it. Assumes this node has been split.
+        /// </summary>
+        public void RouteItem(IMapObject3d mapItem)
+        {
+            OctreeNode leaf = FindContainingLeaf(mapItem);
+
+            if (leaf == null)
+                StoreItem(mapItem);
+            else
+                leaf.AddItem(mapItem);
+        }
+
+        /// <summary>
+        /// Returns the child leaf whose bounding box fully contains the item's bounding
+        /// box, or null when the item straddles an octant boundary. Assumes this node
+        /// has been split.
+        /// </summary>
+        public OctreeNode FindContainingLeaf(IMapObject3d mapItem)
+        {
+            eOctant octant = FindOctant(_BoundingBox.Center, mapItem.BoundingBox.Center);
+            OctreeNode leaf = _Leaves[(int)octant];
+
+            if (leaf.BoundingBox.Contains(mapItem.BoundingBox))
+                return leaf;
+
+            return null;
+        }
+
+        /// <summary>
+        /// Stores an item directly on this node and points the tree's object index at
+        /// this node.
+        /// </summary>
+        public void StoreItem(IMapObject3d mapItem)
+        {
+            _NodeItems.Add(mapItem);
+
+            if (_Octree.ObjectIndex.ContainsKey(mapItem))
+                _Octree.ObjectIndex[mapItem] = this;
+            else
+                _Octree.ObjectIndex.Add(mapItem, this);
         }
 
         public void RemoveAllLeafItems(bool recursive)

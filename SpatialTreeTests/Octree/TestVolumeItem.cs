@@ -39,9 +39,20 @@ namespace SpatialTreesTests
 
         public Point3 Location { get; set; }
 
+        // Defaults to a 1x1x1 box centered on Location; override for items large enough to
+        // straddle an octant boundary.
+        public float Width { get; set; } = 1f;
+        public float Height { get; set; } = 1f;
+        public float Depth { get; set; } = 1f;
+
         public Cube BoundingBox
         {
-            get { return new Cube(Location.X - 0.5f, Location.Y - 0.5f, Location.Z - 0.5f, Location.X + 0.5f, Location.Y + 0.5f, Location.Z + 0.5f); }
+            get
+            {
+                return new Cube(
+                    Location.X - Width / 2f, Location.Y - Height / 2f, Location.Z - Depth / 2f,
+                    Location.X + Width / 2f, Location.Y + Height / 2f, Location.Z + Depth / 2f);
+            }
         }
 
         public TestVolumeItem() { }
@@ -50,6 +61,16 @@ namespace SpatialTreesTests
         {
             Name = name;
             Location = new Point3(x, y, z);
+            ObjectTypes = objectTypes;
+        }
+
+        public TestVolumeItem(string name, float x, float y, float z, float width, float height, float depth, int objectTypes)
+        {
+            Name = name;
+            Location = new Point3(x, y, z);
+            Width = width;
+            Height = height;
+            Depth = depth;
             ObjectTypes = objectTypes;
         }
     }
