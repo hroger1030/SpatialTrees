@@ -143,8 +143,9 @@ namespace SpatialTrees
             {
                 // already here, treat this as a move/update. Pull it out completely -
                 // both the node list and the object index - so the re-add below starts
-                // from a clean state instead of leaving a stale index entry.
-                RemoveItem(item);
+                // from a clean state instead of leaving a stale index entry. No collapse
+                // pass here: we are about to re-insert, so the item count is unchanged.
+                DetachItem(item);
             }
 
             return _TopNode.AddItem(item);
@@ -163,14 +164,16 @@ namespace SpatialTrees
 
                 if (current_node.BoundingBox.Contains(item.BoundingBox))
                 {
-                    // we are still in the same node spatially. 
+                    // we are still in the same node spatially.
                     return true;
                 }
                 else
                 {
-                    // still here? remove item entry from node list
+                    // still here? remove item entry from node list, then collapse any
+                    // now-underfull ancestors before re-inserting from the top.
                     _ObjectIndex.Remove(item);
                     current_node.NodeItems.Remove(item);
+                    current_node.CollapseUpward();
                 }
             }
 
@@ -180,12 +183,30 @@ namespace SpatialTrees
             return AddItem(item);
         }
 
+        /// <summary>
+        /// Removes an item from its node and the object index with no tree maintenance.
+        /// Used by the AddItem update path, which re-inserts the item straight away.
+        /// </summary>
+        public bool DetachItem(IMapObject2d item)
+        {
+            if (!_ObjectIndex.TryGetValue(item, out var node))
+                return false;
+
+            node.NodeItems.Remove(item);
+            _ObjectIndex.Remove(item);
+
+            return true;
+        }
+
         public bool RemoveItem(IMapObject2d item)
         {
-            if (_ObjectIndex.ContainsKey(item))
+            if (_ObjectIndex.TryGetValue(item, out var node))
             {
-                _ObjectIndex[item].NodeItems.Remove(item);
+                node.NodeItems.Remove(item);
                 _ObjectIndex.Remove(item);
+
+                // pull any ancestors that are now underfull back into a single leaf
+                node.CollapseUpward();
 
                 return true;
             }
@@ -201,7 +222,12 @@ namespace SpatialTrees
             _ObjectIndex.Clear();
 
             if (_TopNode != null)
+            {
                 _TopNode.RemoveAllLeafItems(true);
+
+                // drop the now-empty subdivision so the tree starts fresh
+                _TopNode.Collapse();
+            }
         }
 
         /// <summary>

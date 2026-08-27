@@ -63,6 +63,36 @@ namespace SpatialTreesTests
 
             Assert.That(result, Is.False);
         }
+
+        [Test]
+        public void RemoveItem_DroppingSubtreeToMaxObjects_CollapsesTheSplitNode()
+        {
+            var tree = new Octree(new Cube(0, 0, 0, 100, 100, 100), 5, 2);
+
+            var a = new TestVolumeItem("a", 10, 10, 10, (int)TestVolumeItem.Properties.Property1);
+            var b = new TestVolumeItem("b", 90, 10, 10, (int)TestVolumeItem.Properties.Property1);
+            var c = new TestVolumeItem("c", 10, 90, 10, (int)TestVolumeItem.Properties.Property1);
+            var d = new TestVolumeItem("d", 90, 90, 90, (int)TestVolumeItem.Properties.Property1);
+            tree.AddItem(a);
+            tree.AddItem(b);
+            tree.AddItem(c);
+            tree.AddItem(d); // 4th item splits the root
+
+            Assert.That(tree.TopNode.IsSplit, Is.True);
+
+            tree.RemoveItem(c); // 3 left - still over the limit
+            Assert.That(tree.TopNode.IsSplit, Is.True);
+
+            tree.RemoveItem(d); // 2 left - node collapses back to a leaf
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(tree.TopNode.IsSplit, Is.False);
+                Assert.That(tree.TopNode.NodeItems, Is.EquivalentTo(new[] { a, b }));
+                Assert.That(tree.ObjectIndex[a], Is.SameAs(tree.TopNode));
+                Assert.That(tree.ObjectIndex[b], Is.SameAs(tree.TopNode));
+            });
+        }
     }
 
     [TestFixture]
@@ -86,6 +116,26 @@ namespace SpatialTreesTests
                 Assert.That(tree.ObjectIndex, Is.Empty);
                 Assert.That(anyFound, Is.False);
                 Assert.That(itemsFound, Is.Empty);
+            });
+        }
+
+        [Test]
+        public void Clear_CollapsesTheSubdivisionBackToASingleLeaf()
+        {
+            var tree = new Octree(new Cube(0, 0, 0, 100, 100, 100), 5, 2);
+            tree.AddItem(new TestVolumeItem("a", 10, 10, 10, (int)TestVolumeItem.Properties.Property1));
+            tree.AddItem(new TestVolumeItem("b", 90, 10, 10, (int)TestVolumeItem.Properties.Property1));
+            tree.AddItem(new TestVolumeItem("c", 10, 90, 10, (int)TestVolumeItem.Properties.Property1));
+            tree.AddItem(new TestVolumeItem("d", 90, 90, 90, (int)TestVolumeItem.Properties.Property1)); // splits the root
+
+            Assert.That(tree.TopNode.IsSplit, Is.True);
+
+            tree.Clear();
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(tree.TopNode.IsSplit, Is.False);
+                Assert.That(tree.TopNode.GetChildObjectCount(), Is.EqualTo(0));
             });
         }
     }

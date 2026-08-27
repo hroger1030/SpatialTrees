@@ -44,6 +44,14 @@ namespace SpatialTrees
             get { return _NodeItems; }
         }
 
+        /// <summary>
+        /// True once this node has been subdivided into child quadrants.
+        /// </summary>
+        public bool IsSplit
+        {
+            get { return _Leaves != null; }
+        }
+
         public int Depth
         {
             get
@@ -325,6 +333,79 @@ namespace SpatialTrees
             }
 
             return total;
+        }
+
+        /// <summary>
+        /// Called after an item is removed from this node. Walks toward the root and
+        /// collapses the highest ancestor whose whole subtree now holds no more than
+        /// MaxNodeObjects items back into a single leaf, so the tree does not stay
+        /// permanently over-subdivided once items are taken back out of it.
+        /// </summary>
+        public void CollapseUpward()
+        {
+            QuadtreeNode cursor = this;
+            QuadtreeNode target = null;
+
+            while (cursor != null)
+            {
+                if (cursor._Leaves != null)
+                {
+                    // counts only grow as we move up, so once a node is over the limit
+                    // no ancestor of it can be collapsible either.
+                    if (cursor.GetChildObjectCount() <= _Quadtree.MaxNodeObjects)
+                        target = cursor;
+                    else
+                        break;
+                }
+
+                cursor = cursor._Parent;
+            }
+
+            target?.Collapse();
+        }
+
+        /// <summary>
+        /// Pulls every item held anywhere in this node's subtree up into this node and
+        /// discards the child leaves, turning this node back into a leaf.
+        /// </summary>
+        public void Collapse()
+        {
+            if (_Leaves == null)
+                return;
+
+            foreach (var leaf in _Leaves)
+            {
+                if (leaf != null)
+                    leaf.MergeInto(this);
+            }
+
+            _Leaves = null;
+        }
+
+        /// <summary>
+        /// Moves this node's items, and recursively its descendants', into 'ancestor',
+        /// repointing the tree's object index at 'ancestor' as it goes.
+        /// </summary>
+        public void MergeInto(QuadtreeNode ancestor)
+        {
+            foreach (var item in _NodeItems)
+            {
+                ancestor._NodeItems.Add(item);
+                _Quadtree.ObjectIndex[item] = ancestor;
+            }
+
+            _NodeItems.Clear();
+
+            if (_Leaves != null)
+            {
+                foreach (var leaf in _Leaves)
+                {
+                    if (leaf != null)
+                        leaf.MergeInto(ancestor);
+                }
+
+                _Leaves = null;
+            }
         }
 
         protected eQuadrant FindQuadrant(Point2 boundingBoxCenter, Point2 point)
