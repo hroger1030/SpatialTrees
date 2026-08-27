@@ -129,7 +129,9 @@ namespace SpatialTrees
 
             if (_Leaves == null)
             {
-                if (_NodeItems.Count > _Octree.MaxNodeObjects && this.Depth < _Octree.MaxDepth)
+                // split once this node is already holding MaxNodeObjects and another item
+                // is arriving - so a leaf tops out at exactly MaxNodeObjects, not Max + 1.
+                if (_NodeItems.Count >= _Octree.MaxNodeObjects && this.Depth < _Octree.MaxDepth)
                 {
                     Split();
 

@@ -39,8 +39,8 @@ namespace SpatialTreesTests
 
             tree.AddItem(upperRight);
             tree.AddItem(lowerRight);
-            tree.AddItem(lowerLeft);
-            tree.AddItem(upperLeft); // 4th item pushes count above maxObjects(2), triggering Split()
+            tree.AddItem(lowerLeft); // arrives with the node already at maxObjects(2), triggering Split()
+            tree.AddItem(upperLeft);
 
             Assert.Multiple(() =>
             {
@@ -107,8 +107,8 @@ namespace SpatialTreesTests
             var straddle = new TestItem("Straddle", 50, 50, 20f, 20f, (int)TestItem.Properties.Property1);
             tree.AddItem(new TestItem("A", 25, 25, (int)TestItem.Properties.Property1));
             tree.AddItem(new TestItem("B", 75, 25, (int)TestItem.Properties.Property1));
-            tree.AddItem(new TestItem("C", 25, 75, (int)TestItem.Properties.Property1));
-            tree.AddItem(straddle); // 4th item triggers Split()
+            tree.AddItem(new TestItem("C", 25, 75, (int)TestItem.Properties.Property1)); // triggers Split() (node was at maxObjects)
+            tree.AddItem(straddle); // routes into the split root; no child contains it, so it stays on the root
 
             Assert.Multiple(() =>
             {

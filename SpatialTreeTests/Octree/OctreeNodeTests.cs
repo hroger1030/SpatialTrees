@@ -62,6 +62,27 @@ namespace SpatialTreesTests
             Assert.Throws<Exception>(() => tree.TopNode.Split());
         }
 
+        // A leaf holds exactly MaxNodeObjects items; the next one triggers the split.
+        [Test]
+        public void AddItem_LeafFillsToMaxNodeObjectsThenSplitsOnTheNext()
+        {
+            var tree = new Octree(new Cube(0, 0, 0, 100, 100, 100), 5, 3);
+
+            tree.AddItem(new TestVolumeItem("1", 25, 25, 25, (int)TestVolumeItem.Properties.Property1));
+            tree.AddItem(new TestVolumeItem("2", 75, 25, 25, (int)TestVolumeItem.Properties.Property1));
+            tree.AddItem(new TestVolumeItem("3", 25, 75, 25, (int)TestVolumeItem.Properties.Property1));
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(tree.TopNode.IsSplit, Is.False);
+                Assert.That(tree.TopNode.NodeItems, Has.Count.EqualTo(3)); // exactly MaxNodeObjects, still a leaf
+            });
+
+            tree.AddItem(new TestVolumeItem("4", 75, 75, 75, (int)TestVolumeItem.Properties.Property1));
+
+            Assert.That(tree.TopNode.IsSplit, Is.True);
+        }
+
         [Test]
         public void Depth_RootNodeIsOne()
         {

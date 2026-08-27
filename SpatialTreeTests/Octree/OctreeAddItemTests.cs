@@ -103,8 +103,8 @@ namespace SpatialTreesTests
             tree.AddItem(upperLeftNear);
             tree.AddItem(upperRightFar);
             tree.AddItem(lowerRightFar);
-            tree.AddItem(lowerLeftFar);
-            tree.AddItem(upperLeftFar); // 8th item pushes count above maxObjects(6), triggering Split()
+            tree.AddItem(lowerLeftFar); // arrives with the node already at maxObjects(6), triggering Split()
+            tree.AddItem(upperLeftFar);
 
             Assert.Multiple(() =>
             {
@@ -161,9 +161,9 @@ namespace SpatialTreesTests
 
             tree.AddItem(new TestVolumeItem("a", 10, 10, 10, (int)TestVolumeItem.Properties.Property1));
             tree.AddItem(new TestVolumeItem("b", 90, 10, 10, (int)TestVolumeItem.Properties.Property1));
-            tree.AddItem(new TestVolumeItem("c", 10, 90, 10, (int)TestVolumeItem.Properties.Property1));
+            tree.AddItem(new TestVolumeItem("c", 10, 90, 10, (int)TestVolumeItem.Properties.Property1)); // splits the root (node was at maxObjects)
             var mover = new TestVolumeItem("mover", 90, 90, 90, (int)TestVolumeItem.Properties.Property1);
-            tree.AddItem(mover); // 4th item splits the root
+            tree.AddItem(mover);
 
             var firstNode = tree.ObjectIndex[mover];
 

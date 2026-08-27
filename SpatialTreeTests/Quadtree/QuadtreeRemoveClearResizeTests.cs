@@ -75,8 +75,8 @@ namespace SpatialTreesTests
             var d = new TestItem("d", 90, 90, (int)TestItem.Properties.Property1);
             tree.AddItem(a);
             tree.AddItem(b);
-            tree.AddItem(c);
-            tree.AddItem(d); // 4th item splits the root
+            tree.AddItem(c); // splits the root (node was at maxObjects)
+            tree.AddItem(d);
 
             Assert.That(tree.TopNode.IsSplit, Is.True);
 

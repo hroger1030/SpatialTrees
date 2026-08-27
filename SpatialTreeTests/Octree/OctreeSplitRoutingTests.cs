@@ -47,8 +47,8 @@ namespace SpatialTreesTests
             tree.AddItem(upperLeftNear);
             tree.AddItem(upperRightFar);
             tree.AddItem(lowerRightFar);
-            tree.AddItem(lowerLeftFar);
-            tree.AddItem(upperLeftFar); // 8th item pushes count above maxObjects(6), triggering Split()
+            tree.AddItem(lowerLeftFar); // arrives with the node already at maxObjects(6), triggering Split()
+            tree.AddItem(upperLeftFar);
 
             Assert.Multiple(() =>
             {
