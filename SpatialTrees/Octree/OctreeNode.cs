@@ -32,11 +32,6 @@ namespace SpatialTrees
         public OctreeNode Parent { get; protected set; }
         public OctreeNode[] Leaves { get; protected set; }
         public Cube BoundingBox { get; protected set; }
-        // items held directly on this node. A List (not a HashSet): iteration during
-        // collision queries is the hot path and wins from contiguous storage; duplicate
-        // inserts are already prevented by the ContainsKey guard in Octree.AddItem and
-        // the Contains guard in AddItem below. Null until the first item is stored here -
-        // most interior nodes never hold anything directly, so the allocation is deferred.
         public List<IMapObject3d> NodeItems { get; protected set; }
         public int Depth { get; protected set; }
 
@@ -45,11 +40,9 @@ namespace SpatialTrees
         // so CollapseUpward does not have to re-walk the subtree on every remove.
         public int SubtreeCount { get; protected set; }
 
-        // bounding-box centre, cached as scalars at construction so routing does not
-        // allocate a Point3 (Cube.Center) on every level of every insert.
-        public float CenterX { get; protected set; }
-        public float CenterY { get; protected set; }
-        public float CenterZ { get; protected set; }
+        // bounding-box centre, cached at construction so routing does not recompute it
+        // on every level of every insert.
+        public Point3 Center { get; protected set; }
 
         public bool IsSplit
         {
@@ -89,9 +82,7 @@ namespace SpatialTrees
             Depth = (parent == null) ? 1 : parent.Depth + 1;
             Leaves = null;
             BoundingBox = bounding_box;
-            CenterX = (bounding_box.X1 + bounding_box.X2) * 0.5f;
-            CenterY = (bounding_box.Y1 + bounding_box.Y2) * 0.5f;
-            CenterZ = (bounding_box.Z1 + bounding_box.Z2) * 0.5f;
+            Center = bounding_box.Center;
             // NodeItems stays null until StoreItem actually puts something here
         }
 
@@ -195,12 +186,7 @@ namespace SpatialTrees
         /// </summary>
         public OctreeNode FindContainingLeaf(Cube itemBox)
         {
-            // item centre as scalars - matches Cube.Center without the allocation
-            float itemCenterX = (itemBox.X1 + itemBox.X2) * 0.5f;
-            float itemCenterY = (itemBox.Y1 + itemBox.Y2) * 0.5f;
-            float itemCenterZ = (itemBox.Z1 + itemBox.Z2) * 0.5f;
-
-            eOctant octant = FindOctant(itemCenterX, itemCenterY, itemCenterZ);
+            eOctant octant = FindOctant(Center, itemBox.Center);
             OctreeNode leaf = Leaves[(int)octant];
 
             if (leaf.BoundingBox.Contains(itemBox))
@@ -405,7 +391,7 @@ namespace SpatialTrees
 
             float x1 = BoundingBox.X1, y1 = BoundingBox.Y1, z1 = BoundingBox.Z1;
             float x2 = BoundingBox.X2, y2 = BoundingBox.Y2, z2 = BoundingBox.Z2;
-            float cx = CenterX, cy = CenterY, cz = CenterZ;
+            float cx = Center.X, cy = Center.Y, cz = Center.Z;
 
             Leaves[(int)eOctant.UpperRightNear] = new OctreeNode(Octree, this, new Cube(cx, y1, z1, x2, cy, cz));
             Leaves[(int)eOctant.LowerRightNear] = new OctreeNode(Octree, this, new Cube(cx, cy, z1, x2, y2, cz));
@@ -503,25 +489,24 @@ namespace SpatialTrees
         }
 
         /// <summary>
-        /// Which child octant the point (px, py, pz) falls in, relative to this node's
-        /// cached centre. Takes scalars rather than a Point3 so the hot routing path
-        /// stays allocation-free.
+        /// Which child octant <paramref name="point"/> falls in, relative to
+        /// <paramref name="nodeCenter"/> (this node's cached centre).
         /// </summary>
-        protected eOctant FindOctant(float px, float py, float pz)
+        protected static eOctant FindOctant(Point3 nodeCenter, Point3 point)
         {
-            if (px > CenterX)
+            if (point.X > nodeCenter.X)
             {
-                if (py > CenterY)
-                    return pz > CenterZ ? eOctant.LowerRightFar : eOctant.LowerRightNear;
+                if (point.Y > nodeCenter.Y)
+                    return point.Z > nodeCenter.Z ? eOctant.LowerRightFar : eOctant.LowerRightNear;
                 else
-                    return pz > CenterZ ? eOctant.UpperRightFar : eOctant.UpperRightNear;
+                    return point.Z > nodeCenter.Z ? eOctant.UpperRightFar : eOctant.UpperRightNear;
             }
             else
             {
-                if (py > CenterY)
-                    return pz > CenterZ ? eOctant.LowerLeftFar : eOctant.LowerLeftNear;
+                if (point.Y > nodeCenter.Y)
+                    return point.Z > nodeCenter.Z ? eOctant.LowerLeftFar : eOctant.LowerLeftNear;
                 else
-                    return pz > CenterZ ? eOctant.UpperLeftFar : eOctant.UpperLeftNear;
+                    return point.Z > nodeCenter.Z ? eOctant.UpperLeftFar : eOctant.UpperLeftNear;
             }
         }
 

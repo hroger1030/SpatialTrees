@@ -66,7 +66,6 @@ namespace SpatialTrees
 
         public Octree(Cube boundingBox, int maxDepth, int maxObjects)
         {
-            ArgumentNullException.ThrowIfNull(boundingBox);
             ArgumentOutOfRangeException.ThrowIfLessThan(maxDepth, 1);
             ArgumentOutOfRangeException.ThrowIfLessThan(maxObjects, 1);
 

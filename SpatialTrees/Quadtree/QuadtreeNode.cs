@@ -45,10 +45,9 @@ namespace SpatialTrees
         // so CollapseUpward does not have to re-walk the subtree on every remove.
         public int SubtreeCount { get; protected set; }
 
-        // bounding-box centre, cached as scalars at construction so routing does not
-        // allocate a Point2 (Rectangle.Center) on every level of every insert.
-        public float CenterX { get; protected set; }
-        public float CenterY { get; protected set; }
+        // bounding-box centre, cached at construction so routing does not recompute it
+        // on every level of every insert.
+        public Point2 Center { get; protected set; }
 
         /// <summary>
         /// True once this node has been subdivided into child quadrants.
@@ -91,8 +90,7 @@ namespace SpatialTrees
             Depth = (parent == null) ? 1 : parent.Depth + 1;
             Leaves = null;
             BoundingBox = bounding_box;
-            CenterX = (bounding_box.Left + bounding_box.Right) * 0.5f;
-            CenterY = (bounding_box.Top + bounding_box.Bottom) * 0.5f;
+            Center = bounding_box.Center;
             // NodeItems stays null until StoreItem actually puts something here
         }
 
@@ -196,11 +194,7 @@ namespace SpatialTrees
         /// </summary>
         public QuadtreeNode FindContainingLeaf(Rectangle itemBox)
         {
-            // item centre as scalars - matches Rectangle.Center without the allocation
-            float itemCenterX = (itemBox.Left + itemBox.Right) * 0.5f;
-            float itemCenterY = (itemBox.Top + itemBox.Bottom) * 0.5f;
-
-            eQuadrant quadrant = FindQuadrant(itemCenterX, itemCenterY);
+            eQuadrant quadrant = FindQuadrant(Center, itemBox.Center);
             QuadtreeNode leaf = Leaves[(int)quadrant];
 
             if (leaf.BoundingBox.Contains(itemBox))
@@ -406,9 +400,9 @@ namespace SpatialTrees
             float new_width = BoundingBox.Width / 2;
             float new_height = BoundingBox.Height / 2;
 
-            Leaves[(int)eQuadrant.UpperRightQuadrant] = new QuadtreeNode(Quadtree, this, new Rectangle(CenterX, BoundingBox.Top, new_width, new_height));
-            Leaves[(int)eQuadrant.LowerRightQuadrant] = new QuadtreeNode(Quadtree, this, new Rectangle(CenterX, CenterY, new_width, new_height));
-            Leaves[(int)eQuadrant.LowerLeftQuadrant] = new QuadtreeNode(Quadtree, this, new Rectangle(BoundingBox.Left, CenterY, new_width, new_height));
+            Leaves[(int)eQuadrant.UpperRightQuadrant] = new QuadtreeNode(Quadtree, this, new Rectangle(Center.X, BoundingBox.Top, new_width, new_height));
+            Leaves[(int)eQuadrant.LowerRightQuadrant] = new QuadtreeNode(Quadtree, this, new Rectangle(Center.X, Center.Y, new_width, new_height));
+            Leaves[(int)eQuadrant.LowerLeftQuadrant] = new QuadtreeNode(Quadtree, this, new Rectangle(BoundingBox.Left, Center.Y, new_width, new_height));
             Leaves[(int)eQuadrant.UpperLeftQuadrant] = new QuadtreeNode(Quadtree, this, new Rectangle(BoundingBox.Left, BoundingBox.Top, new_width, new_height));
         }
 
@@ -498,22 +492,21 @@ namespace SpatialTrees
         }
 
         /// <summary>
-        /// Which child quadrant the point (px, py) falls in, relative to this node's
-        /// cached centre. Takes scalars rather than a Point2 so the hot routing path
-        /// stays allocation-free.
+        /// Which child quadrant <paramref name="point"/> falls in, relative to
+        /// <paramref name="nodeCenter"/> (this node's cached centre).
         /// </summary>
-        protected eQuadrant FindQuadrant(float px, float py)
+        protected static eQuadrant FindQuadrant(Point2 nodeCenter, Point2 point)
         {
-            if (px > CenterX)
+            if (point.X > nodeCenter.X)
             {
-                if (py > CenterY)
+                if (point.Y > nodeCenter.Y)
                     return eQuadrant.LowerRightQuadrant;
                 else
                     return eQuadrant.UpperRightQuadrant;
             }
             else
             {
-                if (py > CenterY)
+                if (point.Y > nodeCenter.Y)
                     return eQuadrant.LowerLeftQuadrant;
                 else
                     return eQuadrant.UpperLeftQuadrant;

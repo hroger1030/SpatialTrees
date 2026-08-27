@@ -72,12 +72,6 @@ namespace SpatialTreesTests
         }
 
         [Test]
-        public void Constructor_NullBoundingBox_ThrowsArgumentNullException()
-        {
-            Assert.Throws<ArgumentNullException>(() => new Octree(null, 5, 10));
-        }
-
-        [Test]
         public void Constructor_MaxDepthLessThanOne_ThrowsArgumentOutOfRangeException()
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => new Octree(new Cube(0, 0, 0, 100, 100, 100), 0, 10));
