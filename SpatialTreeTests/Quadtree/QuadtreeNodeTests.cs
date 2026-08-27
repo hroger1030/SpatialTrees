@@ -107,5 +107,23 @@ namespace SpatialTreesTests
                 Assert.Throws<NullReferenceException>(() => { var _ = tree.TopNode[(int)eQuadrant.UpperRightQuadrant]; });
             });
         }
+
+        // Guards against re-introducing a broken value-equality override: nodes and
+        // trees use reference identity, so different instances are never "equal".
+        [Test]
+        public void Equality_UsesReferenceIdentity_NotBoundingBox()
+        {
+            var a = new Quadtree(new Rectangle(0, 0, 100, 100), 5, 10);
+            var b = new Quadtree(new Rectangle(0, 0, 100, 100), 5, 10);
+            b.AddItem(new TestItem("only-in-b", 10, 10, (int)TestItem.Properties.Property1));
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(a.Equals(b), Is.False);          // same world, different contents
+                Assert.That(a.Equals(a), Is.True);
+                Assert.That(a.TopNode.Equals(b.TopNode), Is.False);
+                Assert.That(a.TopNode.Equals(a.TopNode), Is.True);
+            });
+        }
     }
 }

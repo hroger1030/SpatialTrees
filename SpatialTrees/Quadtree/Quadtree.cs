@@ -261,26 +261,6 @@ namespace SpatialTrees
             return (itemsFound.Count > 0);
         }
 
-        public override bool Equals(object obj)
-        {
-            if (obj is null) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (GetType() != obj.GetType()) return false;
-
-            var new_obj = (Quadtree)obj;
-            return Equals(new_obj);
-        }
-
-        public bool Equals(Quadtree obj)
-        {
-            return _TopNode.Equals(obj._TopNode);
-        }
-
-        public override int GetHashCode()
-        {
-            return _TopNode.GetHashCode();
-        }
-
         public override string ToString()
         {
             return $"Quadtree {WorldRectangle.Width} x {WorldRectangle.Height}, {_ObjectIndex.Count} items";

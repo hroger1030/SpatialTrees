@@ -111,5 +111,23 @@ namespace SpatialTreesTests
                 Assert.Throws<NullReferenceException>(() => { var _ = tree.TopNode[(int)eOctant.UpperRightNear]; });
             });
         }
+
+        // Guards against re-introducing a broken value-equality override: nodes and
+        // trees use reference identity, so different instances are never "equal".
+        [Test]
+        public void Equality_UsesReferenceIdentity_NotBoundingBox()
+        {
+            var a = new Octree(new Cube(0, 0, 0, 100, 100, 100), 5, 10);
+            var b = new Octree(new Cube(0, 0, 0, 100, 100, 100), 5, 10);
+            b.AddItem(new TestVolumeItem("only-in-b", 10, 10, 10, (int)TestVolumeItem.Properties.Property1));
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(a.Equals(b), Is.False);          // same world, different contents
+                Assert.That(a.Equals(a), Is.True);
+                Assert.That(a.TopNode.Equals(b.TopNode), Is.False);
+                Assert.That(a.TopNode.Equals(a.TopNode), Is.True);
+            });
+        }
     }
 }

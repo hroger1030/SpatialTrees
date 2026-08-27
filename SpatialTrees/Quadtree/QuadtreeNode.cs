@@ -440,26 +440,6 @@ namespace SpatialTrees
             }
         }
 
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (GetType() != obj.GetType()) return false;
-
-            var new_obj = (QuadtreeNode)obj;
-            return Equals(new_obj);
-        }
-
-        public bool Equals(QuadtreeNode obj)
-        {
-            return GetHashCode() == obj.GetHashCode();
-        }
-
-        public override int GetHashCode()
-        {
-            return _BoundingBox.GetHashCode();
-        }
-
         public override string ToString()
         {
             return $"Node depth: {Depth}, Center: {_BoundingBox.Center}, {GetChildObjectCount()} items";
