@@ -33,6 +33,7 @@ namespace SpatialTrees
         protected QuadtreeNode[] _Leaves;
         protected Rectangle _BoundingBox;
         protected HashSet<IMapObject2d> _NodeItems;
+        protected int _Depth;
 
         public Rectangle BoundingBox
         {
@@ -52,21 +53,13 @@ namespace SpatialTrees
             get { return _Leaves != null; }
         }
 
+        /// <summary>
+        /// Depth of this node, root = 1. Cached at construction (and re-stamped by
+        /// Reparent) rather than walked to the root on every access.
+        /// </summary>
         public int Depth
         {
-            get
-            {
-                int depth = 1;
-                QuadtreeNode current_node = this;
-
-                while (current_node._Parent != null)
-                {
-                    current_node = current_node._Parent;
-                    depth++;
-                }
-
-                return depth;
-            }
+            get { return _Depth; }
         }
 
         public QuadtreeNode this[int i]
@@ -99,9 +92,30 @@ namespace SpatialTrees
         {
             _Quadtree = quadtree;
             _Parent = parent;
+            _Depth = (parent == null) ? 1 : parent._Depth + 1;
             _Leaves = null;
             _BoundingBox = bounding_box;
             _NodeItems = new HashSet<IMapObject2d>();
+        }
+
+        /// <summary>
+        /// Re-attaches this node under a new parent and re-stamps the cached depth of
+        /// this node and its whole subtree. Used by Quadtree.Resize, which pushes the
+        /// old root down a level under a new top node.
+        /// </summary>
+        public void Reparent(QuadtreeNode parent)
+        {
+            _Parent = parent;
+            _Depth = (parent == null) ? 1 : parent._Depth + 1;
+
+            if (_Leaves != null)
+            {
+                foreach (var leaf in _Leaves)
+                {
+                    if (leaf != null)
+                        leaf.Reparent(this);
+                }
+            }
         }
 
         /// <summary>

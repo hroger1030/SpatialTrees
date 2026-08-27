@@ -117,8 +117,10 @@ namespace SpatialTrees
             // Generate new leaves
             _TopNode.Split();
 
-            // replace old branches
+            // replace old branches, then fix up the old subtree's parent link and its
+            // now-stale cached depths (everything below it just dropped a level)
             _TopNode[(int)eQuadrant.UpperLeftQuadrant] = old_top_node;
+            old_top_node.Reparent(_TopNode);
 
             return true;
         }

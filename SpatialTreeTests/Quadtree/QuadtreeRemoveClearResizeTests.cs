@@ -212,5 +212,30 @@ namespace SpatialTreesTests
 
             Assert.That(itemsFound, Does.Contain(item));
         }
+
+        [Test]
+        public void Resize_RestampsCachedDepthOfThePushedDownSubtree()
+        {
+            var tree = new Quadtree(new Rectangle(0, 0, 100, 100), 5, 2);
+            tree.AddItem(new TestItem("a", 10, 10, (int)TestItem.Properties.Property1));
+            tree.AddItem(new TestItem("b", 90, 10, (int)TestItem.Properties.Property1));
+            tree.AddItem(new TestItem("c", 10, 90, (int)TestItem.Properties.Property1));
+            tree.AddItem(new TestItem("d", 90, 90, (int)TestItem.Properties.Property1)); // splits the root
+
+            var oldRoot = tree.TopNode;
+            var oldChild = tree.TopNode[(int)eQuadrant.UpperRightQuadrant];
+            Assert.That(oldRoot.Depth, Is.EqualTo(1));
+            Assert.That(oldChild.Depth, Is.EqualTo(2));
+
+            tree.Resize();
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(tree.TopNode.Depth, Is.EqualTo(1));
+                Assert.That(tree.TopNode[(int)eQuadrant.UpperLeftQuadrant], Is.SameAs(oldRoot));
+                Assert.That(oldRoot.Depth, Is.EqualTo(2)); // was 1, dropped a level
+                Assert.That(oldChild.Depth, Is.EqualTo(3)); // was 2, dropped a level
+            });
+        }
     }
 }
