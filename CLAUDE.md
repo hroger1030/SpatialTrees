@@ -15,6 +15,7 @@ This repository contains a .NET solution for experimenting with a geometry libra
 
 - SpatialTrees
 - SpatialTreeTests
+- BenchMarks - BenchmarkDotNet perf suite. Run in Release: `dotnet run -c Release --project BenchMarks -- --filter *Quadtree*`. See BenchMarks/README.md.
 
 Other libraries can be examines, but not altered without explicit permission.
 

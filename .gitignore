@@ -25,6 +25,9 @@ x86/
 *.VisualState.xml
 TestResult.xml
 
+# BenchmarkDotNet output
+BenchmarkDotNet.Artifacts/
+
 # NuGet
 *.nupkg
 *.nuget.props

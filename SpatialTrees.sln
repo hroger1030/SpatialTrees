@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
-VisualStudioVersion = 18.8.12023.21 stable
+VisualStudioVersion = 18.8.12023.21
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SpatialTrees", "SpatialTrees\SpatialTrees.csproj", "{7B91275D-1FAF-45F4-8D48-27A03938DAFE}"
 EndProject
@@ -18,6 +18,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Files", "Solution 
 		LICENSE.txt = LICENSE.txt
 		README.md = README.md
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BenchMarks", "BenchMarks\BenchMarks.csproj", "{2311A35A-630F-8D56-15CD-BBB525570F8F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -167,6 +169,38 @@ Global
 		{035DED20-958B-46E4-A1FE-40DD12E843E4}.ReleaseSnk|Mixed Platforms.Build.0 = Release|Any CPU
 		{035DED20-958B-46E4-A1FE-40DD12E843E4}.ReleaseSnk|x86.ActiveCfg = Release|Any CPU
 		{035DED20-958B-46E4-A1FE-40DD12E843E4}.ReleaseSnk|x86.Build.0 = Release|Any CPU
+		{2311A35A-630F-8D56-15CD-BBB525570F8F}.Debug|.NET.ActiveCfg = Debug|Any CPU
+		{2311A35A-630F-8D56-15CD-BBB525570F8F}.Debug|.NET.Build.0 = Debug|Any CPU
+		{2311A35A-630F-8D56-15CD-BBB525570F8F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2311A35A-630F-8D56-15CD-BBB525570F8F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2311A35A-630F-8D56-15CD-BBB525570F8F}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{2311A35A-630F-8D56-15CD-BBB525570F8F}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{2311A35A-630F-8D56-15CD-BBB525570F8F}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{2311A35A-630F-8D56-15CD-BBB525570F8F}.Debug|x86.Build.0 = Debug|Any CPU
+		{2311A35A-630F-8D56-15CD-BBB525570F8F}.DebugSnk|.NET.ActiveCfg = Debug|Any CPU
+		{2311A35A-630F-8D56-15CD-BBB525570F8F}.DebugSnk|.NET.Build.0 = Debug|Any CPU
+		{2311A35A-630F-8D56-15CD-BBB525570F8F}.DebugSnk|Any CPU.ActiveCfg = Debug|Any CPU
+		{2311A35A-630F-8D56-15CD-BBB525570F8F}.DebugSnk|Any CPU.Build.0 = Debug|Any CPU
+		{2311A35A-630F-8D56-15CD-BBB525570F8F}.DebugSnk|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{2311A35A-630F-8D56-15CD-BBB525570F8F}.DebugSnk|Mixed Platforms.Build.0 = Debug|Any CPU
+		{2311A35A-630F-8D56-15CD-BBB525570F8F}.DebugSnk|x86.ActiveCfg = Debug|Any CPU
+		{2311A35A-630F-8D56-15CD-BBB525570F8F}.DebugSnk|x86.Build.0 = Debug|Any CPU
+		{2311A35A-630F-8D56-15CD-BBB525570F8F}.Release|.NET.ActiveCfg = Release|Any CPU
+		{2311A35A-630F-8D56-15CD-BBB525570F8F}.Release|.NET.Build.0 = Release|Any CPU
+		{2311A35A-630F-8D56-15CD-BBB525570F8F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2311A35A-630F-8D56-15CD-BBB525570F8F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2311A35A-630F-8D56-15CD-BBB525570F8F}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{2311A35A-630F-8D56-15CD-BBB525570F8F}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{2311A35A-630F-8D56-15CD-BBB525570F8F}.Release|x86.ActiveCfg = Release|Any CPU
+		{2311A35A-630F-8D56-15CD-BBB525570F8F}.Release|x86.Build.0 = Release|Any CPU
+		{2311A35A-630F-8D56-15CD-BBB525570F8F}.ReleaseSnk|.NET.ActiveCfg = Release|Any CPU
+		{2311A35A-630F-8D56-15CD-BBB525570F8F}.ReleaseSnk|.NET.Build.0 = Release|Any CPU
+		{2311A35A-630F-8D56-15CD-BBB525570F8F}.ReleaseSnk|Any CPU.ActiveCfg = Release|Any CPU
+		{2311A35A-630F-8D56-15CD-BBB525570F8F}.ReleaseSnk|Any CPU.Build.0 = Release|Any CPU
+		{2311A35A-630F-8D56-15CD-BBB525570F8F}.ReleaseSnk|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{2311A35A-630F-8D56-15CD-BBB525570F8F}.ReleaseSnk|Mixed Platforms.Build.0 = Release|Any CPU
+		{2311A35A-630F-8D56-15CD-BBB525570F8F}.ReleaseSnk|x86.ActiveCfg = Release|Any CPU
+		{2311A35A-630F-8D56-15CD-BBB525570F8F}.ReleaseSnk|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
