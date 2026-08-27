@@ -119,13 +119,14 @@ namespace SpatialTrees
         }
 
         /// <summary>
-        /// Attempts to add an item to the quadtree. Returns true if the item was added,
-        /// false if the item faild to be added.
+        /// Adds an item into this node's subtree. A caller-facing failure (item outside
+        /// the world, no object type) is a thrown exception from Quadtree.AddItem, not a
+        /// return value; a node that already holds the item just ignores the call.
         /// </summary>
-        public bool AddItem(IMapObject2d mapItem)
+        public void AddItem(IMapObject2d mapItem)
         {
             if (_NodeItems.Contains(mapItem))
-                return false;
+                return;
 
             if (_Leaves == null)
             {
@@ -151,12 +152,10 @@ namespace SpatialTrees
                 {
                     StoreItem(mapItem);
                 }
-
-                return true;
             }
             else
             {
-                return RouteItem(mapItem);
+                RouteItem(mapItem);
             }
         }
 
@@ -166,17 +165,14 @@ namespace SpatialTrees
         /// stored on this node instead, so that collision queries touching only one of the
         /// neighbouring quadrants still find it. Assumes this node has been split.
         /// </summary>
-        public bool RouteItem(IMapObject2d mapItem)
+        public void RouteItem(IMapObject2d mapItem)
         {
             QuadtreeNode leaf = FindContainingLeaf(mapItem);
 
             if (leaf == null)
-            {
                 StoreItem(mapItem);
-                return true;
-            }
-
-            return leaf.AddItem(mapItem);
+            else
+                leaf.AddItem(mapItem);
         }
 
         /// <summary>

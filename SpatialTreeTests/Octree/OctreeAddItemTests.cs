@@ -37,17 +37,13 @@ namespace SpatialTreesTests
         }
 
         [Test]
-        public void AddItem_ValidItem_ReturnsTrueAndIsIndexed()
+        public void AddItem_ValidItem_IsIndexed()
         {
             var item = new TestVolumeItem("A", 10, 10, 10, (int)TestVolumeItem.Properties.Property1);
 
-            var result = _Octree.AddItem(item);
+            _Octree.AddItem(item);
 
-            Assert.Multiple(() =>
-            {
-                Assert.That(result, Is.True);
-                Assert.That(_Octree.ObjectIndex.ContainsKey(item), Is.True);
-            });
+            Assert.That(_Octree.ObjectIndex.ContainsKey(item), Is.True);
         }
 
         [Test]
@@ -132,11 +128,9 @@ namespace SpatialTreesTests
                 BoundingBox = new Cube(49, 49, 49, 51, 51, 51),        // center well inside it
             };
 
-            Assert.Multiple(() =>
-            {
-                Assert.That(_Octree.AddItem(item), Is.True);
-                Assert.That(_Octree.ObjectIndex.ContainsKey(item), Is.True);
-            });
+            _Octree.AddItem(item);
+
+            Assert.That(_Octree.ObjectIndex.ContainsKey(item), Is.True);
         }
 
         [Test]

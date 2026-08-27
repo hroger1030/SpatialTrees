@@ -101,7 +101,7 @@ namespace SpatialTrees
         /// Resizes world by adding a new top level node. Calling this will increase volume by 8x.
         /// Old top node becomes the upper left near node, since the cube keeps its X1,Y1,Z1 corner fixed.
         /// </summary>
-        public bool Resize()
+        public void Resize()
         {
             // create new bounding box. note cube keeps its X1,Y1,Z1 corner and grows along X2,Y2,Z2
             var new_boundingbox = new Cube(_TopNode.BoundingBox * 2);
@@ -120,15 +120,14 @@ namespace SpatialTrees
             // now-stale cached depths (everything below it just dropped a level)
             _TopNode[(int)eOctant.UpperLeftNear] = old_top_node;
             old_top_node.Reparent(_TopNode);
-
-            return true;
         }
 
         /// <summary>
-        /// Attempts to add an item to the octree. Returns true if the item was added,
-        /// false if the item faild to be added.
+        /// Adds an item to the octree, or re-places it if it is already present. The
+        /// operation always succeeds unless it throws: ArgumentException if the item's
+        /// bounding-box centre is outside the world, Exception if it has no object type.
         /// </summary>
-        public bool AddItem(IMapObject3d item)
+        public void AddItem(IMapObject3d item)
         {
             // route and range-check off the same reference point: the tree places items by
             // BoundingBox.Center (see OctreeNode.FindOctant), so that is what has to be
@@ -148,15 +147,15 @@ namespace SpatialTrees
                 DetachItem(item);
             }
 
-            return _TopNode.AddItem(item);
+            _TopNode.AddItem(item);
         }
 
         /// <summary>
-        /// Moves item in tree. Does checks for collisions. This can be called if the
-        /// bounding box has changed in size, too. Returns true if item was moved,
-        /// false if item could not be moved.
+        /// Re-places an item after its position or size changed; if it was never tracked
+        /// it is added. Same throwing contract as AddItem for an item now outside the
+        /// world.
         /// </summary>
-        public bool MoveItem(IMapObject3d item)
+        public void MoveItem(IMapObject3d item)
         {
             if (_ObjectIndex.ContainsKey(item))
             {
@@ -164,23 +163,21 @@ namespace SpatialTrees
 
                 if (current_node.BoundingBox.Contains(item.BoundingBox))
                 {
-                    // we are still in the same node spatially.
-                    return true;
+                    // we are still in the same node spatially - nothing to do.
+                    return;
                 }
-                else
-                {
-                    // still here? remove item entry from node list, then collapse any
-                    // now-underfull ancestors before re-inserting from the top.
-                    _ObjectIndex.Remove(item);
-                    current_node.NodeItems.Remove(item);
-                    current_node.CollapseUpward();
-                }
+
+                // still here? remove item entry from node list, then collapse any
+                // now-underfull ancestors before re-inserting from the top.
+                _ObjectIndex.Remove(item);
+                current_node.NodeItems.Remove(item);
+                current_node.CollapseUpward();
             }
 
             // no longer fits or never existed. Yank it out and start from top.
             // cant assume that just going up a level in the tree is going to fit
             // as current bounding box may be way different than prior one.
-            return AddItem(item);
+            AddItem(item);
         }
 
         /// <summary>

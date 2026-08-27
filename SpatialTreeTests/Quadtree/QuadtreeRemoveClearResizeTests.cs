@@ -187,11 +187,10 @@ namespace SpatialTreesTests
         {
             var tree = new Quadtree(new Rectangle(0, 0, 100, 100), 5, 10);
 
-            var result = tree.Resize();
+            tree.Resize();
 
             Assert.Multiple(() =>
             {
-                Assert.That(result, Is.True);
                 Assert.That(tree.WorldRectangle.Width, Is.EqualTo(200f));
                 Assert.That(tree.WorldRectangle.Height, Is.EqualTo(200f));
                 Assert.That(tree.MaxDepth, Is.EqualTo(6));

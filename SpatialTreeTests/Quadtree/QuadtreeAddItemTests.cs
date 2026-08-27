@@ -37,17 +37,13 @@ namespace SpatialTreesTests
         }
 
         [Test]
-        public void AddItem_ValidItem_ReturnsTrueAndIsIndexed()
+        public void AddItem_ValidItem_IsIndexed()
         {
             var item = new TestItem("A", 10, 10, (int)TestItem.Properties.Property1);
 
-            var result = _Quadtree.AddItem(item);
+            _Quadtree.AddItem(item);
 
-            Assert.Multiple(() =>
-            {
-                Assert.That(result, Is.True);
-                Assert.That(_Quadtree.ObjectIndex.ContainsKey(item), Is.True);
-            });
+            Assert.That(_Quadtree.ObjectIndex.ContainsKey(item), Is.True);
         }
 
         [Test]
@@ -120,11 +116,9 @@ namespace SpatialTreesTests
                 BoundingBox = new Rectangle(new Point2(50, 50), 2f, 2f),  // center well inside it
             };
 
-            Assert.Multiple(() =>
-            {
-                Assert.That(_Quadtree.AddItem(item), Is.True);
-                Assert.That(_Quadtree.ObjectIndex.ContainsKey(item), Is.True);
-            });
+            _Quadtree.AddItem(item);
+
+            Assert.That(_Quadtree.ObjectIndex.ContainsKey(item), Is.True);
         }
 
         [Test]

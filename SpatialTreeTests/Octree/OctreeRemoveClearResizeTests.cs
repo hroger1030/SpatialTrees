@@ -149,11 +149,10 @@ namespace SpatialTreesTests
         {
             var tree = new Octree(new Cube(0, 0, 0, 100, 100, 100), 5, 10);
 
-            var result = tree.Resize();
+            tree.Resize();
 
             Assert.Multiple(() =>
             {
-                Assert.That(result, Is.True);
                 Assert.That(tree.WorldCube.Width, Is.EqualTo(200f));
                 Assert.That(tree.WorldCube.Height, Is.EqualTo(200f));
                 Assert.That(tree.WorldCube.Depth, Is.EqualTo(200f));

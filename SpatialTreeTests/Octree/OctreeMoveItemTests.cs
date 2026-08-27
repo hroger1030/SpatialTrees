@@ -41,32 +41,24 @@ namespace SpatialTreesTests
         {
             var item = new TestVolumeItem("Fresh", 10, 10, 10, (int)TestVolumeItem.Properties.Property1);
 
-            var result = _Octree.MoveItem(item);
+            _Octree.MoveItem(item);
 
-            Assert.Multiple(() =>
-            {
-                Assert.That(result, Is.True);
-                Assert.That(_Octree.ObjectIndex.ContainsKey(item), Is.True);
-            });
+            Assert.That(_Octree.ObjectIndex.ContainsKey(item), Is.True);
         }
 
         [Test]
-        public void MoveItem_WithinSameNode_ReturnsTrueAndIsFindableAtNewLocation()
+        public void MoveItem_WithinSameNode_IsFindableAtNewLocation()
         {
             var item = new TestVolumeItem("Mover", 10, 10, 10, (int)TestVolumeItem.Properties.Property1);
             _Octree.AddItem(item);
 
             item.Location = new Point3(20, 20, 20);
-            var result = _Octree.MoveItem(item);
+            _Octree.MoveItem(item);
 
             var itemsFound = new HashSet<IMapObject3d>();
             _Octree.GetCollidingItems(new Cube(19, 19, 19, 21, 21, 21), (int)TestVolumeItem.Properties.Property1, ref itemsFound);
 
-            Assert.Multiple(() =>
-            {
-                Assert.That(result, Is.True);
-                Assert.That(itemsFound, Does.Contain(item));
-            });
+            Assert.That(itemsFound, Does.Contain(item));
         }
 
         [Test]

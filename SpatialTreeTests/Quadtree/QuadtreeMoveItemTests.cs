@@ -41,32 +41,24 @@ namespace SpatialTreesTests
         {
             var item = new TestItem("Fresh", 10, 10, (int)TestItem.Properties.Property1);
 
-            var result = _Quadtree.MoveItem(item);
+            _Quadtree.MoveItem(item);
 
-            Assert.Multiple(() =>
-            {
-                Assert.That(result, Is.True);
-                Assert.That(_Quadtree.ObjectIndex.ContainsKey(item), Is.True);
-            });
+            Assert.That(_Quadtree.ObjectIndex.ContainsKey(item), Is.True);
         }
 
         [Test]
-        public void MoveItem_WithinSameNode_ReturnsTrueAndIsFindableAtNewLocation()
+        public void MoveItem_WithinSameNode_IsFindableAtNewLocation()
         {
             var item = new TestItem("Mover", 10, 10, (int)TestItem.Properties.Property1);
             _Quadtree.AddItem(item);
 
             item.Location = new Point2(20, 20);
-            var result = _Quadtree.MoveItem(item);
+            _Quadtree.MoveItem(item);
 
             var itemsFound = new HashSet<IMapObject2d>();
             _Quadtree.GetCollidingItems(new Rectangle(19, 19, 2, 2), (int)TestItem.Properties.Property1, ref itemsFound);
 
-            Assert.Multiple(() =>
-            {
-                Assert.That(result, Is.True);
-                Assert.That(itemsFound, Does.Contain(item));
-            });
+            Assert.That(itemsFound, Does.Contain(item));
         }
 
         [Test]

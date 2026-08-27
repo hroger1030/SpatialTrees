@@ -97,14 +97,15 @@ Resize()
     Doubles the outer bounding box by adding a new top-level node.
 
 AddItem(IMapObject item)
-    Adds an item to the tree.
+    Adds an item to the tree, or re-places it if it is already present. Throws if the
+    item's bounding-box centre is outside the world or it has no object type.
 
 MoveItem(IMapObject item)
-    Moves an item in the tree, checking for collisions. Returns true if the item was moved,
-    false if it could not be moved.
+    Re-places an item after its position or size changed; adds it if it was never tracked.
+    Same throwing contract as AddItem.
 
 RemoveItem(IMapObject item)
-    Removes the specified item.
+    Removes the specified item. Returns true if it was found and removed, false otherwise.
 
 Clear()
     Removes all items from the tree.

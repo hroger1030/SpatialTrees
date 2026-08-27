@@ -119,13 +119,14 @@ namespace SpatialTrees
         }
 
         /// <summary>
-        /// Attempts to add an item to the octree. Returns true if the item was added,
-        /// false if the item faild to be added.
+        /// Adds an item into this node's subtree. A caller-facing failure (item outside
+        /// the world, no object type) is a thrown exception from Octree.AddItem, not a
+        /// return value; a node that already holds the item just ignores the call.
         /// </summary>
-        public bool AddItem(IMapObject3d mapItem)
+        public void AddItem(IMapObject3d mapItem)
         {
             if (_NodeItems.Contains(mapItem))
-                return false;
+                return;
 
             if (_Leaves == null)
             {
@@ -157,13 +158,11 @@ namespace SpatialTrees
                     else
                         _Octree.ObjectIndex.Add(mapItem, this);
                 }
-
-                return true;
             }
             else
             {
                 eOctant octant = FindOctant(_BoundingBox.Center, mapItem.BoundingBox.Center);
-                return _Leaves[(int)octant].AddItem(mapItem);
+                _Leaves[(int)octant].AddItem(mapItem);
             }
         }
 
