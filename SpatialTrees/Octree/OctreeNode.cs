@@ -31,14 +31,15 @@ namespace SpatialTrees
         protected Octree _Octree;
         protected OctreeNode _Parent;
         protected OctreeNode[] _Leaves;
-        protected Cube _BoundingBox;
+        public Cube BoundingBox { get; protected set; }
         protected HashSet<IMapObject3d> _NodeItems;
         protected int _Depth;
 
-        public Cube BoundingBox
-        {
-            get { return _BoundingBox; }
-        }
+        // bounding-box centre, cached as scalars at construction so routing does not
+        // allocate a Point3 (Cube.Center) on every level of every insert.
+        protected float _CenterX;
+        protected float _CenterY;
+        protected float _CenterZ;
 
         public HashSet<IMapObject3d> NodeItems
         {
@@ -94,7 +95,10 @@ namespace SpatialTrees
             _Parent = parent;
             _Depth = (parent == null) ? 1 : parent._Depth + 1;
             _Leaves = null;
-            _BoundingBox = bounding_box;
+            BoundingBox = bounding_box;
+            _CenterX = (bounding_box.X1 + bounding_box.X2) * 0.5f;
+            _CenterY = (bounding_box.Y1 + bounding_box.Y2) * 0.5f;
+            _CenterZ = (bounding_box.Z1 + bounding_box.Z2) * 0.5f;
             _NodeItems = new HashSet<IMapObject3d>();
         }
 
@@ -125,6 +129,18 @@ namespace SpatialTrees
         /// </summary>
         public void AddItem(IMapObject3d mapItem)
         {
+            // read the item's bounding box once here and pass it down the routing
+            // recursion - BoundingBox is typically a fresh allocation on every access.
+            AddItem(mapItem, mapItem.BoundingBox);
+        }
+
+        /// <summary>
+        /// Routing worker for <see cref="AddItem(IMapObject3d)"/>. Takes the item's
+        /// bounding box as a parameter so a multi-level insert reads the property once
+        /// instead of once (or twice) per level.
+        /// </summary>
+        public void AddItem(IMapObject3d mapItem, Cube itemBox)
+        {
             if (_NodeItems.Contains(mapItem))
                 return;
 
@@ -144,9 +160,9 @@ namespace SpatialTrees
                     _NodeItems.Clear();
 
                     foreach (var item in items_to_route)
-                        RouteItem(item);
+                        RouteItem(item, item.BoundingBox);
 
-                    RouteItem(mapItem);
+                    RouteItem(mapItem, itemBox);
                 }
                 else
                 {
@@ -155,7 +171,7 @@ namespace SpatialTrees
             }
             else
             {
-                RouteItem(mapItem);
+                RouteItem(mapItem, itemBox);
             }
         }
 
@@ -165,27 +181,31 @@ namespace SpatialTrees
         /// stored on this node instead, so that collision queries touching only one of the
         /// neighbouring octants still find it. Assumes this node has been split.
         /// </summary>
-        public void RouteItem(IMapObject3d mapItem)
+        public void RouteItem(IMapObject3d mapItem, Cube itemBox)
         {
-            OctreeNode leaf = FindContainingLeaf(mapItem);
+            OctreeNode leaf = FindContainingLeaf(itemBox);
 
             if (leaf == null)
                 StoreItem(mapItem);
             else
-                leaf.AddItem(mapItem);
+                leaf.AddItem(mapItem, itemBox);
         }
 
         /// <summary>
-        /// Returns the child leaf whose bounding box fully contains the item's bounding
-        /// box, or null when the item straddles an octant boundary. Assumes this node
-        /// has been split.
+        /// Returns the child leaf whose bounding box fully contains <paramref name="itemBox"/>,
+        /// or null when the box straddles an octant boundary. Assumes this node has been split.
         /// </summary>
-        public OctreeNode FindContainingLeaf(IMapObject3d mapItem)
+        public OctreeNode FindContainingLeaf(Cube itemBox)
         {
-            eOctant octant = FindOctant(_BoundingBox.Center, mapItem.BoundingBox.Center);
+            // item centre as scalars - matches Cube.Center without the allocation
+            float itemCenterX = (itemBox.X1 + itemBox.X2) * 0.5f;
+            float itemCenterY = (itemBox.Y1 + itemBox.Y2) * 0.5f;
+            float itemCenterZ = (itemBox.Z1 + itemBox.Z2) * 0.5f;
+
+            eOctant octant = FindOctant(itemCenterX, itemCenterY, itemCenterZ);
             OctreeNode leaf = _Leaves[(int)octant];
 
-            if (leaf.BoundingBox.Contains(mapItem.BoundingBox))
+            if (leaf.BoundingBox.Contains(itemBox))
                 return leaf;
 
             return null;
@@ -234,10 +254,10 @@ namespace SpatialTrees
         /// </summary>
         public void GetCollidingItems(Cube collisionBox, int objectTypes, ref HashSet<IMapObject3d> itemsFound)
         {
-            if (!_BoundingBox.Intersects(collisionBox))
+            if (!BoundingBox.Intersects(collisionBox))
                 return;
 
-            if (collisionBox.Contains(_BoundingBox))
+            if (collisionBox.Contains(BoundingBox))
             {
                 // the query region fully contains this node, so it contains this node's
                 // whole subtree - collect everything below with no further geometry tests.
@@ -272,10 +292,10 @@ namespace SpatialTrees
         /// </summary>
         public void GetCollidingItems(Sphere collisionSphere, int objectTypes, ref HashSet<IMapObject3d> itemsFound)
         {
-            if (!_BoundingBox.Intersects(collisionSphere))
+            if (!BoundingBox.Intersects(collisionSphere))
                 return;
 
-            if (collisionSphere.Contains(_BoundingBox))
+            if (collisionSphere.Contains(BoundingBox))
             {
                 // the query region fully contains this node, so it contains this node's
                 // whole subtree - collect everything below with no further geometry tests.
@@ -337,10 +357,9 @@ namespace SpatialTrees
 
             _Leaves = new OctreeNode[LEAVES];
 
-            var center = _BoundingBox.Center;
-            float x1 = _BoundingBox.X1, y1 = _BoundingBox.Y1, z1 = _BoundingBox.Z1;
-            float x2 = _BoundingBox.X2, y2 = _BoundingBox.Y2, z2 = _BoundingBox.Z2;
-            float cx = center.X, cy = center.Y, cz = center.Z;
+            float x1 = BoundingBox.X1, y1 = BoundingBox.Y1, z1 = BoundingBox.Z1;
+            float x2 = BoundingBox.X2, y2 = BoundingBox.Y2, z2 = BoundingBox.Z2;
+            float cx = _CenterX, cy = _CenterY, cz = _CenterZ;
 
             _Leaves[(int)eOctant.UpperRightNear] = new OctreeNode(_Octree, this, new Cube(cx, y1, z1, x2, cy, cz));
             _Leaves[(int)eOctant.LowerRightNear] = new OctreeNode(_Octree, this, new Cube(cx, cy, z1, x2, y2, cz));
@@ -441,27 +460,32 @@ namespace SpatialTrees
             }
         }
 
-        protected eOctant FindOctant(Point3 boundingBoxCenter, Point3 point)
+        /// <summary>
+        /// Which child octant the point (px, py, pz) falls in, relative to this node's
+        /// cached centre. Takes scalars rather than a Point3 so the hot routing path
+        /// stays allocation-free.
+        /// </summary>
+        protected eOctant FindOctant(float px, float py, float pz)
         {
-            if (point.X > boundingBoxCenter.X)
+            if (px > _CenterX)
             {
-                if (point.Y > boundingBoxCenter.Y)
-                    return point.Z > boundingBoxCenter.Z ? eOctant.LowerRightFar : eOctant.LowerRightNear;
+                if (py > _CenterY)
+                    return pz > _CenterZ ? eOctant.LowerRightFar : eOctant.LowerRightNear;
                 else
-                    return point.Z > boundingBoxCenter.Z ? eOctant.UpperRightFar : eOctant.UpperRightNear;
+                    return pz > _CenterZ ? eOctant.UpperRightFar : eOctant.UpperRightNear;
             }
             else
             {
-                if (point.Y > boundingBoxCenter.Y)
-                    return point.Z > boundingBoxCenter.Z ? eOctant.LowerLeftFar : eOctant.LowerLeftNear;
+                if (py > _CenterY)
+                    return pz > _CenterZ ? eOctant.LowerLeftFar : eOctant.LowerLeftNear;
                 else
-                    return point.Z > boundingBoxCenter.Z ? eOctant.UpperLeftFar : eOctant.UpperLeftNear;
+                    return pz > _CenterZ ? eOctant.UpperLeftFar : eOctant.UpperLeftNear;
             }
         }
 
         public override string ToString()
         {
-            return $"Node depth: {Depth}, Center: {_BoundingBox.Center}, {GetChildObjectCount()} items";
+            return $"Node depth: {Depth}, Center: {BoundingBox.Center}, {GetChildObjectCount()} items";
         }
     }
 }

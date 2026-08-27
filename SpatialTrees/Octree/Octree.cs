@@ -127,11 +127,22 @@ namespace SpatialTrees
         /// </summary>
         public void ValidateForInsert(IMapObject3d item)
         {
+            ValidateForInsert(item, item.BoundingBox);
+        }
+
+        /// <summary>
+        /// As <see cref="ValidateForInsert(IMapObject3d)"/>, but takes the item's bounding
+        /// box so a caller that already has it does not re-read the property.
+        /// </summary>
+        public void ValidateForInsert(IMapObject3d item, Cube itemBox)
+        {
             // route and range-check off the same reference point: the tree places items by
             // BoundingBox.Center (see OctreeNode.FindOctant), so that is what has to be
             // inside the world, not the item's Location which may not track the box.
-            if (!WorldCube.Contains(item.BoundingBox.Center))
-                throw new ArgumentException($"{item.BoundingBox.Center} is outside the octree world cube {WorldCube}", nameof(item));
+            var center = itemBox.Center;
+
+            if (!WorldCube.Contains(center))
+                throw new ArgumentException($"{center} is outside the octree world cube {WorldCube}", nameof(item));
 
             if (item.ObjectTypes == 0)
                 throw new ArgumentException($"{item} has no object type flags set and could never be returned by a query", nameof(item));
@@ -144,7 +155,8 @@ namespace SpatialTrees
         /// </summary>
         public void AddItem(IMapObject3d item)
         {
-            ValidateForInsert(item);
+            var itemBox = item.BoundingBox;
+            ValidateForInsert(item, itemBox);
 
             if (_ObjectIndex.ContainsKey(item))
             {
@@ -155,7 +167,7 @@ namespace SpatialTrees
                 DetachItem(item);
             }
 
-            _TopNode.AddItem(item);
+            _TopNode.AddItem(item, itemBox);
         }
 
         /// <summary>
@@ -168,20 +180,21 @@ namespace SpatialTrees
             if (_ObjectIndex.ContainsKey(item))
             {
                 var current_node = _ObjectIndex[item];
+                var itemBox = item.BoundingBox;
 
-                if (current_node.BoundingBox.Contains(item.BoundingBox))
+                if (current_node.BoundingBox.Contains(itemBox))
                 {
                     // still spatially inside its current node. If that node has children,
                     // the item may have shrunk enough to now fit entirely in one of them -
                     // push it down so a query against that child alone can prune to it.
                     if (current_node.IsSplit)
                     {
-                        var target_leaf = current_node.FindContainingLeaf(item);
+                        var target_leaf = current_node.FindContainingLeaf(itemBox);
 
                         if (target_leaf != null)
                         {
                             current_node.NodeItems.Remove(item);
-                            target_leaf.AddItem(item);
+                            target_leaf.AddItem(item, itemBox);
                         }
                     }
 
@@ -192,7 +205,7 @@ namespace SpatialTrees
 
                 // the item has to move. Reject an out-of-world / typeless target now,
                 // before detaching anything, so a failed move leaves the tree intact.
-                ValidateForInsert(item);
+                ValidateForInsert(item, itemBox);
 
                 // still here? remove item entry from node list, then collapse any
                 // now-underfull ancestors before re-inserting from the top.

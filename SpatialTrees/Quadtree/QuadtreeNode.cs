@@ -35,6 +35,11 @@ namespace SpatialTrees
         protected HashSet<IMapObject2d> _NodeItems;
         protected int _Depth;
 
+        // bounding-box centre, cached as scalars at construction so routing does not
+        // allocate a Point2 (Rectangle.Center) on every level of every insert.
+        protected float _CenterX;
+        protected float _CenterY;
+
         public Rectangle BoundingBox
         {
             get { return _BoundingBox; }
@@ -95,6 +100,8 @@ namespace SpatialTrees
             _Depth = (parent == null) ? 1 : parent._Depth + 1;
             _Leaves = null;
             _BoundingBox = bounding_box;
+            _CenterX = (bounding_box.Left + bounding_box.Right) * 0.5f;
+            _CenterY = (bounding_box.Top + bounding_box.Bottom) * 0.5f;
             _NodeItems = new HashSet<IMapObject2d>();
         }
 
@@ -125,6 +132,18 @@ namespace SpatialTrees
         /// </summary>
         public void AddItem(IMapObject2d mapItem)
         {
+            // read the item's bounding box once here and pass it down the routing
+            // recursion - BoundingBox is typically a fresh allocation on every access.
+            AddItem(mapItem, mapItem.BoundingBox);
+        }
+
+        /// <summary>
+        /// Routing worker for <see cref="AddItem(IMapObject2d)"/>. Takes the item's
+        /// bounding box as a parameter so a multi-level insert reads the property once
+        /// instead of once (or twice) per level.
+        /// </summary>
+        public void AddItem(IMapObject2d mapItem, Rectangle itemBox)
+        {
             if (_NodeItems.Contains(mapItem))
                 return;
 
@@ -144,9 +163,9 @@ namespace SpatialTrees
                     _NodeItems.Clear();
 
                     foreach (var item in items_to_route)
-                        RouteItem(item);
+                        RouteItem(item, item.BoundingBox);
 
-                    RouteItem(mapItem);
+                    RouteItem(mapItem, itemBox);
                 }
                 else
                 {
@@ -155,7 +174,7 @@ namespace SpatialTrees
             }
             else
             {
-                RouteItem(mapItem);
+                RouteItem(mapItem, itemBox);
             }
         }
 
@@ -165,27 +184,30 @@ namespace SpatialTrees
         /// stored on this node instead, so that collision queries touching only one of the
         /// neighbouring quadrants still find it. Assumes this node has been split.
         /// </summary>
-        public void RouteItem(IMapObject2d mapItem)
+        public void RouteItem(IMapObject2d mapItem, Rectangle itemBox)
         {
-            QuadtreeNode leaf = FindContainingLeaf(mapItem);
+            QuadtreeNode leaf = FindContainingLeaf(itemBox);
 
             if (leaf == null)
                 StoreItem(mapItem);
             else
-                leaf.AddItem(mapItem);
+                leaf.AddItem(mapItem, itemBox);
         }
 
         /// <summary>
-        /// Returns the child leaf whose bounding box fully contains the item's bounding
-        /// box, or null when the item straddles a quadrant boundary. Assumes this node
-        /// has been split.
+        /// Returns the child leaf whose bounding box fully contains <paramref name="itemBox"/>,
+        /// or null when the box straddles a quadrant boundary. Assumes this node has been split.
         /// </summary>
-        public QuadtreeNode FindContainingLeaf(IMapObject2d mapItem)
+        public QuadtreeNode FindContainingLeaf(Rectangle itemBox)
         {
-            eQuadrant quadrant = FindQuadrant(_BoundingBox.Center, mapItem.BoundingBox.Center);
+            // item centre as scalars - matches Rectangle.Center without the allocation
+            float itemCenterX = (itemBox.Left + itemBox.Right) * 0.5f;
+            float itemCenterY = (itemBox.Top + itemBox.Bottom) * 0.5f;
+
+            eQuadrant quadrant = FindQuadrant(itemCenterX, itemCenterY);
             QuadtreeNode leaf = _Leaves[(int)quadrant];
 
-            if (leaf.BoundingBox.Contains(mapItem.BoundingBox))
+            if (leaf.BoundingBox.Contains(itemBox))
                 return leaf;
 
             return null;
@@ -340,9 +362,9 @@ namespace SpatialTrees
             float new_width = _BoundingBox.Width / 2;
             float new_height = _BoundingBox.Height / 2;
 
-            _Leaves[(int)eQuadrant.UpperRightQuadrant] = new QuadtreeNode(_Quadtree, this, new Rectangle(_BoundingBox.Center.X, _BoundingBox.Top, new_width, new_height));
-            _Leaves[(int)eQuadrant.LowerRightQuadrant] = new QuadtreeNode(_Quadtree, this, new Rectangle(_BoundingBox.Center.X, _BoundingBox.Center.Y, new_width, new_height));
-            _Leaves[(int)eQuadrant.LowerLeftQuadrant] = new QuadtreeNode(_Quadtree, this, new Rectangle(_BoundingBox.Left, _BoundingBox.Center.Y, new_width, new_height));
+            _Leaves[(int)eQuadrant.UpperRightQuadrant] = new QuadtreeNode(_Quadtree, this, new Rectangle(_CenterX, _BoundingBox.Top, new_width, new_height));
+            _Leaves[(int)eQuadrant.LowerRightQuadrant] = new QuadtreeNode(_Quadtree, this, new Rectangle(_CenterX, _CenterY, new_width, new_height));
+            _Leaves[(int)eQuadrant.LowerLeftQuadrant] = new QuadtreeNode(_Quadtree, this, new Rectangle(_BoundingBox.Left, _CenterY, new_width, new_height));
             _Leaves[(int)eQuadrant.UpperLeftQuadrant] = new QuadtreeNode(_Quadtree, this, new Rectangle(_BoundingBox.Left, _BoundingBox.Top, new_width, new_height));
         }
 
@@ -435,18 +457,23 @@ namespace SpatialTrees
             }
         }
 
-        protected eQuadrant FindQuadrant(Point2 boundingBoxCenter, Point2 point)
+        /// <summary>
+        /// Which child quadrant the point (px, py) falls in, relative to this node's
+        /// cached centre. Takes scalars rather than a Point2 so the hot routing path
+        /// stays allocation-free.
+        /// </summary>
+        protected eQuadrant FindQuadrant(float px, float py)
         {
-            if (point.X > boundingBoxCenter.X)
+            if (px > _CenterX)
             {
-                if (point.Y > boundingBoxCenter.Y)
+                if (py > _CenterY)
                     return eQuadrant.LowerRightQuadrant;
                 else
                     return eQuadrant.UpperRightQuadrant;
             }
             else
             {
-                if (point.Y > boundingBoxCenter.Y)
+                if (py > _CenterY)
                     return eQuadrant.LowerLeftQuadrant;
                 else
                     return eQuadrant.UpperLeftQuadrant;
