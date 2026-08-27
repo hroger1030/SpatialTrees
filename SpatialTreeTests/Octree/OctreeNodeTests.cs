@@ -32,7 +32,7 @@ namespace SpatialTreesTests
         {
             var tree = new Octree(new Cube(0, 0, 0, 100, 100, 100), 5, 10);
 
-            Assert.Throws<IndexOutOfRangeException>(() => { var _ = tree.TopNode[-1]; });
+            Assert.Throws<IndexOutOfRangeException>((Action)(() => { var _ = tree.TopNode[-1]; }));
         }
 
         [Test]
@@ -40,7 +40,7 @@ namespace SpatialTreesTests
         {
             var tree = new Octree(new Cube(0, 0, 0, 100, 100, 100), 5, 10);
 
-            Assert.Throws<IndexOutOfRangeException>(() => { var _ = tree.TopNode[OctreeNode.LEAVES]; });
+            Assert.Throws<IndexOutOfRangeException>((Action)(() => { var _ = tree.TopNode[OctreeNode.LEAVES]; }));
         }
 
         [Test]
@@ -50,7 +50,7 @@ namespace SpatialTreesTests
             // so indexing an in-range octant on an unsplit node throws instead of returning null.
             var tree = new Octree(new Cube(0, 0, 0, 100, 100, 100), 5, 10);
 
-            Assert.Throws<NullReferenceException>(() => { var _ = tree.TopNode[(int)eOctant.UpperRightNear]; });
+            Assert.Throws<NullReferenceException>((Action)(() => { var _ = tree.TopNode[(int)eOctant.UpperRightNear]; }));
         }
 
         [Test]
@@ -72,11 +72,11 @@ namespace SpatialTreesTests
             tree.AddItem(new TestVolumeItem("2", 75, 25, 25, (int)TestVolumeItem.Properties.Property1));
             tree.AddItem(new TestVolumeItem("3", 25, 75, 25, (int)TestVolumeItem.Properties.Property1));
 
-            Assert.Multiple(() =>
+            Assert.Multiple((Action)(() =>
             {
-                Assert.That(tree.TopNode.IsSplit, Is.False);
-                Assert.That(tree.TopNode.NodeItems, Has.Count.EqualTo(3)); // exactly MaxNodeObjects, still a leaf
-            });
+                Assert.That((bool)tree.TopNode.IsSplit, Is.False);
+                Assert.That((System.Collections.Generic.HashSet<IMapObject3d>)tree.TopNode.NodeItems, Has.Count.EqualTo(3)); // exactly MaxNodeObjects, still a leaf
+            }));
 
             tree.AddItem(new TestVolumeItem("4", 75, 75, 75, (int)TestVolumeItem.Properties.Property1));
 
@@ -126,11 +126,11 @@ namespace SpatialTreesTests
             tree.AddItem(new TestVolumeItem("B", 11, 11, 11, (int)TestVolumeItem.Properties.Property1));
             tree.AddItem(new TestVolumeItem("C", 12, 12, 12, (int)TestVolumeItem.Properties.Property1));
 
-            Assert.Multiple(() =>
+            Assert.Multiple((Action)(() =>
             {
-                Assert.That(tree.TopNode.GetChildObjectCount(), Is.EqualTo(3));
-                Assert.Throws<NullReferenceException>(() => { var _ = tree.TopNode[(int)eOctant.UpperRightNear]; });
-            });
+                Assert.That((int)tree.TopNode.GetChildObjectCount(), Is.EqualTo(3));
+                Assert.Throws<NullReferenceException>((Action)(() => { var _ = tree.TopNode[(int)eOctant.UpperRightNear]; }));
+            }));
         }
 
         // Guards against re-introducing a broken value-equality override: nodes and
@@ -142,13 +142,13 @@ namespace SpatialTreesTests
             var b = new Octree(new Cube(0, 0, 0, 100, 100, 100), 5, 10);
             b.AddItem(new TestVolumeItem("only-in-b", 10, 10, 10, (int)TestVolumeItem.Properties.Property1));
 
-            Assert.Multiple(() =>
+            Assert.Multiple((Action)(() =>
             {
                 Assert.That(a.Equals(b), Is.False);          // same world, different contents
                 Assert.That(a.Equals(a), Is.True);
-                Assert.That(a.TopNode.Equals(b.TopNode), Is.False);
-                Assert.That(a.TopNode.Equals(a.TopNode), Is.True);
-            });
+                Assert.That(a.TopNode.Equals((object)b.TopNode), Is.False);
+                Assert.That(a.TopNode.Equals((object)a.TopNode), Is.True);
+            }));
         }
     }
 }

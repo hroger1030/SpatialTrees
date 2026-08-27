@@ -85,13 +85,13 @@ namespace SpatialTreesTests
 
             tree.RemoveItem(d); // 2 left - node collapses back to a leaf
 
-            Assert.Multiple(() =>
+            Assert.Multiple((System.Action)(() =>
             {
-                Assert.That(tree.TopNode.IsSplit, Is.False);
-                Assert.That(tree.TopNode.NodeItems, Is.EquivalentTo(new[] { a, b }));
-                Assert.That(tree.ObjectIndex[a], Is.SameAs(tree.TopNode));
-                Assert.That(tree.ObjectIndex[b], Is.SameAs(tree.TopNode));
-            });
+                Assert.That((bool)tree.TopNode.IsSplit, Is.False);
+                Assert.That((HashSet<IMapObject3d>)tree.TopNode.NodeItems, Is.EquivalentTo(new[] { a, b }));
+                Assert.That(tree.ObjectIndex[a], Is.SameAs((OctreeNode)tree.TopNode));
+                Assert.That(tree.ObjectIndex[b], Is.SameAs((OctreeNode)tree.TopNode));
+            }));
         }
     }
 
@@ -132,11 +132,11 @@ namespace SpatialTreesTests
 
             tree.Clear();
 
-            Assert.Multiple(() =>
+            Assert.Multiple((System.Action)(() =>
             {
-                Assert.That(tree.TopNode.IsSplit, Is.False);
-                Assert.That(tree.TopNode.GetChildObjectCount(), Is.EqualTo(0));
-            });
+                Assert.That((bool)tree.TopNode.IsSplit, Is.False);
+                Assert.That((int)tree.TopNode.GetChildObjectCount(), Is.EqualTo(0));
+            }));
         }
     }
 
@@ -191,13 +191,13 @@ namespace SpatialTreesTests
 
             tree.Resize();
 
-            Assert.Multiple(() =>
+            Assert.Multiple((System.Action)(() =>
             {
-                Assert.That(tree.TopNode.Depth, Is.EqualTo(1));
-                Assert.That(tree.TopNode[(int)eOctant.UpperLeftNear], Is.SameAs(oldRoot));
-                Assert.That(oldRoot.Depth, Is.EqualTo(2)); // was 1, dropped a level
-                Assert.That(oldChild.Depth, Is.EqualTo(3)); // was 2, dropped a level
-            });
+                Assert.That((int)tree.TopNode.Depth, Is.EqualTo(1));
+                Assert.That((OctreeNode)tree.TopNode[(int)eOctant.UpperLeftNear], Is.SameAs((OctreeNode)oldRoot));
+                Assert.That((int)oldRoot.Depth, Is.EqualTo(2)); // was 1, dropped a level
+                Assert.That((int)oldChild.Depth, Is.EqualTo(3)); // was 2, dropped a level
+            }));
         }
     }
 }

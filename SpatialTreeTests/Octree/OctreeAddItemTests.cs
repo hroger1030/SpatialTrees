@@ -102,18 +102,18 @@ namespace SpatialTreesTests
             tree.AddItem(lowerLeftFar); // arrives with the node already at maxObjects(6), triggering Split()
             tree.AddItem(upperLeftFar);
 
-            Assert.Multiple(() =>
+            Assert.Multiple((Action)(() =>
             {
-                Assert.That(tree.TopNode[(int)eOctant.UpperRightNear].NodeItems, Does.Contain(upperRightNear));
-                Assert.That(tree.TopNode[(int)eOctant.LowerRightNear].NodeItems, Does.Contain(lowerRightNear));
-                Assert.That(tree.TopNode[(int)eOctant.LowerLeftNear].NodeItems, Does.Contain(lowerLeftNear));
-                Assert.That(tree.TopNode[(int)eOctant.UpperLeftNear].NodeItems, Does.Contain(upperLeftNear));
-                Assert.That(tree.TopNode[(int)eOctant.UpperRightFar].NodeItems, Does.Contain(upperRightFar));
-                Assert.That(tree.TopNode[(int)eOctant.LowerRightFar].NodeItems, Does.Contain(lowerRightFar));
-                Assert.That(tree.TopNode[(int)eOctant.LowerLeftFar].NodeItems, Does.Contain(lowerLeftFar));
-                Assert.That(tree.TopNode[(int)eOctant.UpperLeftFar].NodeItems, Does.Contain(upperLeftFar));
-                Assert.That(tree.TopNode.GetChildObjectCount(), Is.EqualTo(8));
-            });
+                Assert.That((HashSet<IMapObject3d>)tree.TopNode[(int)eOctant.UpperRightNear].NodeItems, Does.Contain(upperRightNear));
+                Assert.That((HashSet<IMapObject3d>)tree.TopNode[(int)eOctant.LowerRightNear].NodeItems, Does.Contain(lowerRightNear));
+                Assert.That((HashSet<IMapObject3d>)tree.TopNode[(int)eOctant.LowerLeftNear].NodeItems, Does.Contain(lowerLeftNear));
+                Assert.That((HashSet<IMapObject3d>)tree.TopNode[(int)eOctant.UpperLeftNear].NodeItems, Does.Contain(upperLeftNear));
+                Assert.That((HashSet<IMapObject3d>)tree.TopNode[(int)eOctant.UpperRightFar].NodeItems, Does.Contain(upperRightFar));
+                Assert.That((HashSet<IMapObject3d>)tree.TopNode[(int)eOctant.LowerRightFar].NodeItems, Does.Contain(lowerRightFar));
+                Assert.That((HashSet<IMapObject3d>)tree.TopNode[(int)eOctant.LowerLeftFar].NodeItems, Does.Contain(lowerLeftFar));
+                Assert.That((HashSet<IMapObject3d>)tree.TopNode[(int)eOctant.UpperLeftFar].NodeItems, Does.Contain(upperLeftFar));
+                Assert.That((int)tree.TopNode.GetChildObjectCount(), Is.EqualTo(8));
+            }));
         }
 
         // The tree routes and range-checks by BoundingBox.Center, not Location. These two

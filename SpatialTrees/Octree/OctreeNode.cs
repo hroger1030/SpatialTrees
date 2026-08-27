@@ -28,39 +28,22 @@ namespace SpatialTrees
     {
         public const int LEAVES = 8;
 
-        protected Octree _Octree;
-        protected OctreeNode _Parent;
-        protected OctreeNode[] _Leaves;
+        public Octree Octree { get; protected set; }
+        public OctreeNode Parent { get; protected set; }
+        public OctreeNode[] Leaves { get; protected set; }
         public Cube BoundingBox { get; protected set; }
-        protected HashSet<IMapObject3d> _NodeItems;
-        protected int _Depth;
+        public HashSet<IMapObject3d> NodeItems { get; protected set; }
+        public int Depth { get; protected set; }
 
         // bounding-box centre, cached as scalars at construction so routing does not
         // allocate a Point3 (Cube.Center) on every level of every insert.
-        protected float _CenterX;
-        protected float _CenterY;
-        protected float _CenterZ;
+        public float CenterX { get; protected set; }
+        public float CenterY { get; protected set; }
+        public float CenterZ { get; protected set; }
 
-        public HashSet<IMapObject3d> NodeItems
-        {
-            get { return _NodeItems; }
-        }
-
-        /// <summary>
-        /// True once this node has been subdivided into child octants.
-        /// </summary>
         public bool IsSplit
         {
-            get { return _Leaves != null; }
-        }
-
-        /// <summary>
-        /// Depth of this node, root = 1. Cached at construction (and re-stamped by
-        /// Reparent) rather than walked to the root on every access.
-        /// </summary>
-        public int Depth
-        {
-            get { return _Depth; }
+            get { return Leaves != null; }
         }
 
         public OctreeNode this[int i]
@@ -69,7 +52,7 @@ namespace SpatialTrees
             {
                 if (i > -1 && i < LEAVES)
                 {
-                    return _Leaves[i];
+                    return Leaves[i];
                 }
                 else
                 {
@@ -80,7 +63,7 @@ namespace SpatialTrees
             {
                 if (i > -1 && i < LEAVES)
                 {
-                    _Leaves[i] = value;
+                    Leaves[i] = value;
                 }
                 else
                 {
@@ -91,15 +74,15 @@ namespace SpatialTrees
 
         public OctreeNode(Octree octree, OctreeNode parent, Cube bounding_box)
         {
-            _Octree = octree;
-            _Parent = parent;
-            _Depth = (parent == null) ? 1 : parent._Depth + 1;
-            _Leaves = null;
+            Octree = octree;
+            Parent = parent;
+            Depth = (parent == null) ? 1 : parent.Depth + 1;
+            Leaves = null;
             BoundingBox = bounding_box;
-            _CenterX = (bounding_box.X1 + bounding_box.X2) * 0.5f;
-            _CenterY = (bounding_box.Y1 + bounding_box.Y2) * 0.5f;
-            _CenterZ = (bounding_box.Z1 + bounding_box.Z2) * 0.5f;
-            _NodeItems = new HashSet<IMapObject3d>();
+            CenterX = (bounding_box.X1 + bounding_box.X2) * 0.5f;
+            CenterY = (bounding_box.Y1 + bounding_box.Y2) * 0.5f;
+            CenterZ = (bounding_box.Z1 + bounding_box.Z2) * 0.5f;
+            NodeItems = new HashSet<IMapObject3d>();
         }
 
         /// <summary>
@@ -109,12 +92,12 @@ namespace SpatialTrees
         /// </summary>
         public void Reparent(OctreeNode parent)
         {
-            _Parent = parent;
-            _Depth = (parent == null) ? 1 : parent._Depth + 1;
+            Parent = parent;
+            Depth = (parent == null) ? 1 : parent.Depth + 1;
 
-            if (_Leaves != null)
+            if (Leaves != null)
             {
-                foreach (var leaf in _Leaves)
+                foreach (var leaf in Leaves)
                 {
                     if (leaf != null)
                         leaf.Reparent(this);
@@ -141,14 +124,14 @@ namespace SpatialTrees
         /// </summary>
         public void AddItem(IMapObject3d mapItem, Cube itemBox)
         {
-            if (_NodeItems.Contains(mapItem))
+            if (NodeItems.Contains(mapItem))
                 return;
 
-            if (_Leaves == null)
+            if (Leaves == null)
             {
                 // split once this node is already holding MaxNodeObjects and another item
                 // is arriving - so a leaf tops out at exactly MaxNodeObjects, not Max + 1.
-                if (_NodeItems.Count >= _Octree.MaxNodeObjects && this.Depth < _Octree.MaxDepth)
+                if (NodeItems.Count >= Octree.MaxNodeObjects && this.Depth < Octree.MaxDepth)
                 {
                     Split();
 
@@ -156,8 +139,8 @@ namespace SpatialTrees
                     // bounding box does not fit entirely inside a single child straddles
                     // an octant boundary and has to stay on this node, so pull everything
                     // off first and let RouteItem decide where each one lands.
-                    var items_to_route = new List<IMapObject3d>(_NodeItems);
-                    _NodeItems.Clear();
+                    var items_to_route = new List<IMapObject3d>(NodeItems);
+                    NodeItems.Clear();
 
                     foreach (var item in items_to_route)
                         RouteItem(item, item.BoundingBox);
@@ -203,7 +186,7 @@ namespace SpatialTrees
             float itemCenterZ = (itemBox.Z1 + itemBox.Z2) * 0.5f;
 
             eOctant octant = FindOctant(itemCenterX, itemCenterY, itemCenterZ);
-            OctreeNode leaf = _Leaves[(int)octant];
+            OctreeNode leaf = Leaves[(int)octant];
 
             if (leaf.BoundingBox.Contains(itemBox))
                 return leaf;
@@ -217,21 +200,21 @@ namespace SpatialTrees
         /// </summary>
         public void StoreItem(IMapObject3d mapItem)
         {
-            _NodeItems.Add(mapItem);
+            NodeItems.Add(mapItem);
 
-            if (_Octree.ObjectIndex.ContainsKey(mapItem))
-                _Octree.ObjectIndex[mapItem] = this;
+            if (Octree.ObjectIndex.ContainsKey(mapItem))
+                Octree.ObjectIndex[mapItem] = this;
             else
-                _Octree.ObjectIndex.Add(mapItem, this);
+                Octree.ObjectIndex.Add(mapItem, this);
         }
 
         public void RemoveAllLeafItems(bool recursive)
         {
-            _NodeItems.Clear();
+            NodeItems.Clear();
 
-            if (recursive && _Leaves != null)
+            if (recursive && Leaves != null)
             {
-                foreach (var leaf in _Leaves)
+                foreach (var leaf in Leaves)
                 {
                     if (leaf != null)
                         leaf.RemoveAllLeafItems(true);
@@ -265,10 +248,10 @@ namespace SpatialTrees
                 return;
             }
 
-            if (_NodeItems.Count > 0)
+            if (NodeItems.Count > 0)
             {
                 // test each item in this node
-                foreach (var item in _NodeItems)
+                foreach (var item in NodeItems)
                 {
                     if (collisionBox.Intersects(item.BoundingBox) && MatchesObjectTypes(objectTypes, item.ObjectTypes))
                     {
@@ -277,9 +260,9 @@ namespace SpatialTrees
                 }
             }
 
-            if (_Leaves != null)
+            if (Leaves != null)
             {
-                foreach (var leaf in _Leaves)
+                foreach (var leaf in Leaves)
                 {
                     if (leaf != null)
                         leaf.GetCollidingItems(collisionBox, objectTypes, ref itemsFound);
@@ -303,10 +286,10 @@ namespace SpatialTrees
                 return;
             }
 
-            if (_NodeItems.Count > 0)
+            if (NodeItems.Count > 0)
             {
                 // test each item in this node
-                foreach (var item in _NodeItems)
+                foreach (var item in NodeItems)
                 {
                     if (collisionSphere.Intersects(item.BoundingBox) && MatchesObjectTypes(objectTypes, item.ObjectTypes))
                     {
@@ -315,9 +298,9 @@ namespace SpatialTrees
                 }
             }
 
-            if (_Leaves != null)
+            if (Leaves != null)
             {
-                foreach (var leaf in _Leaves)
+                foreach (var leaf in Leaves)
                 {
                     if (leaf != null)
                         leaf.GetCollidingItems(collisionSphere, objectTypes, ref itemsFound);
@@ -332,7 +315,7 @@ namespace SpatialTrees
         /// </summary>
         public void CollectAll(int objectTypes, ref HashSet<IMapObject3d> itemsFound)
         {
-            foreach (var item in _NodeItems)
+            foreach (var item in NodeItems)
             {
                 if (MatchesObjectTypes(objectTypes, item.ObjectTypes))
                 {
@@ -340,9 +323,9 @@ namespace SpatialTrees
                 }
             }
 
-            if (_Leaves != null)
+            if (Leaves != null)
             {
-                foreach (var leaf in _Leaves)
+                foreach (var leaf in Leaves)
                 {
                     if (leaf != null)
                         leaf.CollectAll(objectTypes, ref itemsFound);
@@ -352,32 +335,32 @@ namespace SpatialTrees
 
         public void Split()
         {
-            if (_Leaves != null)
+            if (Leaves != null)
                 throw new Exception("Node already split");
 
-            _Leaves = new OctreeNode[LEAVES];
+            Leaves = new OctreeNode[LEAVES];
 
             float x1 = BoundingBox.X1, y1 = BoundingBox.Y1, z1 = BoundingBox.Z1;
             float x2 = BoundingBox.X2, y2 = BoundingBox.Y2, z2 = BoundingBox.Z2;
-            float cx = _CenterX, cy = _CenterY, cz = _CenterZ;
+            float cx = CenterX, cy = CenterY, cz = CenterZ;
 
-            _Leaves[(int)eOctant.UpperRightNear] = new OctreeNode(_Octree, this, new Cube(cx, y1, z1, x2, cy, cz));
-            _Leaves[(int)eOctant.LowerRightNear] = new OctreeNode(_Octree, this, new Cube(cx, cy, z1, x2, y2, cz));
-            _Leaves[(int)eOctant.LowerLeftNear] = new OctreeNode(_Octree, this, new Cube(x1, cy, z1, cx, y2, cz));
-            _Leaves[(int)eOctant.UpperLeftNear] = new OctreeNode(_Octree, this, new Cube(x1, y1, z1, cx, cy, cz));
-            _Leaves[(int)eOctant.UpperRightFar] = new OctreeNode(_Octree, this, new Cube(cx, y1, cz, x2, cy, z2));
-            _Leaves[(int)eOctant.LowerRightFar] = new OctreeNode(_Octree, this, new Cube(cx, cy, cz, x2, y2, z2));
-            _Leaves[(int)eOctant.LowerLeftFar] = new OctreeNode(_Octree, this, new Cube(x1, cy, cz, cx, y2, z2));
-            _Leaves[(int)eOctant.UpperLeftFar] = new OctreeNode(_Octree, this, new Cube(x1, y1, cz, cx, cy, z2));
+            Leaves[(int)eOctant.UpperRightNear] = new OctreeNode(Octree, this, new Cube(cx, y1, z1, x2, cy, cz));
+            Leaves[(int)eOctant.LowerRightNear] = new OctreeNode(Octree, this, new Cube(cx, cy, z1, x2, y2, cz));
+            Leaves[(int)eOctant.LowerLeftNear] = new OctreeNode(Octree, this, new Cube(x1, cy, z1, cx, y2, cz));
+            Leaves[(int)eOctant.UpperLeftNear] = new OctreeNode(Octree, this, new Cube(x1, y1, z1, cx, cy, cz));
+            Leaves[(int)eOctant.UpperRightFar] = new OctreeNode(Octree, this, new Cube(cx, y1, cz, x2, cy, z2));
+            Leaves[(int)eOctant.LowerRightFar] = new OctreeNode(Octree, this, new Cube(cx, cy, cz, x2, y2, z2));
+            Leaves[(int)eOctant.LowerLeftFar] = new OctreeNode(Octree, this, new Cube(x1, cy, cz, cx, y2, z2));
+            Leaves[(int)eOctant.UpperLeftFar] = new OctreeNode(Octree, this, new Cube(x1, y1, cz, cx, cy, z2));
         }
 
         public int GetChildObjectCount()
         {
-            int total = _NodeItems.Count;
+            int total = NodeItems.Count;
 
-            if (_Leaves != null)
+            if (Leaves != null)
             {
-                foreach (var leaf in _Leaves)
+                foreach (var leaf in Leaves)
                 {
                     if (leaf != null)
                         total += leaf.GetChildObjectCount();
@@ -400,17 +383,17 @@ namespace SpatialTrees
 
             while (cursor != null)
             {
-                if (cursor._Leaves != null)
+                if (cursor.Leaves != null)
                 {
                     // counts only grow as we move up, so once a node is over the limit
                     // no ancestor of it can be collapsible either.
-                    if (cursor.GetChildObjectCount() <= _Octree.MaxNodeObjects)
+                    if (cursor.GetChildObjectCount() <= Octree.MaxNodeObjects)
                         target = cursor;
                     else
                         break;
                 }
 
-                cursor = cursor._Parent;
+                cursor = cursor.Parent;
             }
 
             target?.Collapse();
@@ -422,16 +405,16 @@ namespace SpatialTrees
         /// </summary>
         public void Collapse()
         {
-            if (_Leaves == null)
+            if (Leaves == null)
                 return;
 
-            foreach (var leaf in _Leaves)
+            foreach (var leaf in Leaves)
             {
                 if (leaf != null)
                     leaf.MergeInto(this);
             }
 
-            _Leaves = null;
+            Leaves = null;
         }
 
         /// <summary>
@@ -440,23 +423,23 @@ namespace SpatialTrees
         /// </summary>
         public void MergeInto(OctreeNode ancestor)
         {
-            foreach (var item in _NodeItems)
+            foreach (var item in NodeItems)
             {
-                ancestor._NodeItems.Add(item);
-                _Octree.ObjectIndex[item] = ancestor;
+                ancestor.NodeItems.Add(item);
+                Octree.ObjectIndex[item] = ancestor;
             }
 
-            _NodeItems.Clear();
+            NodeItems.Clear();
 
-            if (_Leaves != null)
+            if (Leaves != null)
             {
-                foreach (var leaf in _Leaves)
+                foreach (var leaf in Leaves)
                 {
                     if (leaf != null)
                         leaf.MergeInto(ancestor);
                 }
 
-                _Leaves = null;
+                Leaves = null;
             }
         }
 
@@ -467,19 +450,19 @@ namespace SpatialTrees
         /// </summary>
         protected eOctant FindOctant(float px, float py, float pz)
         {
-            if (px > _CenterX)
+            if (px > CenterX)
             {
-                if (py > _CenterY)
-                    return pz > _CenterZ ? eOctant.LowerRightFar : eOctant.LowerRightNear;
+                if (py > CenterY)
+                    return pz > CenterZ ? eOctant.LowerRightFar : eOctant.LowerRightNear;
                 else
-                    return pz > _CenterZ ? eOctant.UpperRightFar : eOctant.UpperRightNear;
+                    return pz > CenterZ ? eOctant.UpperRightFar : eOctant.UpperRightNear;
             }
             else
             {
-                if (py > _CenterY)
-                    return pz > _CenterZ ? eOctant.LowerLeftFar : eOctant.LowerLeftNear;
+                if (py > CenterY)
+                    return pz > CenterZ ? eOctant.LowerLeftFar : eOctant.LowerLeftNear;
                 else
-                    return pz > _CenterZ ? eOctant.UpperLeftFar : eOctant.UpperLeftNear;
+                    return pz > CenterZ ? eOctant.UpperLeftFar : eOctant.UpperLeftNear;
             }
         }
 

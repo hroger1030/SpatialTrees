@@ -32,14 +32,14 @@ namespace SpatialTreesTests
         {
             var tree = new Octree();
 
-            Assert.Multiple(() =>
+            Assert.Multiple((Action)(() =>
             {
                 Assert.That(tree.MaxDepth, Is.EqualTo(5));
-                Assert.That(tree.MaxNodeObjects, Is.EqualTo(100));
+                Assert.That((int)tree.MaxNodeObjects, Is.EqualTo(100));
                 Assert.That(tree.WorldCube.Width, Is.EqualTo(1f));
                 Assert.That(tree.WorldCube.Height, Is.EqualTo(1f));
                 Assert.That(tree.WorldCube.Depth, Is.EqualTo(1f));
-            });
+            }));
         }
 
         [Test]
@@ -47,14 +47,14 @@ namespace SpatialTreesTests
         {
             var tree = new Octree(new Cube(0, 0, 0, 50, 25, 10));
 
-            Assert.Multiple(() =>
+            Assert.Multiple((Action)(() =>
             {
                 Assert.That(tree.MaxDepth, Is.EqualTo(5));
-                Assert.That(tree.MaxNodeObjects, Is.EqualTo(100));
+                Assert.That((int)tree.MaxNodeObjects, Is.EqualTo(100));
                 Assert.That(tree.WorldCube.Width, Is.EqualTo(50f));
                 Assert.That(tree.WorldCube.Height, Is.EqualTo(25f));
                 Assert.That(tree.WorldCube.Depth, Is.EqualTo(10f));
-            });
+            }));
         }
 
         [Test]
@@ -63,12 +63,12 @@ namespace SpatialTreesTests
             var boundingBox = new Cube(0, 0, 0, 200, 200, 200);
             var tree = new Octree(boundingBox, 3, 7);
 
-            Assert.Multiple(() =>
+            Assert.Multiple((Action)(() =>
             {
                 Assert.That(tree.MaxDepth, Is.EqualTo(3));
-                Assert.That(tree.MaxNodeObjects, Is.EqualTo(7));
+                Assert.That((int)tree.MaxNodeObjects, Is.EqualTo(7));
                 Assert.That(tree.WorldCube.Width, Is.EqualTo(200f));
-            });
+            }));
         }
 
         [Test]

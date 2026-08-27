@@ -50,17 +50,17 @@ namespace SpatialTreesTests
             tree.AddItem(lowerLeftFar); // arrives with the node already at maxObjects(6), triggering Split()
             tree.AddItem(upperLeftFar);
 
-            Assert.Multiple(() =>
+            Assert.Multiple((System.Action)(() =>
             {
-                Assert.That(tree.TopNode[(int)eOctant.UpperRightNear].NodeItems, Does.Contain(upperRightNear));
-                Assert.That(tree.TopNode[(int)eOctant.LowerRightNear].NodeItems, Does.Contain(lowerRightNear));
-                Assert.That(tree.TopNode[(int)eOctant.LowerLeftNear].NodeItems, Does.Contain(lowerLeftNear));
-                Assert.That(tree.TopNode[(int)eOctant.UpperLeftNear].NodeItems, Does.Contain(upperLeftNear));
-                Assert.That(tree.TopNode[(int)eOctant.UpperRightFar].NodeItems, Does.Contain(upperRightFar));
-                Assert.That(tree.TopNode[(int)eOctant.LowerRightFar].NodeItems, Does.Contain(lowerRightFar));
-                Assert.That(tree.TopNode[(int)eOctant.LowerLeftFar].NodeItems, Does.Contain(lowerLeftFar));
-                Assert.That(tree.TopNode[(int)eOctant.UpperLeftFar].NodeItems, Does.Contain(upperLeftFar));
-            });
+                Assert.That((HashSet<IMapObject3d>)tree.TopNode[(int)eOctant.UpperRightNear].NodeItems, Does.Contain(upperRightNear));
+                Assert.That((HashSet<IMapObject3d>)tree.TopNode[(int)eOctant.LowerRightNear].NodeItems, Does.Contain(lowerRightNear));
+                Assert.That((HashSet<IMapObject3d>)tree.TopNode[(int)eOctant.LowerLeftNear].NodeItems, Does.Contain(lowerLeftNear));
+                Assert.That((HashSet<IMapObject3d>)tree.TopNode[(int)eOctant.UpperLeftNear].NodeItems, Does.Contain(upperLeftNear));
+                Assert.That((HashSet<IMapObject3d>)tree.TopNode[(int)eOctant.UpperRightFar].NodeItems, Does.Contain(upperRightFar));
+                Assert.That((HashSet<IMapObject3d>)tree.TopNode[(int)eOctant.LowerRightFar].NodeItems, Does.Contain(lowerRightFar));
+                Assert.That((HashSet<IMapObject3d>)tree.TopNode[(int)eOctant.LowerLeftFar].NodeItems, Does.Contain(lowerLeftFar));
+                Assert.That((HashSet<IMapObject3d>)tree.TopNode[(int)eOctant.UpperLeftFar].NodeItems, Does.Contain(upperLeftFar));
+            }));
         }
 
         [Test]
@@ -138,12 +138,12 @@ namespace SpatialTreesTests
             tree.AddItem(new TestVolumeItem("C", 25, 75, 25, (int)TestVolumeItem.Properties.Property1)); // triggers Split() (node was at maxObjects)
             tree.AddItem(straddle); // routes into the split root; no child contains it, so it stays on the root
 
-            Assert.Multiple(() =>
+            Assert.Multiple((System.Action)(() =>
             {
-                Assert.That(tree.TopNode[(int)eOctant.UpperLeftNear], Is.Not.Null); // did split
-                Assert.That(tree.TopNode.NodeItems, Does.Contain(straddle));
-                Assert.That(tree.ObjectIndex[straddle], Is.SameAs(tree.TopNode));
-            });
+                Assert.That((OctreeNode)tree.TopNode[(int)eOctant.UpperLeftNear], Is.Not.Null); // did split
+                Assert.That((HashSet<IMapObject3d>)tree.TopNode.NodeItems, Does.Contain(straddle));
+                Assert.That(tree.ObjectIndex[straddle], Is.SameAs((OctreeNode)tree.TopNode));
+            }));
         }
 
         [Test]

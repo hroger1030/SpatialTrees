@@ -46,34 +46,14 @@ namespace SpatialTrees
         protected readonly static int DEFAULT_MAX_OBJECTS = 100;
         protected readonly static int DEFAULT_COLLECTION_SIZE = 1000;
 
-        protected IDictionary<IMapObject3d, OctreeNode> _ObjectIndex;
-        protected OctreeNode _TopNode;
-        protected int _MaxDepth;
-        protected int _MaxNodeObjects;
-
-        public IDictionary<IMapObject3d, OctreeNode> ObjectIndex
-        {
-            get { return _ObjectIndex; }
-        }
-
-        public OctreeNode TopNode
-        {
-            get { return _TopNode; }
-        }
-
-        public int MaxDepth
-        {
-            get { return _MaxDepth; }
-        }
-
-        public int MaxNodeObjects
-        {
-            get { return _MaxNodeObjects; }
-        }
+        public Dictionary<IMapObject3d, OctreeNode> ObjectIndex { get; protected set; }
+        public OctreeNode TopNode { get; protected set; }
+        public int MaxDepth { get; protected set; }
+        public int MaxNodeObjects { get; protected set; }
 
         public Cube WorldCube
         {
-            get { return _TopNode.BoundingBox; }
+            get { return TopNode.BoundingBox; }
         }
 
         // default world is the unit cube (0,0,0)-(1,1,1); Quadtree() mirrors this with the unit rectangle
@@ -87,10 +67,10 @@ namespace SpatialTrees
             ArgumentOutOfRangeException.ThrowIfLessThan(maxDepth, 1);
             ArgumentOutOfRangeException.ThrowIfLessThan(maxObjects, 1);
 
-            _ObjectIndex = new Dictionary<IMapObject3d, OctreeNode>(DEFAULT_COLLECTION_SIZE);
-            _TopNode = new OctreeNode(this, null, boundingBox);
-            _MaxDepth = maxDepth;
-            _MaxNodeObjects = maxObjects;
+            ObjectIndex = new Dictionary<IMapObject3d, OctreeNode>(DEFAULT_COLLECTION_SIZE);
+            TopNode = new OctreeNode(this, null, boundingBox);
+            MaxDepth = maxDepth;
+            MaxNodeObjects = maxObjects;
         }
 
         /// <summary>
@@ -100,22 +80,22 @@ namespace SpatialTrees
         public void Resize()
         {
             // create new bounding box. note cube keeps its X1,Y1,Z1 corner and grows along X2,Y2,Z2
-            var new_boundingbox = new Cube(_TopNode.BoundingBox * 2);
+            var new_boundingbox = new Cube(TopNode.BoundingBox * 2);
 
             // save top object refrence
-            var old_top_node = _TopNode;
+            var old_top_node = TopNode;
 
             // replace upper left near branch of octree with old tree
-            _TopNode = new OctreeNode(this, null, new_boundingbox);
-            _MaxDepth++;
+            TopNode = new OctreeNode(this, null, new_boundingbox);
+            MaxDepth++;
 
             // Generate new leaves
-            _TopNode.Split();
+            TopNode.Split();
 
             // replace old branches, then fix up the old subtree's parent link and its
             // now-stale cached depths (everything below it just dropped a level)
-            _TopNode[(int)eOctant.UpperLeftNear] = old_top_node;
-            old_top_node.Reparent(_TopNode);
+            TopNode[(int)eOctant.UpperLeftNear] = old_top_node;
+            old_top_node.Reparent(TopNode);
         }
 
         /// <summary>
@@ -158,7 +138,7 @@ namespace SpatialTrees
             var itemBox = item.BoundingBox;
             ValidateForInsert(item, itemBox);
 
-            if (_ObjectIndex.ContainsKey(item))
+            if (ObjectIndex.ContainsKey(item))
             {
                 // already here, treat this as a move/update. Pull it out completely -
                 // both the node list and the object index - so the re-add below starts
@@ -167,7 +147,7 @@ namespace SpatialTrees
                 DetachItem(item);
             }
 
-            _TopNode.AddItem(item, itemBox);
+            TopNode.AddItem(item, itemBox);
         }
 
         /// <summary>
@@ -177,9 +157,9 @@ namespace SpatialTrees
         /// </summary>
         public void MoveItem(IMapObject3d item)
         {
-            if (_ObjectIndex.ContainsKey(item))
+            if (ObjectIndex.ContainsKey(item))
             {
-                var current_node = _ObjectIndex[item];
+                var current_node = ObjectIndex[item];
                 var itemBox = item.BoundingBox;
 
                 if (current_node.BoundingBox.Contains(itemBox))
@@ -209,7 +189,7 @@ namespace SpatialTrees
 
                 // still here? remove item entry from node list, then collapse any
                 // now-underfull ancestors before re-inserting from the top.
-                _ObjectIndex.Remove(item);
+                ObjectIndex.Remove(item);
                 current_node.NodeItems.Remove(item);
                 current_node.CollapseUpward();
             }
@@ -226,21 +206,21 @@ namespace SpatialTrees
         /// </summary>
         public bool DetachItem(IMapObject3d item)
         {
-            if (!_ObjectIndex.TryGetValue(item, out var node))
+            if (!ObjectIndex.TryGetValue(item, out var node))
                 return false;
 
             node.NodeItems.Remove(item);
-            _ObjectIndex.Remove(item);
+            ObjectIndex.Remove(item);
 
             return true;
         }
 
         public bool RemoveItem(IMapObject3d item)
         {
-            if (_ObjectIndex.TryGetValue(item, out var node))
+            if (ObjectIndex.TryGetValue(item, out var node))
             {
                 node.NodeItems.Remove(item);
-                _ObjectIndex.Remove(item);
+                ObjectIndex.Remove(item);
 
                 // pull any ancestors that are now underfull back into a single leaf
                 node.CollapseUpward();
@@ -261,14 +241,14 @@ namespace SpatialTrees
         /// </summary>
         public void Clear()
         {
-            _ObjectIndex.Clear();
+            ObjectIndex.Clear();
 
-            if (_TopNode != null)
+            if (TopNode != null)
             {
-                _TopNode.RemoveAllLeafItems(true);
+                TopNode.RemoveAllLeafItems(true);
 
                 // drop the now-empty subdivision so the tree starts fresh
-                _TopNode.Collapse();
+                TopNode.Collapse();
             }
         }
 
@@ -282,7 +262,7 @@ namespace SpatialTrees
             else
                 itemsFound.Clear();
 
-            _TopNode.GetCollidingItems(collisionBox, objectTypes, ref itemsFound);
+            TopNode.GetCollidingItems(collisionBox, objectTypes, ref itemsFound);
 
             return (itemsFound.Count > 0);
         }
@@ -297,14 +277,14 @@ namespace SpatialTrees
             else
                 itemsFound.Clear();
 
-            _TopNode.GetCollidingItems(collisionSphere, objectPoperties, ref itemsFound);
+            TopNode.GetCollidingItems(collisionSphere, objectPoperties, ref itemsFound);
 
             return (itemsFound.Count > 0);
         }
 
         public override string ToString()
         {
-            return $"Octree {WorldCube.Width} x {WorldCube.Height} x {WorldCube.Depth}, {_ObjectIndex.Count} items";
+            return $"Octree {WorldCube.Width} x {WorldCube.Height} x {WorldCube.Depth}, {ObjectIndex.Count} items";
         }
     }
 }
