@@ -11,6 +11,7 @@ quadtree's design one dimension up — same API shape, same splitting behavior, 
   - [Requirements](#requirements)
   - [Project layout](#project-layout)
   - [Building and testing](#building-and-testing)
+  - [Thread safety](#thread-safety)
   - [Creating a quadtree](#creating-a-quadtree)
   - [Items](#items)
   - [Creating an octree](#creating-an-octree)
@@ -63,6 +64,11 @@ dotnet test SpatialTrees.sln
 ```
 
 Unit tests are written with NUnit and live in the `SpatialTreeTests` project.
+
+## Thread safety
+
+`Quadtree` and `Octree` are **not** thread safe. They are intended for single-threaded use; if you access one from more than
+one thread, you must serialize the calls yourself. Thread-safe variants of both structures are planned for a future release.
 
 ## Creating a quadtree
 

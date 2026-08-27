@@ -24,17 +24,21 @@ using System.Diagnostics;
 namespace SpatialTrees
 {
     /// <summary>
-    /// Quadtree represents a two dimensional tree structure, and all the 
+    /// Quadtree represents a two dimensional tree structure, and all the
     /// objects that it contains. We will assume that we are working off of
     /// a screen co-ordinate centric system. (0,0 is in top left)
-    /// 
+    ///
     /// The quadants are numbered looking on the plane from the top, 0,1,2,3 in
-    /// a clockwise fashion from the top right quadrant. 
-    /// 
+    /// a clockwise fashion from the top right quadrant.
+    ///
     /// The quadants are stored in an leaf array, with the index of a given quadrant
     /// as _leaf[quadants_index-1]
-    /// 
+    ///
     /// note that this object supports non-balanced nodes.
+    ///
+    /// THREADING: this class is not thread safe and is intended for single-threaded
+    /// use only. Callers that touch it from multiple threads must serialize access
+    /// themselves. Thread-safe variants of both spatial trees are planned.
     /// </summary>
     [DebuggerDisplay("Quadtree {WorldRectangle.Width} x {WorldRectangle.Height}, {_ObjectIndex.Count} items")]
     public class Quadtree
@@ -47,7 +51,6 @@ namespace SpatialTrees
         protected QuadtreeNode _TopNode;
         protected int _MaxDepth;
         protected int _MaxNodeObjects;
-        protected object _LockObject;
 
         public IDictionary<IMapObject2d, QuadtreeNode> ObjectIndex
         {
@@ -93,7 +96,6 @@ namespace SpatialTrees
             _TopNode = new QuadtreeNode(this, null, boundingBox);
             _MaxDepth = maxDepth;
             _MaxNodeObjects = maxObjects;
-            _LockObject = new object();
         }
 
         /// <summary>
@@ -102,26 +104,23 @@ namespace SpatialTrees
         /// </summary>
         public bool Resize()
         {
-            lock (_LockObject)
-            {
-                // create new bounding box. note rectangle keeps its top-left corner and grows down and to the right
-                var new_boundingbox = new Rectangle(_TopNode.BoundingBox * 2);
+            // create new bounding box. note rectangle keeps its top-left corner and grows down and to the right
+            var new_boundingbox = new Rectangle(_TopNode.BoundingBox * 2);
 
-                // save top object refrence
-                var old_top_node = _TopNode;
+            // save top object refrence
+            var old_top_node = _TopNode;
 
-                // replace upper left branch of quadtree with old tree
-                _TopNode = new QuadtreeNode(this, null, new_boundingbox);
-                _MaxDepth++;
+            // replace upper left branch of quadtree with old tree
+            _TopNode = new QuadtreeNode(this, null, new_boundingbox);
+            _MaxDepth++;
 
-                // Generate new leaves
-                _TopNode.Split();
+            // Generate new leaves
+            _TopNode.Split();
 
-                // replace old branches
-                _TopNode[(int)eQuadrant.UpperLeftQuadrant] = old_top_node;
+            // replace old branches
+            _TopNode[(int)eQuadrant.UpperLeftQuadrant] = old_top_node;
 
-                return true;
-            }
+            return true;
         }
 
         /// <summary>

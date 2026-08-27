@@ -34,6 +34,10 @@ namespace SpatialTrees
     /// as _leaf[octant_index-1]
     ///
     /// note that this object supports non-balanced nodes.
+    ///
+    /// THREADING: this class is not thread safe and is intended for single-threaded
+    /// use only. Callers that touch it from multiple threads must serialize access
+    /// themselves. Thread-safe variants of both spatial trees are planned.
     /// </summary>
     [DebuggerDisplay("Octree {WorldCube.Width} x {WorldCube.Height} x {WorldCube.Depth}, {_ObjectIndex.Count} items")]
     public class Octree
@@ -46,7 +50,6 @@ namespace SpatialTrees
         protected OctreeNode _TopNode;
         protected int _MaxDepth;
         protected int _MaxNodeObjects;
-        protected object _LockObject;
 
         public IDictionary<IMapObject3d, OctreeNode> ObjectIndex
         {
@@ -92,7 +95,6 @@ namespace SpatialTrees
             _TopNode = new OctreeNode(this, null, boundingBox);
             _MaxDepth = maxDepth;
             _MaxNodeObjects = maxObjects;
-            _LockObject = new object();
         }
 
         /// <summary>
@@ -101,26 +103,23 @@ namespace SpatialTrees
         /// </summary>
         public bool Resize()
         {
-            lock (_LockObject)
-            {
-                // create new bounding box. note cube keeps its X1,Y1,Z1 corner and grows along X2,Y2,Z2
-                var new_boundingbox = new Cube(_TopNode.BoundingBox * 2);
+            // create new bounding box. note cube keeps its X1,Y1,Z1 corner and grows along X2,Y2,Z2
+            var new_boundingbox = new Cube(_TopNode.BoundingBox * 2);
 
-                // save top object refrence
-                var old_top_node = _TopNode;
+            // save top object refrence
+            var old_top_node = _TopNode;
 
-                // replace upper left near branch of octree with old tree
-                _TopNode = new OctreeNode(this, null, new_boundingbox);
-                _MaxDepth++;
+            // replace upper left near branch of octree with old tree
+            _TopNode = new OctreeNode(this, null, new_boundingbox);
+            _MaxDepth++;
 
-                // Generate new leaves
-                _TopNode.Split();
+            // Generate new leaves
+            _TopNode.Split();
 
-                // replace old branches
-                _TopNode[(int)eOctant.UpperLeftNear] = old_top_node;
+            // replace old branches
+            _TopNode[(int)eOctant.UpperLeftNear] = old_top_node;
 
-                return true;
-            }
+            return true;
         }
 
         /// <summary>
