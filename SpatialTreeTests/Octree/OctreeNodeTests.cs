@@ -75,7 +75,7 @@ namespace SpatialTreesTests
             Assert.Multiple((Action)(() =>
             {
                 Assert.That((bool)tree.TopNode.IsSplit, Is.False);
-                Assert.That((System.Collections.Generic.HashSet<IMapObject3d>)tree.TopNode.NodeItems, Has.Count.EqualTo(3)); // exactly MaxNodeObjects, still a leaf
+                Assert.That(tree.TopNode.NodeItems, Has.Count.EqualTo(3)); // exactly MaxNodeObjects, still a leaf
             }));
 
             tree.AddItem(new TestVolumeItem("4", 75, 75, 75, (int)TestVolumeItem.Properties.Property1));

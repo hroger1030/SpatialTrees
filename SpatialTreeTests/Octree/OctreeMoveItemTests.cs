@@ -97,8 +97,8 @@ namespace SpatialTreesTests
 
             Assert.Multiple((Action)(() =>
             {
-                Assert.That((HashSet<IMapObject3d>)tree.TopNode.NodeItems, Does.Not.Contain(item));
-                Assert.That((HashSet<IMapObject3d>)lowerRightFar.NodeItems, Does.Contain(item));
+                Assert.That(tree.TopNode.NodeItems, Does.Not.Contain(item));
+                Assert.That(lowerRightFar.NodeItems, Does.Contain(item));
                 Assert.That(tree.ObjectIndex[item], Is.SameAs((OctreeNode)lowerRightFar));
             }));
         }

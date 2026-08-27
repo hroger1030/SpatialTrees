@@ -23,7 +23,7 @@ using System.Diagnostics;
 
 namespace SpatialTrees
 {
-    [DebuggerDisplay("Node depth: {Depth}, Center: {_BoundingBox.Center}, {GetChildObjectCount()} items")]
+    [DebuggerDisplay("Node depth: {Depth}, Center: {BoundingBox.Center}, {GetChildObjectCount()} items")]
     public class OctreeNode
     {
         public const int LEAVES = 8;
@@ -32,7 +32,12 @@ namespace SpatialTrees
         public OctreeNode Parent { get; protected set; }
         public OctreeNode[] Leaves { get; protected set; }
         public Cube BoundingBox { get; protected set; }
-        public HashSet<IMapObject3d> NodeItems { get; protected set; }
+        // items held directly on this node. A List (not a HashSet): iteration during
+        // collision queries is the hot path and wins from contiguous storage; duplicate
+        // inserts are already prevented by the ContainsKey guard in Octree.AddItem and
+        // the Contains guard in AddItem below. Null until the first item is stored here -
+        // most interior nodes never hold anything directly, so the allocation is deferred.
+        public List<IMapObject3d> NodeItems { get; protected set; }
         public int Depth { get; protected set; }
 
         // bounding-box centre, cached as scalars at construction so routing does not
@@ -82,7 +87,7 @@ namespace SpatialTrees
             CenterX = (bounding_box.X1 + bounding_box.X2) * 0.5f;
             CenterY = (bounding_box.Y1 + bounding_box.Y2) * 0.5f;
             CenterZ = (bounding_box.Z1 + bounding_box.Z2) * 0.5f;
-            NodeItems = new HashSet<IMapObject3d>();
+            // NodeItems stays null until StoreItem actually puts something here
         }
 
         /// <summary>
@@ -124,14 +129,14 @@ namespace SpatialTrees
         /// </summary>
         public void AddItem(IMapObject3d mapItem, Cube itemBox)
         {
-            if (NodeItems.Contains(mapItem))
+            if (NodeItems != null && NodeItems.Contains(mapItem))
                 return;
 
             if (Leaves == null)
             {
                 // split once this node is already holding MaxNodeObjects and another item
                 // is arriving - so a leaf tops out at exactly MaxNodeObjects, not Max + 1.
-                if (NodeItems.Count >= Octree.MaxNodeObjects && this.Depth < Octree.MaxDepth)
+                if ((NodeItems?.Count ?? 0) >= Octree.MaxNodeObjects && this.Depth < Octree.MaxDepth)
                 {
                     Split();
 
@@ -200,7 +205,7 @@ namespace SpatialTrees
         /// </summary>
         public void StoreItem(IMapObject3d mapItem)
         {
-            NodeItems.Add(mapItem);
+            (NodeItems ??= new List<IMapObject3d>()).Add(mapItem);
 
             if (Octree.ObjectIndex.ContainsKey(mapItem))
                 Octree.ObjectIndex[mapItem] = this;
@@ -210,7 +215,7 @@ namespace SpatialTrees
 
         public void RemoveAllLeafItems(bool recursive)
         {
-            NodeItems.Clear();
+            NodeItems?.Clear();
 
             if (recursive && Leaves != null)
             {
@@ -248,7 +253,7 @@ namespace SpatialTrees
                 return;
             }
 
-            if (NodeItems.Count > 0)
+            if (NodeItems is { Count: > 0 })
             {
                 // test each item in this node
                 foreach (var item in NodeItems)
@@ -286,7 +291,7 @@ namespace SpatialTrees
                 return;
             }
 
-            if (NodeItems.Count > 0)
+            if (NodeItems is { Count: > 0 })
             {
                 // test each item in this node
                 foreach (var item in NodeItems)
@@ -315,11 +320,14 @@ namespace SpatialTrees
         /// </summary>
         public void CollectAll(int objectTypes, ref HashSet<IMapObject3d> itemsFound)
         {
-            foreach (var item in NodeItems)
+            if (NodeItems != null)
             {
-                if (MatchesObjectTypes(objectTypes, item.ObjectTypes))
+                foreach (var item in NodeItems)
                 {
-                    itemsFound.Add(item);
+                    if (MatchesObjectTypes(objectTypes, item.ObjectTypes))
+                    {
+                        itemsFound.Add(item);
+                    }
                 }
             }
 
@@ -356,7 +364,7 @@ namespace SpatialTrees
 
         public int GetChildObjectCount()
         {
-            int total = NodeItems.Count;
+            int total = NodeItems?.Count ?? 0;
 
             if (Leaves != null)
             {
@@ -423,13 +431,16 @@ namespace SpatialTrees
         /// </summary>
         public void MergeInto(OctreeNode ancestor)
         {
-            foreach (var item in NodeItems)
+            if (NodeItems != null)
             {
-                ancestor.NodeItems.Add(item);
-                Octree.ObjectIndex[item] = ancestor;
-            }
+                foreach (var item in NodeItems)
+                {
+                    (ancestor.NodeItems ??= new List<IMapObject3d>()).Add(item);
+                    Octree.ObjectIndex[item] = ancestor;
+                }
 
-            NodeItems.Clear();
+                NodeItems.Clear();
+            }
 
             if (Leaves != null)
             {

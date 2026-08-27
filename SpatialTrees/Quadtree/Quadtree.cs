@@ -174,7 +174,7 @@ namespace SpatialTrees
 
                         if (target_leaf != null)
                         {
-                            current_node.NodeItems.Remove(item);
+                            current_node.NodeItems?.Remove(item);
                             target_leaf.AddItem(item, itemBox);
                         }
                     }
@@ -191,7 +191,7 @@ namespace SpatialTrees
                 // still here? remove item entry from node list, then collapse any
                 // now-underfull ancestors before re-inserting from the top.
                 ObjectIndex.Remove(item);
-                current_node.NodeItems.Remove(item);
+                current_node.NodeItems?.Remove(item);
                 current_node.CollapseUpward();
             }
 
@@ -210,7 +210,7 @@ namespace SpatialTrees
             if (!ObjectIndex.TryGetValue(item, out var node))
                 return false;
 
-            node.NodeItems.Remove(item);
+            node.NodeItems?.Remove(item);
             ObjectIndex.Remove(item);
 
             return true;
@@ -220,7 +220,7 @@ namespace SpatialTrees
         {
             if (ObjectIndex.TryGetValue(item, out var node))
             {
-                node.NodeItems.Remove(item);
+                node.NodeItems?.Remove(item);
                 ObjectIndex.Remove(item);
 
                 // pull any ancestors that are now underfull back into a single leaf

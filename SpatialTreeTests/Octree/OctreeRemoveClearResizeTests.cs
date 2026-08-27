@@ -88,7 +88,7 @@ namespace SpatialTreesTests
             Assert.Multiple((System.Action)(() =>
             {
                 Assert.That((bool)tree.TopNode.IsSplit, Is.False);
-                Assert.That((HashSet<IMapObject3d>)tree.TopNode.NodeItems, Is.EquivalentTo(new[] { a, b }));
+                Assert.That(tree.TopNode.NodeItems, Is.EquivalentTo(new[] { a, b }));
                 Assert.That(tree.ObjectIndex[a], Is.SameAs((OctreeNode)tree.TopNode));
                 Assert.That(tree.ObjectIndex[b], Is.SameAs((OctreeNode)tree.TopNode));
             }));

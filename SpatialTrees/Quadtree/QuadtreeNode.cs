@@ -23,7 +23,7 @@ using System.Diagnostics;
 
 namespace SpatialTrees
 {
-    [DebuggerDisplay("Node depth: {Depth}, Center: {_BoundingBox.Center}, {GetChildObjectCount()} items")]
+    [DebuggerDisplay("Node depth: {Depth}, Center: {BoundingBox.Center}, {GetChildObjectCount()} items")]
     public class QuadtreeNode
     {
         public const int LEAVES = 4;
@@ -32,7 +32,12 @@ namespace SpatialTrees
         public QuadtreeNode Parent { get; protected set; }
         public QuadtreeNode[] Leaves { get; protected set; }
         public Rectangle BoundingBox { get; protected set; }
-        public HashSet<IMapObject2d> NodeItems { get; protected set; }
+        // items held directly on this node. A List (not a HashSet): iteration during
+        // collision queries is the hot path and wins from contiguous storage; duplicate
+        // inserts are already prevented by the ContainsKey guard in Quadtree.AddItem and
+        // the Contains guard in AddItem below. Null until the first item is stored here -
+        // most interior nodes never hold anything directly, so the allocation is deferred.
+        public List<IMapObject2d> NodeItems { get; protected set; }
         public int Depth { get; protected set; }
 
         // bounding-box centre, cached as scalars at construction so routing does not
@@ -83,7 +88,7 @@ namespace SpatialTrees
             BoundingBox = bounding_box;
             CenterX = (bounding_box.Left + bounding_box.Right) * 0.5f;
             CenterY = (bounding_box.Top + bounding_box.Bottom) * 0.5f;
-            NodeItems = new HashSet<IMapObject2d>();
+            // NodeItems stays null until StoreItem actually puts something here
         }
 
         /// <summary>
@@ -125,14 +130,14 @@ namespace SpatialTrees
         /// </summary>
         public void AddItem(IMapObject2d mapItem, Rectangle itemBox)
         {
-            if (NodeItems.Contains(mapItem))
+            if (NodeItems != null && NodeItems.Contains(mapItem))
                 return;
 
             if (Leaves == null)
             {
                 // split once this node is already holding MaxNodeObjects and another item
                 // is arriving - so a leaf tops out at exactly MaxNodeObjects, not Max + 1.
-                if (NodeItems.Count >= Quadtree.MaxNodeObjects && this.Depth < Quadtree.MaxDepth)
+                if ((NodeItems?.Count ?? 0) >= Quadtree.MaxNodeObjects && this.Depth < Quadtree.MaxDepth)
                 {
                     Split();
 
@@ -200,7 +205,7 @@ namespace SpatialTrees
         /// </summary>
         public void StoreItem(IMapObject2d mapItem)
         {
-            NodeItems.Add(mapItem);
+            (NodeItems ??= new List<IMapObject2d>()).Add(mapItem);
 
             if (Quadtree.ObjectIndex.ContainsKey(mapItem))
                 Quadtree.ObjectIndex[mapItem] = this;
@@ -210,7 +215,7 @@ namespace SpatialTrees
 
         public void RemoveAllLeafItems(bool recursive)
         {
-            NodeItems.Clear();
+            NodeItems?.Clear();
 
             if (recursive && Leaves != null)
             {
@@ -248,7 +253,7 @@ namespace SpatialTrees
                 return;
             }
 
-            if (NodeItems.Count > 0)
+            if (NodeItems is { Count: > 0 })
             {
                 // test each item in this node
                 foreach (var item in NodeItems)
@@ -286,7 +291,7 @@ namespace SpatialTrees
                 return;
             }
 
-            if (NodeItems.Count > 0)
+            if (NodeItems is { Count: > 0 })
             {
                 // test each item in this node
                 foreach (var item in NodeItems)
@@ -315,11 +320,14 @@ namespace SpatialTrees
         /// </summary>
         public void CollectAll(int objectTypes, ref HashSet<IMapObject2d> itemsFound)
         {
-            foreach (var item in NodeItems)
+            if (NodeItems != null)
             {
-                if (MatchesObjectTypes(objectTypes, item.ObjectTypes))
+                foreach (var item in NodeItems)
                 {
-                    itemsFound.Add(item);
+                    if (MatchesObjectTypes(objectTypes, item.ObjectTypes))
+                    {
+                        itemsFound.Add(item);
+                    }
                 }
             }
 
@@ -351,7 +359,7 @@ namespace SpatialTrees
 
         public int GetChildObjectCount()
         {
-            int total = NodeItems.Count;
+            int total = NodeItems?.Count ?? 0;
 
             if (Leaves != null)
             {
@@ -418,13 +426,16 @@ namespace SpatialTrees
         /// </summary>
         public void MergeInto(QuadtreeNode ancestor)
         {
-            foreach (var item in NodeItems)
+            if (NodeItems != null)
             {
-                ancestor.NodeItems.Add(item);
-                Quadtree.ObjectIndex[item] = ancestor;
-            }
+                foreach (var item in NodeItems)
+                {
+                    (ancestor.NodeItems ??= new List<IMapObject2d>()).Add(item);
+                    Quadtree.ObjectIndex[item] = ancestor;
+                }
 
-            NodeItems.Clear();
+                NodeItems.Clear();
+            }
 
             if (Leaves != null)
             {
