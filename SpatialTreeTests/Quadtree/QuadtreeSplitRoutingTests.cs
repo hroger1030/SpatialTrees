@@ -96,5 +96,45 @@ namespace SpatialTreesTests
 
             Assert.That(itemsFound, Does.Contain(target));
         }
+
+        [Test]
+        public void AddItem_ItemStraddlingQuadrantBoundary_StaysOnParentNode()
+        {
+            var tree = new Quadtree(new Rectangle(0, 0, 100, 100), 5, 2);
+
+            // one small item per quadrant, plus a large item centered on the root split
+            // point whose 20x20 box overlaps all four children and fits inside none.
+            var straddle = new TestItem("Straddle", 50, 50, 20f, 20f, (int)TestItem.Properties.Property1);
+            tree.AddItem(new TestItem("A", 25, 25, (int)TestItem.Properties.Property1));
+            tree.AddItem(new TestItem("B", 75, 25, (int)TestItem.Properties.Property1));
+            tree.AddItem(new TestItem("C", 25, 75, (int)TestItem.Properties.Property1));
+            tree.AddItem(straddle); // 4th item triggers Split()
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(tree.TopNode[(int)eQuadrant.UpperLeftQuadrant], Is.Not.Null); // did split
+                Assert.That(tree.TopNode.NodeItems, Does.Contain(straddle));
+                Assert.That(tree.ObjectIndex[straddle], Is.SameAs(tree.TopNode));
+            });
+        }
+
+        [Test]
+        public void GetCollidingItems_StraddlingItem_FoundFromNeighbouringQuadrantOnly()
+        {
+            var tree = new Quadtree(new Rectangle(0, 0, 100, 100), 5, 2);
+
+            var straddle = new TestItem("Straddle", 50, 50, 20f, 20f, (int)TestItem.Properties.Property1); // box (40,40)-(60,60)
+            tree.AddItem(new TestItem("A", 25, 25, (int)TestItem.Properties.Property1));
+            tree.AddItem(new TestItem("B", 75, 25, (int)TestItem.Properties.Property1));
+            tree.AddItem(new TestItem("C", 25, 75, (int)TestItem.Properties.Property1));
+            tree.AddItem(straddle);
+
+            // search box sits entirely inside the lower-right quadrant but overlaps the
+            // straddling item. Before routing accounted for extent this returned nothing.
+            var itemsFound = new HashSet<IMapObject2d>();
+            tree.GetCollidingItems(new Rectangle(55, 55, 3, 3), (int)TestItem.Properties.Property1, ref itemsFound);
+
+            Assert.That(itemsFound, Does.Contain(straddle));
+        }
     }
 }

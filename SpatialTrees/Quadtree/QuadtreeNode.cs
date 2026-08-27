@@ -111,36 +111,78 @@ namespace SpatialTrees
                 {
                     Split();
 
-                    eQuadrant quadrant;
-
-                    foreach (var item in _NodeItems)
-                    {
-                        quadrant = FindQuadrant(_BoundingBox.Center, item.BoundingBox.Center);
-                        _Leaves[(int)quadrant].AddItem(item);
-                    }
-
+                    // redistribute existing items into the new leaves. An item whose
+                    // bounding box does not fit entirely inside a single child straddles
+                    // a quadrant boundary and has to stay on this node, so pull everything
+                    // off first and let RouteItem decide where each one lands.
+                    var items_to_route = new List<IMapObject2d>(_NodeItems);
                     _NodeItems.Clear();
 
-                    quadrant = FindQuadrant(_BoundingBox.Center, mapItem.BoundingBox.Center);
-                    _Leaves[(int)quadrant].AddItem(mapItem);
+                    foreach (var item in items_to_route)
+                        RouteItem(item);
+
+                    RouteItem(mapItem);
                 }
                 else
                 {
-                    _NodeItems.Add(mapItem);
-
-                    if (_Quadtree.ObjectIndex.ContainsKey(mapItem))
-                        _Quadtree.ObjectIndex[mapItem] = this;
-                    else
-                        _Quadtree.ObjectIndex.Add(mapItem, this);
+                    StoreItem(mapItem);
                 }
 
                 return true;
             }
             else
             {
-                eQuadrant quadrant = FindQuadrant(_BoundingBox.Center, mapItem.BoundingBox.Center);
-                return _Leaves[(int)quadrant].AddItem(mapItem);
+                return RouteItem(mapItem);
             }
+        }
+
+        /// <summary>
+        /// Routes an item into the child leaf that fully contains its bounding box. If no
+        /// single child contains it (the item straddles a quadrant boundary) the item is
+        /// stored on this node instead, so that collision queries touching only one of the
+        /// neighbouring quadrants still find it. Assumes this node has been split.
+        /// </summary>
+        public bool RouteItem(IMapObject2d mapItem)
+        {
+            QuadtreeNode leaf = FindContainingLeaf(mapItem);
+
+            if (leaf == null)
+            {
+                StoreItem(mapItem);
+                return true;
+            }
+
+            return leaf.AddItem(mapItem);
+        }
+
+        /// <summary>
+        /// Returns the child leaf whose bounding box fully contains the item's bounding
+        /// box, or null when the item straddles a quadrant boundary. Assumes this node
+        /// has been split.
+        /// </summary>
+        public QuadtreeNode FindContainingLeaf(IMapObject2d mapItem)
+        {
+            eQuadrant quadrant = FindQuadrant(_BoundingBox.Center, mapItem.BoundingBox.Center);
+            QuadtreeNode leaf = _Leaves[(int)quadrant];
+
+            if (leaf.BoundingBox.Contains(mapItem.BoundingBox))
+                return leaf;
+
+            return null;
+        }
+
+        /// <summary>
+        /// Stores an item directly on this node and points the tree's object index at
+        /// this node.
+        /// </summary>
+        public void StoreItem(IMapObject2d mapItem)
+        {
+            _NodeItems.Add(mapItem);
+
+            if (_Quadtree.ObjectIndex.ContainsKey(mapItem))
+                _Quadtree.ObjectIndex[mapItem] = this;
+            else
+                _Quadtree.ObjectIndex.Add(mapItem, this);
         }
 
         public void RemoveAllLeafItems(bool recursive)

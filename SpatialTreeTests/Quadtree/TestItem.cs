@@ -39,9 +39,14 @@ namespace SpatialTreesTests
 
         public Point2 Location { get; set; }
 
+        // Defaults to a 1x1 box centered on Location; override for items large enough to
+        // straddle a quadrant boundary.
+        public float Width { get; set; } = 1f;
+        public float Height { get; set; } = 1f;
+
         public Rectangle BoundingBox
         {
-            get { return new Rectangle(Location, 1f, 1f); }
+            get { return new Rectangle(Location, Width, Height); }
         }
 
         public TestItem() { }
@@ -50,6 +55,15 @@ namespace SpatialTreesTests
         {
             Name = name;
             Location = new Point2(x, y);
+            ObjectTypes = objectTypes;
+        }
+
+        public TestItem(string name, float x, float y, float width, float height, int objectTypes)
+        {
+            Name = name;
+            Location = new Point2(x, y);
+            Width = width;
+            Height = height;
             ObjectTypes = objectTypes;
         }
     }
