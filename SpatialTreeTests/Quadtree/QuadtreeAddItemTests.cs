@@ -107,5 +107,46 @@ namespace SpatialTreesTests
                 Assert.That(tree.TopNode.GetChildObjectCount(), Is.EqualTo(4));
             });
         }
+
+        // The tree routes and range-checks by BoundingBox.Center, not Location. These two
+        // cases pin that down with an item whose Location and BoundingBox deliberately disagree.
+        [Test]
+        public void AddItem_LocationOutsideWorldButBoundingBoxCenterInside_Succeeds()
+        {
+            var item = new DivergentItem
+            {
+                ObjectTypes = (int)TestItem.Properties.Property1,
+                Location = new Point2(500, 500),                          // outside the world rectangle
+                BoundingBox = new Rectangle(new Point2(50, 50), 2f, 2f),  // center well inside it
+            };
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(_Quadtree.AddItem(item), Is.True);
+                Assert.That(_Quadtree.ObjectIndex.ContainsKey(item), Is.True);
+            });
+        }
+
+        [Test]
+        public void AddItem_LocationInsideWorldButBoundingBoxCenterOutside_ThrowsArgumentException()
+        {
+            var item = new DivergentItem
+            {
+                ObjectTypes = (int)TestItem.Properties.Property1,
+                Location = new Point2(50, 50),                              // inside the world rectangle
+                BoundingBox = new Rectangle(new Point2(500, 500), 2f, 2f),  // center outside it
+            };
+
+            Assert.Throws<ArgumentException>(() => _Quadtree.AddItem(item));
+        }
+
+        // A map object whose Location is not tied to its BoundingBox, for tests that need
+        // the two to diverge.
+        public class DivergentItem : IMapObject2d
+        {
+            public int ObjectTypes { get; set; }
+            public Point2 Location { get; set; }
+            public Rectangle BoundingBox { get; set; }
+        }
     }
 }

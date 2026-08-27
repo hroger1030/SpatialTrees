@@ -130,8 +130,11 @@ namespace SpatialTrees
         /// </summary>
         public bool AddItem(IMapObject2d item)
         {
-            if (!WorldRectangle.Contains(item.Location))
-                throw new ArgumentException($"{item.Location} is outside the quadtree world rectangle {WorldRectangle}");
+            // route and range-check off the same reference point: the tree places items by
+            // BoundingBox.Center (see QuadtreeNode.FindQuadrant), so that is what has to be
+            // inside the world, not the item's Location which may not track the box.
+            if (!WorldRectangle.Contains(item.BoundingBox.Center))
+                throw new ArgumentException($"{item.BoundingBox.Center} is outside the quadtree world rectangle {WorldRectangle}");
 
             if (item.ObjectTypes == 0)
                 throw new Exception("Object w/o properties is being added:");

@@ -20,6 +20,11 @@ using Geometry;
 
 namespace SpatialTrees
 {
+    /// <summary>
+    /// An object the octree can index. The tree positions and range-checks items purely
+    /// by <see cref="BoundingBox"/> (routing uses its center); <see cref="Location"/> is a
+    /// caller convenience and should stay consistent with the box's center.
+    /// </summary>
     public interface IMapObject3d
     {
         int ObjectTypes { get; set; }

@@ -119,5 +119,46 @@ namespace SpatialTreesTests
                 Assert.That(tree.TopNode.GetChildObjectCount(), Is.EqualTo(8));
             });
         }
+
+        // The tree routes and range-checks by BoundingBox.Center, not Location. These two
+        // cases pin that down with an item whose Location and BoundingBox deliberately disagree.
+        [Test]
+        public void AddItem_LocationOutsideWorldButBoundingBoxCenterInside_Succeeds()
+        {
+            var item = new DivergentVolumeItem
+            {
+                ObjectTypes = (int)TestVolumeItem.Properties.Property1,
+                Location = new Point3(500, 500, 500),                  // outside the world cube
+                BoundingBox = new Cube(49, 49, 49, 51, 51, 51),        // center well inside it
+            };
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(_Octree.AddItem(item), Is.True);
+                Assert.That(_Octree.ObjectIndex.ContainsKey(item), Is.True);
+            });
+        }
+
+        [Test]
+        public void AddItem_LocationInsideWorldButBoundingBoxCenterOutside_ThrowsArgumentException()
+        {
+            var item = new DivergentVolumeItem
+            {
+                ObjectTypes = (int)TestVolumeItem.Properties.Property1,
+                Location = new Point3(50, 50, 50),                     // inside the world cube
+                BoundingBox = new Cube(499, 499, 499, 501, 501, 501),  // center outside it
+            };
+
+            Assert.Throws<ArgumentException>(() => _Octree.AddItem(item));
+        }
+
+        // A map object whose Location is not tied to its BoundingBox, for tests that need
+        // the two to diverge.
+        public class DivergentVolumeItem : IMapObject3d
+        {
+            public int ObjectTypes { get; set; }
+            public Point3 Location { get; set; }
+            public Cube BoundingBox { get; set; }
+        }
     }
 }

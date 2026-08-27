@@ -129,8 +129,11 @@ namespace SpatialTrees
         /// </summary>
         public bool AddItem(IMapObject3d item)
         {
-            if (!WorldCube.Contains(item.Location))
-                throw new ArgumentException($"{item.Location} is outside the octree world cube {WorldCube}");
+            // route and range-check off the same reference point: the tree places items by
+            // BoundingBox.Center (see OctreeNode.FindOctant), so that is what has to be
+            // inside the world, not the item's Location which may not track the box.
+            if (!WorldCube.Contains(item.BoundingBox.Center))
+                throw new ArgumentException($"{item.BoundingBox.Center} is outside the octree world cube {WorldCube}");
 
             if (item.ObjectTypes == 0)
                 throw new Exception("Object w/o properties is being added:");

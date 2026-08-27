@@ -20,6 +20,11 @@ using Geometry;
 
 namespace SpatialTrees
 {
+    /// <summary>
+    /// An object the quadtree can index. The tree positions and range-checks items purely
+    /// by <see cref="BoundingBox"/> (routing uses its center); <see cref="Location"/> is a
+    /// caller convenience and should stay consistent with the box's center.
+    /// </summary>
     public interface IMapObject2d
     {
         int ObjectTypes { get; set; }
