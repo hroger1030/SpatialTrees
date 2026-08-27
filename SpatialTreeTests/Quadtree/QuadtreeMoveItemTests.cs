@@ -73,6 +73,36 @@ namespace SpatialTreesTests
         }
 
         [Test]
+        public void MoveItem_ItemShrinksToFitAChildOfItsCurrentNode_IsPushedDown()
+        {
+            var tree = new Quadtree(new Rectangle(0, 0, 100, 100), 5, 2);
+
+            // force the root to split, then add a large item that straddles the root's
+            // quadrant boundary so it is stored on the (now split) root itself.
+            tree.AddItem(new TestItem("A", 25, 25, (int)TestItem.Properties.Property1));
+            tree.AddItem(new TestItem("B", 75, 25, (int)TestItem.Properties.Property1));
+            tree.AddItem(new TestItem("C", 25, 75, (int)TestItem.Properties.Property1)); // triggers Split()
+
+            var item = new TestItem("Shrinker", 60, 60, 40f, 40f, (int)TestItem.Properties.Property1); // box (40,40)-(80,80)
+            tree.AddItem(item);
+            Assume.That(tree.ObjectIndex[item], Is.SameAs(tree.TopNode)); // straddles - lives on the root
+
+            // shrink it so its box now fits entirely inside the lower-right quadrant
+            item.Width = 10f;
+            item.Height = 10f; // box (55,55)-(65,65)
+            tree.MoveItem(item);
+
+            var lowerRight = tree.TopNode[(int)eQuadrant.LowerRightQuadrant];
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(tree.TopNode.NodeItems, Does.Not.Contain(item));
+                Assert.That(lowerRight.NodeItems, Does.Contain(item));
+                Assert.That(tree.ObjectIndex[item], Is.SameAs(lowerRight));
+            });
+        }
+
+        [Test]
         public void MoveItem_ToLocationOutsideWorldRectangle_LeavesItemTracked()
         {
             var item = new TestItem("Wanderer", 10, 10, (int)TestItem.Properties.Property1);

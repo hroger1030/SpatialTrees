@@ -83,14 +83,9 @@ namespace SpatialTrees
 
         public Octree(Cube boundingBox, int maxDepth, int maxObjects)
         {
-            if (boundingBox == null)
-                throw new Exception("Bounding Box cannot be null");
-
-            if (maxDepth < 1)
-                throw new Exception("Max depth must be greater than zero.");
-
-            if (maxObjects < 1)
-                throw new Exception("Max Objects must be greater than zero.");
+            ArgumentNullException.ThrowIfNull(boundingBox);
+            ArgumentOutOfRangeException.ThrowIfLessThan(maxDepth, 1);
+            ArgumentOutOfRangeException.ThrowIfLessThan(maxObjects, 1);
 
             _ObjectIndex = new Dictionary<IMapObject3d, OctreeNode>(DEFAULT_COLLECTION_SIZE);
             _TopNode = new OctreeNode(this, null, boundingBox);
@@ -176,7 +171,22 @@ namespace SpatialTrees
 
                 if (current_node.BoundingBox.Contains(item.BoundingBox))
                 {
-                    // we are still in the same node spatially - nothing to do.
+                    // still spatially inside its current node. If that node has children,
+                    // the item may have shrunk enough to now fit entirely in one of them -
+                    // push it down so a query against that child alone can prune to it.
+                    if (current_node.IsSplit)
+                    {
+                        var target_leaf = current_node.FindContainingLeaf(item);
+
+                        if (target_leaf != null)
+                        {
+                            current_node.NodeItems.Remove(item);
+                            target_leaf.AddItem(item);
+                        }
+                    }
+
+                    // otherwise it belongs exactly where it is (a leaf, or still
+                    // straddling a child boundary) - nothing to do.
                     return;
                 }
 

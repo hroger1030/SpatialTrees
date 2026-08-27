@@ -73,6 +73,37 @@ namespace SpatialTreesTests
         }
 
         [Test]
+        public void MoveItem_ItemShrinksToFitAChildOfItsCurrentNode_IsPushedDown()
+        {
+            var tree = new Octree(new Cube(0, 0, 0, 100, 100, 100), 5, 2);
+
+            // force the root to split, then add a large item that straddles the root's
+            // octant boundary so it is stored on the (now split) root itself.
+            tree.AddItem(new TestVolumeItem("A", 25, 25, 25, (int)TestVolumeItem.Properties.Property1));
+            tree.AddItem(new TestVolumeItem("B", 75, 25, 25, (int)TestVolumeItem.Properties.Property1));
+            tree.AddItem(new TestVolumeItem("C", 25, 75, 25, (int)TestVolumeItem.Properties.Property1)); // triggers Split()
+
+            var item = new TestVolumeItem("Shrinker", 60, 60, 60, 40f, 40f, 40f, (int)TestVolumeItem.Properties.Property1); // box (40,40,40)-(80,80,80)
+            tree.AddItem(item);
+            Assume.That(tree.ObjectIndex[item], Is.SameAs(tree.TopNode)); // straddles - lives on the root
+
+            // shrink it so its box now fits entirely inside the lower-right-far octant
+            item.Width = 10f;
+            item.Height = 10f;
+            item.Depth = 10f; // box (55,55,55)-(65,65,65)
+            tree.MoveItem(item);
+
+            var lowerRightFar = tree.TopNode[(int)eOctant.LowerRightFar];
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(tree.TopNode.NodeItems, Does.Not.Contain(item));
+                Assert.That(lowerRightFar.NodeItems, Does.Contain(item));
+                Assert.That(tree.ObjectIndex[item], Is.SameAs(lowerRightFar));
+            });
+        }
+
+        [Test]
         public void MoveItem_ToLocationOutsideWorldCube_LeavesItemTracked()
         {
             var item = new TestVolumeItem("Wanderer", 10, 10, 10, (int)TestVolumeItem.Properties.Property1);

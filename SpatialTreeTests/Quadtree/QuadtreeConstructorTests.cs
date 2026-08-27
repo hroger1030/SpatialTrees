@@ -70,21 +70,21 @@ namespace SpatialTreesTests
         }
 
         [Test]
-        public void Constructor_NullBoundingBox_Throws()
+        public void Constructor_NullBoundingBox_ThrowsArgumentNullException()
         {
-            Assert.Throws<Exception>(() => new Quadtree(null, 5, 10));
+            Assert.Throws<ArgumentNullException>(() => new Quadtree(null, 5, 10));
         }
 
         [Test]
-        public void Constructor_MaxDepthLessThanOne_Throws()
+        public void Constructor_MaxDepthLessThanOne_ThrowsArgumentOutOfRangeException()
         {
-            Assert.Throws<Exception>(() => new Quadtree(new Rectangle(0, 0, 100, 100), 0, 10));
+            Assert.Throws<ArgumentOutOfRangeException>(() => new Quadtree(new Rectangle(0, 0, 100, 100), 0, 10));
         }
 
         [Test]
-        public void Constructor_MaxObjectsLessThanOne_Throws()
+        public void Constructor_MaxObjectsLessThanOne_ThrowsArgumentOutOfRangeException()
         {
-            Assert.Throws<Exception>(() => new Quadtree(new Rectangle(0, 0, 100, 100), 5, 0));
+            Assert.Throws<ArgumentOutOfRangeException>(() => new Quadtree(new Rectangle(0, 0, 100, 100), 5, 0));
         }
     }
 }
