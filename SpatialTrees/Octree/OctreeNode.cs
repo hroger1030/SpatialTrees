@@ -158,6 +158,16 @@ namespace SpatialTrees
         }
 
         /// <summary>
+        /// Object-type filter for collision queries. An item matches when it carries at
+        /// least one of the requested type bits, so a query mask combining several types
+        /// returns items of any of those types. A mask of 0 matches nothing.
+        /// </summary>
+        public static bool MatchesObjectTypes(int queryMask, int itemObjectTypes)
+        {
+            return (queryMask & itemObjectTypes) != 0;
+        }
+
+        /// <summary>
         /// returns a list of unique items that are colliding with the item that is passed in.
         /// </summary>
         public void GetCollidingItems(Cube collisionBox, int objectTypes, ref HashSet<IMapObject3d> itemsFound)
@@ -171,7 +181,7 @@ namespace SpatialTrees
                 {
                     foreach (var item in _NodeItems)
                     {
-                        if ((objectTypes & item.ObjectTypes) == objectTypes)
+                        if (MatchesObjectTypes(objectTypes, item.ObjectTypes))
                         {
                             itemsFound.Add(item);
                         }
@@ -182,7 +192,7 @@ namespace SpatialTrees
                     // test each item in this node
                     foreach (var item in _NodeItems)
                     {
-                        if (collisionBox.Intersects(item.BoundingBox) && ((objectTypes & item.ObjectTypes) == objectTypes))
+                        if (collisionBox.Intersects(item.BoundingBox) && MatchesObjectTypes(objectTypes, item.ObjectTypes))
                         {
                             itemsFound.Add(item);
                         }
@@ -214,7 +224,7 @@ namespace SpatialTrees
                 {
                     foreach (var item in _NodeItems)
                     {
-                        if ((objectTypes & item.ObjectTypes) == objectTypes)
+                        if (MatchesObjectTypes(objectTypes, item.ObjectTypes))
                         {
                             itemsFound.Add(item);
                         }
@@ -225,7 +235,7 @@ namespace SpatialTrees
                     // test each item in this node
                     foreach (var item in _NodeItems)
                     {
-                        if (collisionSphere.Intersects(item.BoundingBox) && ((objectTypes & item.ObjectTypes) == objectTypes))
+                        if (collisionSphere.Intersects(item.BoundingBox) && MatchesObjectTypes(objectTypes, item.ObjectTypes))
                         {
                             itemsFound.Add(item);
                         }

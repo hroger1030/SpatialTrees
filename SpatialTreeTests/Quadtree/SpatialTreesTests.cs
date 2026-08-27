@@ -190,5 +190,31 @@ namespace SpatialTreesTests
 
             Assert.That(itemsFound, Has.Some.Property(nameof(TestItem.Name)).EqualTo("TestItem6"));
         }
+
+        // A query mask combining several types is an OR: it returns items that carry any
+        // one of those types, not only items that carry all of them.
+        [Test]
+        [Category("Quadtree")]
+        public void Quadtree_ObjectTypeMask_CombinedMask_MatchesItemsOfEitherType()
+        {
+            var itemsFound = new HashSet<IMapObject2d>();
+            var searchArea = new Rectangle(-1, -1, 102, 102); // contains the entire world rectangle
+            int mask = (int)TestItem.Properties.Property2 | (int)TestItem.Properties.Property3;
+            _Quadtree.GetCollidingItems(searchArea, mask, ref itemsFound);
+
+            // TestItem2/3 (Property2), TestItem5 (Property3), TestItem6 (All) match; the Property1-only items do not
+            Assert.That(itemsFound.Count, Is.EqualTo(4));
+        }
+
+        [Test]
+        [Category("Quadtree")]
+        public void Quadtree_ObjectTypeMask_MaskDisjointFromItem_ExcludesItem()
+        {
+            var itemsFound = new HashSet<IMapObject2d>();
+            var searchArea = new Rectangle(4, 4, 3, 3); // overlaps TestItem2 (Property2) only
+            _Quadtree.GetCollidingItems(searchArea, (int)TestItem.Properties.Property1, ref itemsFound);
+
+            Assert.That(itemsFound, Is.Empty);
+        }
     }
 }

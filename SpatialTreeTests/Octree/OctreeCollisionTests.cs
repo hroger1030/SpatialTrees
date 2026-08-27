@@ -172,5 +172,29 @@ namespace SpatialTreesTests
 
             Assert.That(itemsFound, Has.Some.Property(nameof(TestVolumeItem.Name)).EqualTo("TestItem6"));
         }
+
+        // A query mask combining several types is an OR: it returns items that carry any
+        // one of those types, not only items that carry all of them.
+        [Test]
+        public void Octree_ObjectTypeMask_CombinedMask_MatchesItemsOfEitherType()
+        {
+            var itemsFound = new HashSet<IMapObject3d>();
+            var searchArea = new Cube(-1, -1, -1, 101, 101, 101); // contains the entire world cube
+            int mask = (int)TestVolumeItem.Properties.Property2 | (int)TestVolumeItem.Properties.Property3;
+            _Octree.GetCollidingItems(searchArea, mask, ref itemsFound);
+
+            // TestItem2/3 (Property2), TestItem5 (Property3), TestItem6 (All) match; the Property1-only items do not
+            Assert.That(itemsFound.Count, Is.EqualTo(4));
+        }
+
+        [Test]
+        public void Octree_ObjectTypeMask_MaskDisjointFromItem_ExcludesItem()
+        {
+            var itemsFound = new HashSet<IMapObject3d>();
+            var searchArea = new Cube(4, 4, 4, 7, 7, 7); // overlaps TestItem2 (Property2) only
+            _Octree.GetCollidingItems(searchArea, (int)TestVolumeItem.Properties.Property1, ref itemsFound);
+
+            Assert.That(itemsFound, Is.Empty);
+        }
     }
 }
