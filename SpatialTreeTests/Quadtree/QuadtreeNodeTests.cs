@@ -94,8 +94,13 @@ namespace SpatialTreesTests
         [Test]
         public void Depth_ChildOfRootIsTwo()
         {
-            var tree = new Quadtree(new Rectangle(0, 0, 100, 100), 5, 10);
-            tree.TopNode.Split();
+            var tree = new Quadtree(new Rectangle(0, 0, 100, 100), 5, 2);
+
+            // two items in the upper-right quadrant plus one elsewhere fills the root and
+            // splits it; the upper-right child is materialised as those two route into it.
+            tree.AddItem(new TestItem("a", 60, 40, (int)TestItem.Properties.Property1));
+            tree.AddItem(new TestItem("b", 90, 10, (int)TestItem.Properties.Property1));
+            tree.AddItem(new TestItem("c", 10, 90, (int)TestItem.Properties.Property1));
 
             Assert.That(tree.TopNode[(int)eQuadrant.UpperRightQuadrant].Depth, Is.EqualTo(2));
         }

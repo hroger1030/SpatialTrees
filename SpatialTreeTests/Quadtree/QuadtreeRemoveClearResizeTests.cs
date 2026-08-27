@@ -43,7 +43,7 @@ namespace SpatialTreesTests
 
             var result = _Quadtree.RemoveItem(item);
 
-            var itemsFound = new HashSet<IMapObject2d>();
+            var itemsFound = new List<IMapObject2d>();
             _Quadtree.GetCollidingItems(new Rectangle(0, 0, 100, 100), (int)TestItem.Properties.Property1, ref itemsFound);
 
             Assert.Multiple(() =>
@@ -120,7 +120,7 @@ namespace SpatialTreesTests
             s.Location = new Point2(95, 48);
             tree.MoveItem(s); // upper-left child down to 2 - it collapses
 
-            var itemsFound = new HashSet<IMapObject2d>();
+            var itemsFound = new List<IMapObject2d>();
             tree.GetCollidingItems(new Rectangle(0, 0, 100, 100), (int)TestItem.Properties.Property1, ref itemsFound);
 
             Assert.Multiple(() =>
@@ -146,7 +146,7 @@ namespace SpatialTreesTests
 
             tree.Clear();
 
-            var itemsFound = new HashSet<IMapObject2d>();
+            var itemsFound = new List<IMapObject2d>();
             var anyFound = tree.GetCollidingItems(new Rectangle(0, 0, 100, 100), (int)TestItem.Properties.Property1, ref itemsFound);
 
             Assert.Multiple(() =>
@@ -206,7 +206,7 @@ namespace SpatialTreesTests
 
             tree.Resize();
 
-            var itemsFound = new HashSet<IMapObject2d>();
+            var itemsFound = new List<IMapObject2d>();
             tree.GetCollidingItems(new Rectangle(9, 9, 2, 2), (int)TestItem.Properties.Property1, ref itemsFound);
 
             Assert.That(itemsFound, Does.Contain(item));

@@ -28,7 +28,7 @@ namespace BenchMarks
         private Cube[] _cubeQueries;
         private Sphere[] _sphereQueries;
         private Octree _prebuilt;
-        private HashSet<IMapObject3d> _results;
+        private List<IMapObject3d> _results;
 
         [GlobalSetup]
         public void Setup()
@@ -41,14 +41,14 @@ namespace BenchMarks
 
             _cubeQueries = WorldData.QueryCubes(QueryCount, QueryBoxSize);
             _sphereQueries = WorldData.QuerySpheres(QueryCount, QueryRadius);
-            _results = new HashSet<IMapObject3d>();
+            _results = new List<IMapObject3d>();
 
             _prebuilt = BuildTree();
         }
 
         public Octree BuildTree()
         {
-            var tree = new Octree(WorldData.World3d(), MaxDepth, MaxObjects);
+            var tree = new Octree(WorldData.World3d(), MaxDepth, MaxObjects, expectedItemCount: ItemCount);
 
             foreach (var item in _items)
                 tree.AddItem(item);

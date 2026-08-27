@@ -94,8 +94,13 @@ namespace SpatialTreesTests
         [Test]
         public void Depth_ChildOfRootIsTwo()
         {
-            var tree = new Octree(new Cube(0, 0, 0, 100, 100, 100), 5, 10);
-            tree.TopNode.Split();
+            var tree = new Octree(new Cube(0, 0, 0, 100, 100, 100), 5, 2);
+
+            // two items in the upper-right-near octant plus one elsewhere fills the root
+            // and splits it; that child is materialised as those two route into it.
+            tree.AddItem(new TestVolumeItem("a", 60, 40, 40, (int)TestVolumeItem.Properties.Property1));
+            tree.AddItem(new TestVolumeItem("b", 90, 10, 10, (int)TestVolumeItem.Properties.Property1));
+            tree.AddItem(new TestVolumeItem("c", 10, 90, 90, (int)TestVolumeItem.Properties.Property1));
 
             Assert.That(tree.TopNode[(int)eOctant.UpperRightNear].Depth, Is.EqualTo(2));
         }

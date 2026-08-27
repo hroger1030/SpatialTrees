@@ -45,7 +45,7 @@ namespace SpatialTreesTests
         [Test]
         public void Octree_FindItemsBasicCube_Passes()
         {
-            var itemsFound = new HashSet<IMapObject3d>();
+            var itemsFound = new List<IMapObject3d>();
             var searchArea = new Cube(1, 1, 1, 2, 2, 2);
             _Octree.GetCollidingItems(searchArea, (int)TestVolumeItem.Properties.Property1, ref itemsFound);
 
@@ -55,7 +55,7 @@ namespace SpatialTreesTests
         [Test]
         public void Octree_FindItemsBasicCubeOversized_Passes()
         {
-            var itemsFound = new HashSet<IMapObject3d>();
+            var itemsFound = new List<IMapObject3d>();
             var searchArea = new Cube(-1, -1, -1, 101, 101, 101);
             _Octree.GetCollidingItems(searchArea, (int)TestVolumeItem.Properties.Property1, ref itemsFound);
 
@@ -65,7 +65,7 @@ namespace SpatialTreesTests
         [Test]
         public void Octree_FindItemsBasicSphere_Passes()
         {
-            var itemsFound = new HashSet<IMapObject3d>();
+            var itemsFound = new List<IMapObject3d>();
             var searchArea = new Sphere(new Point3(1, 1, 1), 1);
             _Octree.GetCollidingItems(searchArea, (int)TestVolumeItem.Properties.Property1, ref itemsFound);
 
@@ -75,7 +75,7 @@ namespace SpatialTreesTests
         [Test]
         public void Octree_FindItemsBasicSphereOversized_Passes()
         {
-            var itemsFound = new HashSet<IMapObject3d>();
+            var itemsFound = new List<IMapObject3d>();
             var searchArea = new Sphere(new Point3(50, 50, 50), 100);
             _Octree.GetCollidingItems(searchArea, (int)TestVolumeItem.Properties.Property1, ref itemsFound);
 
@@ -85,7 +85,7 @@ namespace SpatialTreesTests
         [Test]
         public void Octree_FindItemsWithMatchingProperty_Passes()
         {
-            var itemsFound = new HashSet<IMapObject3d>();
+            var itemsFound = new List<IMapObject3d>();
             var searchArea = new Sphere(new Point3(3, 3, 3), 5);
             _Octree.GetCollidingItems(searchArea, (int)TestVolumeItem.Properties.Property2, ref itemsFound);
 
@@ -95,7 +95,7 @@ namespace SpatialTreesTests
         [Test]
         public void Octree_FindItemsBasicCubeOverlapping_Passes()
         {
-            var itemsFound = new HashSet<IMapObject3d>();
+            var itemsFound = new List<IMapObject3d>();
             var searchArea = new Cube(0, 0, 0, 1, 1, 1);
             _Octree.GetCollidingItems(searchArea, (int)TestVolumeItem.Properties.Property1, ref itemsFound);
 
@@ -105,7 +105,7 @@ namespace SpatialTreesTests
         [Test]
         public void Octree_FindItemsBasicSphereOverlapping_Passes()
         {
-            var itemsFound = new HashSet<IMapObject3d>();
+            var itemsFound = new List<IMapObject3d>();
             var searchArea = new Sphere(new Point3(1, 2, 1), 1);
             _Octree.GetCollidingItems(searchArea, (int)TestVolumeItem.Properties.Property1, ref itemsFound);
 
@@ -115,7 +115,7 @@ namespace SpatialTreesTests
         [Test]
         public void Octree_FindItemsCube_NoIntersection_ReturnsFalseAndEmptySet()
         {
-            var itemsFound = new HashSet<IMapObject3d>();
+            var itemsFound = new List<IMapObject3d>();
             var searchArea = new Cube(40, 0, 0, 45, 5, 5); // clear of every seeded item
             var result = _Octree.GetCollidingItems(searchArea, (int)TestVolumeItem.Properties.All, ref itemsFound);
 
@@ -129,7 +129,7 @@ namespace SpatialTreesTests
         [Test]
         public void Octree_FindItemsSphere_NoIntersection_ReturnsFalseAndEmptySet()
         {
-            var itemsFound = new HashSet<IMapObject3d>();
+            var itemsFound = new List<IMapObject3d>();
             var searchArea = new Sphere(new Point3(40, 0, 0), 2); // clear of every seeded item
             var result = _Octree.GetCollidingItems(searchArea, (int)TestVolumeItem.Properties.All, ref itemsFound);
 
@@ -143,7 +143,7 @@ namespace SpatialTreesTests
         [Test]
         public void Octree_FindItems_ReturnValueTrueWhenAnyItemFound()
         {
-            var itemsFound = new HashSet<IMapObject3d>();
+            var itemsFound = new List<IMapObject3d>();
             var searchArea = new Cube(1, 1, 1, 2, 2, 2);
             var result = _Octree.GetCollidingItems(searchArea, (int)TestVolumeItem.Properties.Property1, ref itemsFound);
 
@@ -156,7 +156,7 @@ namespace SpatialTreesTests
         [Test]
         public void Octree_ObjectTypeMask_PartialOverlapSearch_IncludesItemWithAllFlagsSet()
         {
-            var itemsFound = new HashSet<IMapObject3d>();
+            var itemsFound = new List<IMapObject3d>();
             var searchArea = new Cube(99, 99, 99, 101, 101, 101); // overlaps TestItem6 only, far smaller than the world cube
             _Octree.GetCollidingItems(searchArea, (int)TestVolumeItem.Properties.Property1, ref itemsFound);
 
@@ -166,7 +166,7 @@ namespace SpatialTreesTests
         [Test]
         public void Octree_ObjectTypeMask_SearchAreaContainsWholeNode_IncludesItemWithAllFlagsSet()
         {
-            var itemsFound = new HashSet<IMapObject3d>();
+            var itemsFound = new List<IMapObject3d>();
             var searchArea = new Cube(-1, -1, -1, 101, 101, 101); // contains the entire world cube
             _Octree.GetCollidingItems(searchArea, (int)TestVolumeItem.Properties.Property1, ref itemsFound);
 
@@ -178,7 +178,7 @@ namespace SpatialTreesTests
         [Test]
         public void Octree_ObjectTypeMask_CombinedMask_MatchesItemsOfEitherType()
         {
-            var itemsFound = new HashSet<IMapObject3d>();
+            var itemsFound = new List<IMapObject3d>();
             var searchArea = new Cube(-1, -1, -1, 101, 101, 101); // contains the entire world cube
             int mask = (int)TestVolumeItem.Properties.Property2 | (int)TestVolumeItem.Properties.Property3;
             _Octree.GetCollidingItems(searchArea, mask, ref itemsFound);
@@ -190,7 +190,7 @@ namespace SpatialTreesTests
         [Test]
         public void Octree_ObjectTypeMask_MaskDisjointFromItem_ExcludesItem()
         {
-            var itemsFound = new HashSet<IMapObject3d>();
+            var itemsFound = new List<IMapObject3d>();
             var searchArea = new Cube(4, 4, 4, 7, 7, 7); // overlaps TestItem2 (Property2) only
             _Octree.GetCollidingItems(searchArea, (int)TestVolumeItem.Properties.Property1, ref itemsFound);
 

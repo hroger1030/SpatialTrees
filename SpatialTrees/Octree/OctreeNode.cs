@@ -18,6 +18,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 using Geometry;
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics;
 
@@ -139,17 +140,21 @@ namespace SpatialTrees
                     // redistribute existing items into the new leaves. An item whose
                     // bounding box does not fit entirely inside a single child straddles
                     // an octant boundary and has to stay on this node, so pull everything
-                    // off first and let RouteItem decide where each one lands.
-                    var items_to_route = new List<IMapObject3d>(NodeItems);
+                    // off first and let RouteItem decide where each one lands. The scratch
+                    // array is pooled so a bulk build's many splits don't each allocate.
                     int moved = NodeItems.Count;
+                    IMapObject3d[] scratch = ArrayPool<IMapObject3d>.Shared.Rent(moved);
+                    NodeItems.CopyTo(scratch);
                     NodeItems.Clear();
                     // these items are about to be re-stored (on a child, or back here if
                     // they straddle); drop them from the running totals first so the
                     // per-item StoreItem calls below re-add them exactly once.
                     AdjustSubtreeCount(-moved);
 
-                    foreach (var item in items_to_route)
-                        RouteItem(item, item.BoundingBox);
+                    for (int i = 0; i < moved; i++)
+                        RouteItem(scratch[i], scratch[i].BoundingBox);
+
+                    ArrayPool<IMapObject3d>.Shared.Return(scratch, clearArray: true);
 
                     RouteItem(mapItem, itemBox);
                 }
@@ -182,17 +187,42 @@ namespace SpatialTrees
 
         /// <summary>
         /// Returns the child leaf whose bounding box fully contains <paramref name="itemBox"/>,
-        /// or null when the box straddles an octant boundary. Assumes this node has been split.
+        /// creating that child if it does not exist yet, or null when the box straddles an
+        /// octant boundary (in which case no child is created). Assumes this node has been split.
         /// </summary>
         public OctreeNode FindContainingLeaf(Cube itemBox)
         {
             eOctant octant = FindOctant(Center, itemBox.Center);
             OctreeNode leaf = Leaves[(int)octant];
 
-            if (leaf.BoundingBox.Contains(itemBox))
-                return leaf;
+            Cube childBox = leaf != null ? leaf.BoundingBox : ChildBox(octant);
+            if (!childBox.Contains(itemBox))
+                return null;
 
-            return null;
+            return leaf ?? (Leaves[(int)octant] = new OctreeNode(Octree, this, childBox));
+        }
+
+        /// <summary>
+        /// The bounding box of child octant <paramref name="octant"/>, computed from this
+        /// node's bounds whether or not that child has been created yet.
+        /// </summary>
+        protected Cube ChildBox(eOctant octant)
+        {
+            float x1 = BoundingBox.X1, y1 = BoundingBox.Y1, z1 = BoundingBox.Z1;
+            float x2 = BoundingBox.X2, y2 = BoundingBox.Y2, z2 = BoundingBox.Z2;
+            float cx = Center.X, cy = Center.Y, cz = Center.Z;
+
+            return octant switch
+            {
+                eOctant.UpperRightNear => new Cube(cx, y1, z1, x2, cy, cz),
+                eOctant.LowerRightNear => new Cube(cx, cy, z1, x2, y2, cz),
+                eOctant.LowerLeftNear => new Cube(x1, cy, z1, cx, y2, cz),
+                eOctant.UpperLeftNear => new Cube(x1, y1, z1, cx, cy, cz),
+                eOctant.UpperRightFar => new Cube(cx, y1, cz, x2, cy, z2),
+                eOctant.LowerRightFar => new Cube(cx, cy, cz, x2, y2, z2),
+                eOctant.LowerLeftFar => new Cube(x1, cy, cz, cx, y2, z2),
+                _ => new Cube(x1, y1, cz, cx, cy, z2),
+            };
         }
 
         /// <summary>
@@ -281,7 +311,7 @@ namespace SpatialTrees
         /// <summary>
         /// returns a list of unique items that are colliding with the item that is passed in.
         /// </summary>
-        public void GetCollidingItems(Cube collisionBox, int objectTypes, ref HashSet<IMapObject3d> itemsFound)
+        public void GetCollidingItems(Cube collisionBox, int objectTypes, ref List<IMapObject3d> itemsFound)
         {
             if (!BoundingBox.Intersects(collisionBox))
                 return;
@@ -319,7 +349,7 @@ namespace SpatialTrees
         /// <summary>
         /// returns a list of unique items that are colliding with the item that is passed in.
         /// </summary>
-        public void GetCollidingItems(Sphere collisionSphere, int objectTypes, ref HashSet<IMapObject3d> itemsFound)
+        public void GetCollidingItems(Sphere collisionSphere, int objectTypes, ref List<IMapObject3d> itemsFound)
         {
             if (!BoundingBox.Intersects(collisionSphere))
                 return;
@@ -359,7 +389,7 @@ namespace SpatialTrees
         /// with no spatial tests. Used by GetCollidingItems once a query region is known
         /// to fully contain this node.
         /// </summary>
-        public void CollectAll(int objectTypes, ref HashSet<IMapObject3d> itemsFound)
+        public void CollectAll(int objectTypes, ref List<IMapObject3d> itemsFound)
         {
             if (NodeItems != null)
             {
@@ -387,20 +417,9 @@ namespace SpatialTrees
             if (Leaves != null)
                 throw new Exception("Node already split");
 
+            // child nodes are materialised lazily by FindContainingLeaf as items route
+            // into each octant; an empty octant costs only its null array slot.
             Leaves = new OctreeNode[LEAVES];
-
-            float x1 = BoundingBox.X1, y1 = BoundingBox.Y1, z1 = BoundingBox.Z1;
-            float x2 = BoundingBox.X2, y2 = BoundingBox.Y2, z2 = BoundingBox.Z2;
-            float cx = Center.X, cy = Center.Y, cz = Center.Z;
-
-            Leaves[(int)eOctant.UpperRightNear] = new OctreeNode(Octree, this, new Cube(cx, y1, z1, x2, cy, cz));
-            Leaves[(int)eOctant.LowerRightNear] = new OctreeNode(Octree, this, new Cube(cx, cy, z1, x2, y2, cz));
-            Leaves[(int)eOctant.LowerLeftNear] = new OctreeNode(Octree, this, new Cube(x1, cy, z1, cx, y2, cz));
-            Leaves[(int)eOctant.UpperLeftNear] = new OctreeNode(Octree, this, new Cube(x1, y1, z1, cx, cy, cz));
-            Leaves[(int)eOctant.UpperRightFar] = new OctreeNode(Octree, this, new Cube(cx, y1, cz, x2, cy, z2));
-            Leaves[(int)eOctant.LowerRightFar] = new OctreeNode(Octree, this, new Cube(cx, cy, cz, x2, y2, z2));
-            Leaves[(int)eOctant.LowerLeftFar] = new OctreeNode(Octree, this, new Cube(x1, cy, cz, cx, y2, z2));
-            Leaves[(int)eOctant.UpperLeftFar] = new OctreeNode(Octree, this, new Cube(x1, y1, cz, cx, cy, z2));
         }
 
         /// <summary>

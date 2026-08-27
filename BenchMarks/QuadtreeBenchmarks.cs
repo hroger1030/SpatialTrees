@@ -30,7 +30,7 @@ namespace BenchMarks
         private Rectangle[] _rectQueries;
         private Circle[] _circleQueries;
         private Quadtree _prebuilt;
-        private HashSet<IMapObject2d> _results;
+        private List<IMapObject2d> _results;
 
         [GlobalSetup]
         public void Setup()
@@ -43,14 +43,14 @@ namespace BenchMarks
 
             _rectQueries = WorldData.QueryRects(QueryCount, QueryBoxSize);
             _circleQueries = WorldData.QueryCircles(QueryCount, QueryRadius);
-            _results = new HashSet<IMapObject2d>();
+            _results = new List<IMapObject2d>();
 
             _prebuilt = BuildTree();
         }
 
         public Quadtree BuildTree()
         {
-            var tree = new Quadtree(WorldData.World2d(), MaxDepth, MaxObjects);
+            var tree = new Quadtree(WorldData.World2d(), MaxDepth, MaxObjects, expectedItemCount: ItemCount);
 
             foreach (var item in _items)
                 tree.AddItem(item);

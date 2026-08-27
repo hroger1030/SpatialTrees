@@ -64,12 +64,18 @@ namespace SpatialTrees
 
         public Octree(Cube volume) : this(volume, DEFAULT_MAX_DEPTH, DEFAULT_MAX_OBJECTS) { }
 
-        public Octree(Cube boundingBox, int maxDepth, int maxObjects)
+        /// <param name="expectedItemCount">
+        /// Hint for how many items the tree will hold, used to pre-size the internal
+        /// item -> node index so a bulk build does not repeatedly grow it. 0 uses a
+        /// default; the tree still works correctly with any number of items.
+        /// </param>
+        public Octree(Cube boundingBox, int maxDepth, int maxObjects, int expectedItemCount = 0)
         {
             ArgumentOutOfRangeException.ThrowIfLessThan(maxDepth, 1);
             ArgumentOutOfRangeException.ThrowIfLessThan(maxObjects, 1);
+            ArgumentOutOfRangeException.ThrowIfNegative(expectedItemCount);
 
-            ObjectIndex = new Dictionary<IMapObject3d, OctreeNode>(DEFAULT_COLLECTION_SIZE);
+            ObjectIndex = new Dictionary<IMapObject3d, OctreeNode>(expectedItemCount > 0 ? expectedItemCount : DEFAULT_COLLECTION_SIZE);
             TopNode = new OctreeNode(this, null, boundingBox);
             MaxDepth = maxDepth;
             MaxNodeObjects = maxObjects;
@@ -263,10 +269,10 @@ namespace SpatialTrees
         /// overlaps <paramref name="collisionBox"/> and whose object type matches the mask.
         /// Returns true if anything was found.
         /// </summary>
-        public bool GetCollidingItems(Cube collisionBox, int objectTypes, ref HashSet<IMapObject3d> itemsFound)
+        public bool GetCollidingItems(Cube collisionBox, int objectTypes, ref List<IMapObject3d> itemsFound)
         {
             if (itemsFound == null)
-                itemsFound = new HashSet<IMapObject3d>();
+                itemsFound = new List<IMapObject3d>();
             else
                 itemsFound.Clear();
 
@@ -280,10 +286,10 @@ namespace SpatialTrees
         /// overlaps <paramref name="collisionSphere"/> and whose object type matches the
         /// mask. Returns true if anything was found.
         /// </summary>
-        public bool GetCollidingItems(Sphere collisionSphere, int objectTypes, ref HashSet<IMapObject3d> itemsFound)
+        public bool GetCollidingItems(Sphere collisionSphere, int objectTypes, ref List<IMapObject3d> itemsFound)
         {
             if (itemsFound == null)
-                itemsFound = new HashSet<IMapObject3d>();
+                itemsFound = new List<IMapObject3d>();
             else
                 itemsFound.Clear();
 

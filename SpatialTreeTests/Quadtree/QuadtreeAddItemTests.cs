@@ -73,7 +73,7 @@ namespace SpatialTreesTests
 
             Assert.That(_Quadtree.ObjectIndex.Count, Is.EqualTo(1));
 
-            var itemsFound = new HashSet<IMapObject2d>();
+            var itemsFound = new List<IMapObject2d>();
             _Quadtree.GetCollidingItems(new Rectangle(0, 0, 100, 100), (int)TestItem.Properties.Property1, ref itemsFound);
 
             Assert.That(itemsFound, Has.Count.EqualTo(1));

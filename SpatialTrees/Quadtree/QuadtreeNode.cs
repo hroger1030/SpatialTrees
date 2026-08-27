@@ -18,6 +18,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 using Geometry;
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics;
 
@@ -147,17 +148,21 @@ namespace SpatialTrees
                     // redistribute existing items into the new leaves. An item whose
                     // bounding box does not fit entirely inside a single child straddles
                     // a quadrant boundary and has to stay on this node, so pull everything
-                    // off first and let RouteItem decide where each one lands.
-                    var items_to_route = new List<IMapObject2d>(NodeItems);
+                    // off first and let RouteItem decide where each one lands. The scratch
+                    // array is pooled so a bulk build's many splits don't each allocate.
                     int moved = NodeItems.Count;
+                    IMapObject2d[] scratch = ArrayPool<IMapObject2d>.Shared.Rent(moved);
+                    NodeItems.CopyTo(scratch);
                     NodeItems.Clear();
                     // these items are about to be re-stored (on a child, or back here if
                     // they straddle); drop them from the running totals first so the
                     // per-item StoreItem calls below re-add them exactly once.
                     AdjustSubtreeCount(-moved);
 
-                    foreach (var item in items_to_route)
-                        RouteItem(item, item.BoundingBox);
+                    for (int i = 0; i < moved; i++)
+                        RouteItem(scratch[i], scratch[i].BoundingBox);
+
+                    ArrayPool<IMapObject2d>.Shared.Return(scratch, clearArray: true);
 
                     RouteItem(mapItem, itemBox);
                 }
@@ -190,17 +195,37 @@ namespace SpatialTrees
 
         /// <summary>
         /// Returns the child leaf whose bounding box fully contains <paramref name="itemBox"/>,
-        /// or null when the box straddles a quadrant boundary. Assumes this node has been split.
+        /// creating that child if it does not exist yet, or null when the box straddles a
+        /// quadrant boundary (in which case no child is created). Assumes this node has been split.
         /// </summary>
         public QuadtreeNode FindContainingLeaf(Rectangle itemBox)
         {
             eQuadrant quadrant = FindQuadrant(Center, itemBox.Center);
             QuadtreeNode leaf = Leaves[(int)quadrant];
 
-            if (leaf.BoundingBox.Contains(itemBox))
-                return leaf;
+            Rectangle childBox = leaf != null ? leaf.BoundingBox : ChildBox(quadrant);
+            if (!childBox.Contains(itemBox))
+                return null;
 
-            return null;
+            return leaf ?? (Leaves[(int)quadrant] = new QuadtreeNode(Quadtree, this, childBox));
+        }
+
+        /// <summary>
+        /// The bounding box of child quadrant <paramref name="quadrant"/>, computed from this
+        /// node's bounds whether or not that child has been created yet.
+        /// </summary>
+        protected Rectangle ChildBox(eQuadrant quadrant)
+        {
+            float halfWidth = BoundingBox.Width * 0.5f;
+            float halfHeight = BoundingBox.Height * 0.5f;
+
+            return quadrant switch
+            {
+                eQuadrant.UpperRightQuadrant => new Rectangle(Center.X, BoundingBox.Top, halfWidth, halfHeight),
+                eQuadrant.LowerRightQuadrant => new Rectangle(Center.X, Center.Y, halfWidth, halfHeight),
+                eQuadrant.LowerLeftQuadrant => new Rectangle(BoundingBox.Left, Center.Y, halfWidth, halfHeight),
+                _ => new Rectangle(BoundingBox.Left, BoundingBox.Top, halfWidth, halfHeight),
+            };
         }
 
         /// <summary>
@@ -289,7 +314,7 @@ namespace SpatialTrees
         /// <summary>
         /// returns a list of unique items that are colliding with the item that is passed in.
         /// </summary>
-        public void GetCollidingItems(Rectangle collisionBox, int objectTypes, ref HashSet<IMapObject2d> itemsFound)
+        public void GetCollidingItems(Rectangle collisionBox, int objectTypes, ref List<IMapObject2d> itemsFound)
         {
             if (!BoundingBox.Intersects(collisionBox))
                 return;
@@ -327,7 +352,7 @@ namespace SpatialTrees
         /// <summary>
         /// returns a list of unique items that are colliding with the item that is passed in.
         /// </summary>
-        public void GetCollidingItems(Circle collisionCircle, int objectTypes, ref HashSet<IMapObject2d> itemsFound)
+        public void GetCollidingItems(Circle collisionCircle, int objectTypes, ref List<IMapObject2d> itemsFound)
         {
             if (!BoundingBox.Intersects(collisionCircle))
                 return;
@@ -367,7 +392,7 @@ namespace SpatialTrees
         /// with no spatial tests. Used by GetCollidingItems once a query region is known
         /// to fully contain this node.
         /// </summary>
-        public void CollectAll(int objectTypes, ref HashSet<IMapObject2d> itemsFound)
+        public void CollectAll(int objectTypes, ref List<IMapObject2d> itemsFound)
         {
             if (NodeItems != null)
             {
@@ -395,15 +420,9 @@ namespace SpatialTrees
             if (Leaves != null)
                 throw new Exception("Node already split");
 
+            // child nodes are materialised lazily by FindContainingLeaf as items route
+            // into each quadrant; an empty quadrant costs only its null array slot.
             Leaves = new QuadtreeNode[LEAVES];
-
-            float new_width = BoundingBox.Width / 2;
-            float new_height = BoundingBox.Height / 2;
-
-            Leaves[(int)eQuadrant.UpperRightQuadrant] = new QuadtreeNode(Quadtree, this, new Rectangle(Center.X, BoundingBox.Top, new_width, new_height));
-            Leaves[(int)eQuadrant.LowerRightQuadrant] = new QuadtreeNode(Quadtree, this, new Rectangle(Center.X, Center.Y, new_width, new_height));
-            Leaves[(int)eQuadrant.LowerLeftQuadrant] = new QuadtreeNode(Quadtree, this, new Rectangle(BoundingBox.Left, Center.Y, new_width, new_height));
-            Leaves[(int)eQuadrant.UpperLeftQuadrant] = new QuadtreeNode(Quadtree, this, new Rectangle(BoundingBox.Left, BoundingBox.Top, new_width, new_height));
         }
 
         /// <summary>

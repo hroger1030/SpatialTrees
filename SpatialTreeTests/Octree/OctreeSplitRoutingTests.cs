@@ -119,7 +119,7 @@ namespace SpatialTreesTests
             tree.AddItem(new TestVolumeItem("G", 60, 40, 40, (int)TestVolumeItem.Properties.Property1));
             tree.AddItem(new TestVolumeItem("H", 90, 40, 40, (int)TestVolumeItem.Properties.Property1));
 
-            var itemsFound = new HashSet<IMapObject3d>();
+            var itemsFound = new List<IMapObject3d>();
             tree.GetCollidingItems(new Cube(89, 9, 9, 91, 11, 11), (int)TestVolumeItem.Properties.Property1, ref itemsFound);
 
             Assert.That(itemsFound, Does.Contain(target));
@@ -159,7 +159,7 @@ namespace SpatialTreesTests
 
             // search box sits entirely inside the lower-right-far octant but overlaps the
             // straddling item. Before routing accounted for extent this returned nothing.
-            var itemsFound = new HashSet<IMapObject3d>();
+            var itemsFound = new List<IMapObject3d>();
             tree.GetCollidingItems(new Cube(55, 55, 55, 58, 58, 58), (int)TestVolumeItem.Properties.Property1, ref itemsFound);
 
             Assert.That(itemsFound, Does.Contain(straddle));

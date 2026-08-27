@@ -65,12 +65,18 @@ namespace SpatialTrees
 
         public Quadtree(Rectangle area) : this(area, DEFAULT_MAX_DEPTH, DEFAULT_MAX_OBJECTS) { }
 
-        public Quadtree(Rectangle boundingBox, int maxDepth, int maxObjects)
+        /// <param name="expectedItemCount">
+        /// Hint for how many items the tree will hold, used to pre-size the internal
+        /// item -> node index so a bulk build does not repeatedly grow it. 0 uses a
+        /// default; the tree still works correctly with any number of items.
+        /// </param>
+        public Quadtree(Rectangle boundingBox, int maxDepth, int maxObjects, int expectedItemCount = 0)
         {
             ArgumentOutOfRangeException.ThrowIfLessThan(maxDepth, 1);
             ArgumentOutOfRangeException.ThrowIfLessThan(maxObjects, 1);
+            ArgumentOutOfRangeException.ThrowIfNegative(expectedItemCount);
 
-            ObjectIndex = new Dictionary<IMapObject2d, QuadtreeNode>(DEFAULT_COLLECTION_SIZE);
+            ObjectIndex = new Dictionary<IMapObject2d, QuadtreeNode>(expectedItemCount > 0 ? expectedItemCount : DEFAULT_COLLECTION_SIZE);
             TopNode = new QuadtreeNode(this, null, boundingBox);
             MaxDepth = maxDepth;
             MaxNodeObjects = maxObjects;
@@ -264,10 +270,10 @@ namespace SpatialTrees
         /// overlaps <paramref name="collisionBox"/> and whose object type matches the mask.
         /// Returns true if anything was found.
         /// </summary>
-        public bool GetCollidingItems(Rectangle collisionBox, int objectTypes, ref HashSet<IMapObject2d> itemsFound)
+        public bool GetCollidingItems(Rectangle collisionBox, int objectTypes, ref List<IMapObject2d> itemsFound)
         {
             if (itemsFound == null)
-                itemsFound = new HashSet<IMapObject2d>();
+                itemsFound = new List<IMapObject2d>();
             else
                 itemsFound.Clear();
 
@@ -281,10 +287,10 @@ namespace SpatialTrees
         /// overlaps <paramref name="collisionCircle"/> and whose object type matches the
         /// mask. Returns true if anything was found.
         /// </summary>
-        public bool GetCollidingItems(Circle collisionCircle, int objectTypes, ref HashSet<IMapObject2d> itemsFound)
+        public bool GetCollidingItems(Circle collisionCircle, int objectTypes, ref List<IMapObject2d> itemsFound)
         {
             if (itemsFound == null)
-                itemsFound = new HashSet<IMapObject2d>();
+                itemsFound = new List<IMapObject2d>();
             else
                 itemsFound.Clear();
 
