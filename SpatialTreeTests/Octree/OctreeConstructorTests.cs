@@ -34,8 +34,8 @@ namespace SpatialTreesTests
 
             Assert.Multiple((Action)(() =>
             {
-                Assert.That(tree.MaxDepth, Is.EqualTo(5));
-                Assert.That((int)tree.MaxNodeObjects, Is.EqualTo(100));
+                Assert.That(tree.MaxDepth, Is.EqualTo(8));
+                Assert.That((int)tree.MaxNodeObjects, Is.EqualTo(16));
                 Assert.That(tree.WorldCube.Width, Is.EqualTo(1f));
                 Assert.That(tree.WorldCube.Height, Is.EqualTo(1f));
                 Assert.That(tree.WorldCube.Depth, Is.EqualTo(1f));
@@ -49,8 +49,8 @@ namespace SpatialTreesTests
 
             Assert.Multiple((Action)(() =>
             {
-                Assert.That(tree.MaxDepth, Is.EqualTo(5));
-                Assert.That((int)tree.MaxNodeObjects, Is.EqualTo(100));
+                Assert.That(tree.MaxDepth, Is.EqualTo(8));
+                Assert.That((int)tree.MaxNodeObjects, Is.EqualTo(16));
                 Assert.That(tree.WorldCube.Width, Is.EqualTo(50f));
                 Assert.That(tree.WorldCube.Height, Is.EqualTo(25f));
                 Assert.That(tree.WorldCube.Depth, Is.EqualTo(10f));

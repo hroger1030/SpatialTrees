@@ -40,6 +40,11 @@ namespace SpatialTrees
         public List<IMapObject2d> NodeItems { get; protected set; }
         public int Depth { get; protected set; }
 
+        // number of items held anywhere in this node's subtree (this node's NodeItems
+        // plus every descendant's). Maintained incrementally by StoreItem / RemoveStoredItem
+        // so CollapseUpward does not have to re-walk the subtree on every remove.
+        public int SubtreeCount { get; protected set; }
+
         // bounding-box centre, cached as scalars at construction so routing does not
         // allocate a Point2 (Rectangle.Center) on every level of every insert.
         public float CenterX { get; protected set; }
@@ -146,7 +151,12 @@ namespace SpatialTrees
                     // a quadrant boundary and has to stay on this node, so pull everything
                     // off first and let RouteItem decide where each one lands.
                     var items_to_route = new List<IMapObject2d>(NodeItems);
+                    int moved = NodeItems.Count;
                     NodeItems.Clear();
+                    // these items are about to be re-stored (on a child, or back here if
+                    // they straddle); drop them from the running totals first so the
+                    // per-item StoreItem calls below re-add them exactly once.
+                    AdjustSubtreeCount(-moved);
 
                     foreach (var item in items_to_route)
                         RouteItem(item, item.BoundingBox);
@@ -206,6 +216,7 @@ namespace SpatialTrees
         public void StoreItem(IMapObject2d mapItem)
         {
             (NodeItems ??= new List<IMapObject2d>()).Add(mapItem);
+            AdjustSubtreeCount(1);
 
             if (Quadtree.ObjectIndex.ContainsKey(mapItem))
                 Quadtree.ObjectIndex[mapItem] = this;
@@ -213,9 +224,53 @@ namespace SpatialTrees
                 Quadtree.ObjectIndex.Add(mapItem, this);
         }
 
+        /// <summary>
+        /// Removes an item stored directly on this node and keeps the subtree counts in
+        /// step. Returns false if the item was not held here. The tree's object index is
+        /// the caller's responsibility.
+        /// </summary>
+        public bool RemoveStoredItem(IMapObject2d mapItem)
+        {
+            if (NodeItems == null || !NodeItems.Remove(mapItem))
+                return false;
+
+            AdjustSubtreeCount(-1);
+            return true;
+        }
+
+        /// <summary>
+        /// Adds <paramref name="delta"/> to this node's SubtreeCount and every ancestor's.
+        /// </summary>
+        public void AdjustSubtreeCount(int delta)
+        {
+            for (QuadtreeNode node = this; node != null; node = node.Parent)
+                node.SubtreeCount += delta;
+        }
+
+        /// <summary>
+        /// Recomputes this node's SubtreeCount from its own items plus its childrens'
+        /// counts (assumed already correct). O(children); used by Quadtree.Resize.
+        /// </summary>
+        public void RefreshSubtreeCount()
+        {
+            int total = NodeItems?.Count ?? 0;
+
+            if (Leaves != null)
+            {
+                foreach (var leaf in Leaves)
+                {
+                    if (leaf != null)
+                        total += leaf.SubtreeCount;
+                }
+            }
+
+            SubtreeCount = total;
+        }
+
         public void RemoveAllLeafItems(bool recursive)
         {
             NodeItems?.Clear();
+            SubtreeCount = 0;
 
             if (recursive && Leaves != null)
             {
@@ -357,20 +412,13 @@ namespace SpatialTrees
             Leaves[(int)eQuadrant.UpperLeftQuadrant] = new QuadtreeNode(Quadtree, this, new Rectangle(BoundingBox.Left, BoundingBox.Top, new_width, new_height));
         }
 
+        /// <summary>
+        /// Number of items held anywhere in this node's subtree. O(1) - returns the
+        /// running <see cref="SubtreeCount"/>.
+        /// </summary>
         public int GetChildObjectCount()
         {
-            int total = NodeItems?.Count ?? 0;
-
-            if (Leaves != null)
-            {
-                foreach (var leaf in Leaves)
-                {
-                    if (leaf != null)
-                        total += leaf.GetChildObjectCount();
-                }
-            }
-
-            return total;
+            return SubtreeCount;
         }
 
         /// <summary>

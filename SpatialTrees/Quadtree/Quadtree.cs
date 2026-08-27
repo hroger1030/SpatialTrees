@@ -40,11 +40,14 @@ namespace SpatialTrees
     /// use only. Callers that touch it from multiple threads must serialize access
     /// themselves. Thread-safe variants of both spatial trees are planned.
     /// </summary>
-    [DebuggerDisplay("Quadtree {WorldRectangle.Width} x {WorldRectangle.Height}, {_ObjectIndex.Count} items")]
+    [DebuggerDisplay("Quadtree {WorldRectangle.Width} x {WorldRectangle.Height}, {ObjectIndex.Count} items")]
     public class Quadtree
     {
-        protected readonly static int DEFAULT_MAX_DEPTH = 5;
-        protected readonly static int DEFAULT_MAX_OBJECTS = 100;
+        // a leaf scans its items linearly before a query can prune past it, so a lower
+        // per-node cap keeps those scans short; the deeper tree that allows is cheap now
+        // that interior nodes defer their item-list allocation.
+        protected readonly static int DEFAULT_MAX_DEPTH = 8;
+        protected readonly static int DEFAULT_MAX_OBJECTS = 16;
         protected readonly static int DEFAULT_COLLECTION_SIZE = 1000;
 
         public Dictionary<IMapObject2d, QuadtreeNode> ObjectIndex { get; protected set; }
@@ -97,6 +100,10 @@ namespace SpatialTrees
             // now-stale cached depths (everything below it just dropped a level)
             TopNode[(int)eQuadrant.UpperLeftQuadrant] = old_top_node;
             old_top_node.Reparent(TopNode);
+
+            // the new top node inherits the old tree's whole item count (its three new
+            // sibling leaves are empty)
+            TopNode.RefreshSubtreeCount();
         }
 
         /// <summary>
@@ -174,7 +181,7 @@ namespace SpatialTrees
 
                         if (target_leaf != null)
                         {
-                            current_node.NodeItems?.Remove(item);
+                            current_node.RemoveStoredItem(item);
                             target_leaf.AddItem(item, itemBox);
                         }
                     }
@@ -191,7 +198,7 @@ namespace SpatialTrees
                 // still here? remove item entry from node list, then collapse any
                 // now-underfull ancestors before re-inserting from the top.
                 ObjectIndex.Remove(item);
-                current_node.NodeItems?.Remove(item);
+                current_node.RemoveStoredItem(item);
                 current_node.CollapseUpward();
             }
 
@@ -210,7 +217,7 @@ namespace SpatialTrees
             if (!ObjectIndex.TryGetValue(item, out var node))
                 return false;
 
-            node.NodeItems?.Remove(item);
+            node.RemoveStoredItem(item);
             ObjectIndex.Remove(item);
 
             return true;
@@ -220,7 +227,7 @@ namespace SpatialTrees
         {
             if (ObjectIndex.TryGetValue(item, out var node))
             {
-                node.NodeItems?.Remove(item);
+                node.RemoveStoredItem(item);
                 ObjectIndex.Remove(item);
 
                 // pull any ancestors that are now underfull back into a single leaf
@@ -254,7 +261,9 @@ namespace SpatialTrees
         }
 
         /// <summary>
-        /// returns a list of unique items that are colliding with the item that is passed in.
+        /// Fills <paramref name="itemsFound"/> with every unique item whose bounding box
+        /// overlaps <paramref name="collisionBox"/> and whose object type matches the mask.
+        /// Returns true if anything was found.
         /// </summary>
         public bool GetCollidingItems(Rectangle collisionBox, int objectTypes, ref HashSet<IMapObject2d> itemsFound)
         {
@@ -265,22 +274,24 @@ namespace SpatialTrees
 
             TopNode.GetCollidingItems(collisionBox, objectTypes, ref itemsFound);
 
-            return (itemsFound.Count > 0);
+            return itemsFound.Count > 0;
         }
 
         /// <summary>
-        /// returns a list of unique items that are colliding with the item that is passed in.
+        /// Fills <paramref name="itemsFound"/> with every unique item whose bounding box
+        /// overlaps <paramref name="collisionCircle"/> and whose object type matches the
+        /// mask. Returns true if anything was found.
         /// </summary>
-        public bool GetCollidingItems(Circle collisionCircle, int objectPoperties, ref HashSet<IMapObject2d> itemsFound)
+        public bool GetCollidingItems(Circle collisionCircle, int objectTypes, ref HashSet<IMapObject2d> itemsFound)
         {
             if (itemsFound == null)
                 itemsFound = new HashSet<IMapObject2d>();
             else
                 itemsFound.Clear();
 
-            TopNode.GetCollidingItems(collisionCircle, objectPoperties, ref itemsFound);
+            TopNode.GetCollidingItems(collisionCircle, objectTypes, ref itemsFound);
 
-            return (itemsFound.Count > 0);
+            return itemsFound.Count > 0;
         }
 
         public override string ToString()

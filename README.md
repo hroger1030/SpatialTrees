@@ -76,16 +76,18 @@ To initialize a new quadtree, use the following code:
 
 ```csharp
 var boundingBox = new Rectangle(0, 0, 1000, 1000);
-var maxDepth = 5;
-var maxObjects = 100;
+var maxDepth = 8;
+var maxObjects = 16;
 var tree = new Quadtree(boundingBox, maxDepth, maxObjects);
 ```
 
 - `boundingBox` is the outer boundary of the search space.
 - `maxDepth` is the number of levels of "resolution". The more levels you add, the more finely the space is subdivided, and the
   more memory is consumed.
-- `maxObjects` is a per-node limit on how many objects a node holds before it splits. Set it as high as you like if you have
-  memory and CPU to spare.
+- `maxObjects` is a per-node limit on how many objects a node holds before it splits. A query has to scan a node's items
+  linearly before it can prune past that node, so keep this small (8–32); raise `maxDepth` instead if you need more capacity.
+
+The parameterless / bounding-box-only constructors default to `maxDepth = 8`, `maxObjects = 16`.
 
 Searches use binary space partitioning, which is very fast. Objects are indexed internally, so moving them within the tree is
 also quick.
@@ -141,8 +143,8 @@ and filtering behavior, just with a `Cube`/`Sphere`/`Point3` in place of `Rectan
 
 ```csharp
 var boundingBox = new Cube(0, 0, 0, 1000, 1000, 1000);
-var maxDepth = 5;
-var maxObjects = 100;
+var maxDepth = 8;
+var maxObjects = 16;
 var tree = new Octree(boundingBox, maxDepth, maxObjects);
 ```
 
