@@ -140,6 +140,35 @@ namespace SpatialTreesTests
             Assert.Throws<ArgumentException>(() => _Quadtree.AddItem(item));
         }
 
+        // Re-adding a known item is treated as an update: it must end up indexed against
+        // the node that actually holds it, with no leftover entry on its previous node.
+        [Test]
+        public void AddItem_ReAddKnownItemAtNewLocation_ObjectIndexPointsAtHoldingNode()
+        {
+            var tree = new Quadtree(new Rectangle(0, 0, 100, 100), 5, 2);
+
+            tree.AddItem(new TestItem("a", 10, 10, (int)TestItem.Properties.Property1));
+            tree.AddItem(new TestItem("b", 90, 10, (int)TestItem.Properties.Property1));
+            tree.AddItem(new TestItem("c", 10, 90, (int)TestItem.Properties.Property1));
+            var mover = new TestItem("mover", 90, 90, (int)TestItem.Properties.Property1); // lower-right
+            tree.AddItem(mover); // 4th item splits the root
+
+            var firstNode = tree.ObjectIndex[mover];
+
+            mover.Location = new Point2(12, 12); // now upper-left
+            tree.AddItem(mover);
+
+            var secondNode = tree.ObjectIndex[mover];
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(tree.ObjectIndex, Has.Count.EqualTo(4));
+                Assert.That(secondNode, Is.Not.SameAs(firstNode));
+                Assert.That(secondNode.NodeItems, Does.Contain(mover));
+                Assert.That(firstNode.NodeItems, Does.Not.Contain(mover));
+            });
+        }
+
         // A map object whose Location is not tied to its BoundingBox, for tests that need
         // the two to diverge.
         public class DivergentItem : IMapObject2d

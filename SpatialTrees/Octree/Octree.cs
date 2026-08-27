@@ -140,8 +140,10 @@ namespace SpatialTrees
 
             if (_ObjectIndex.ContainsKey(item))
             {
-                // already here, treat this as a move/update
-                _ObjectIndex[item].NodeItems.Remove(item);
+                // already here, treat this as a move/update. Pull it out completely -
+                // both the node list and the object index - so the re-add below starts
+                // from a clean state instead of leaving a stale index entry.
+                RemoveItem(item);
             }
 
             return _TopNode.AddItem(item);
