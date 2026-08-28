@@ -21,6 +21,7 @@ using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 namespace SpatialTrees
 {
@@ -122,8 +123,10 @@ namespace SpatialTrees
         /// </summary>
         public void AddItem(IMapObject3d mapItem, Cube itemBox)
         {
-            if (NodeItems != null && NodeItems.Contains(mapItem))
-                return;
+            // no dup guard here: Octree.AddItem already does ContainsKey -> DetachItem, so
+            // a routed item is never already somewhere in the tree by the time it reaches
+            // a node. The redistribute path below only re-routes items it just pulled off
+            // this node, so those cannot collide either.
 
             if (Leaves == null)
             {
@@ -298,6 +301,7 @@ namespace SpatialTrees
         /// least one of the requested type bits, so a query mask combining several types
         /// returns items of any of those types. A mask of 0 matches nothing.
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool MatchesObjectTypes(int queryMask, int itemObjectTypes)
         {
             return (queryMask & itemObjectTypes) != 0;
@@ -319,15 +323,15 @@ namespace SpatialTrees
                 return;
             }
 
-            if (NodeItems is { Count: > 0 })
+            var items = NodeItems;
+            if (items != null)
             {
-                // test each item in this node
-                foreach (var item in NodeItems)
+                // test each item in this node - cheap type mask first, then the geometry
+                for (int i = 0, n = items.Count; i < n; i++)
                 {
-                    if (collisionBox.Intersects(item.BoundingBox) && MatchesObjectTypes(objectTypes, item.ObjectTypes))
-                    {
+                    var item = items[i];
+                    if (MatchesObjectTypes(objectTypes, item.ObjectTypes) && collisionBox.Intersects(item.BoundingBox))
                         itemsFound.Add(item);
-                    }
                 }
             }
 
@@ -357,15 +361,15 @@ namespace SpatialTrees
                 return;
             }
 
-            if (NodeItems is { Count: > 0 })
+            var items = NodeItems;
+            if (items != null)
             {
-                // test each item in this node
-                foreach (var item in NodeItems)
+                // test each item in this node - cheap type mask first, then the geometry
+                for (int i = 0, n = items.Count; i < n; i++)
                 {
-                    if (collisionSphere.Intersects(item.BoundingBox) && MatchesObjectTypes(objectTypes, item.ObjectTypes))
-                    {
+                    var item = items[i];
+                    if (MatchesObjectTypes(objectTypes, item.ObjectTypes) && collisionSphere.Intersects(item.BoundingBox))
                         itemsFound.Add(item);
-                    }
                 }
             }
 
@@ -386,14 +390,14 @@ namespace SpatialTrees
         /// </summary>
         public void CollectAll(int objectTypes, ref List<IMapObject3d> itemsFound)
         {
-            if (NodeItems != null)
+            var items = NodeItems;
+            if (items != null)
             {
-                foreach (var item in NodeItems)
+                for (int i = 0, n = items.Count; i < n; i++)
                 {
+                    var item = items[i];
                     if (MatchesObjectTypes(objectTypes, item.ObjectTypes))
-                    {
                         itemsFound.Add(item);
-                    }
                 }
             }
 

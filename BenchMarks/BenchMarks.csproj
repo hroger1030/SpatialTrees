@@ -17,8 +17,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\SpatialTrees\SpatialTrees.csproj" />
     <ProjectReference Include="..\..\Geometry\GeometryLib\Geometry.csproj" />
+    <ProjectReference Include="..\SpatialTrees\SpatialTrees.csproj" />
   </ItemGroup>
 
 </Project>

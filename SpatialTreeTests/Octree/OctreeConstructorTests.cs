@@ -82,5 +82,23 @@ namespace SpatialTreesTests
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => new Octree(new Cube(0, 0, 0, 100, 100, 100), 5, 0));
         }
+
+        [Test]
+        public void Constructor_NegativeExpectedItemCount_ThrowsArgumentOutOfRangeException()
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() => new Octree(new Cube(0, 0, 0, 100, 100, 100), 5, 10, -1));
+        }
+
+        [Test]
+        public void Constructor_ExpectedItemCountHint_ProducesAWorkingTree()
+        {
+            var tree = new Octree(new Cube(0, 0, 0, 100, 100, 100), 5, 4, expectedItemCount: 500);
+
+            for (int i = 0; i < 200; i++)
+                tree.AddItem(new TestVolumeItem($"i{i}", i % 100, (i * 7) % 100, (i * 3) % 100, (int)TestVolumeItem.Properties.Property1));
+
+            Assert.That(tree.ObjectIndex, Has.Count.EqualTo(200));
+            Assert.That(tree.TopNode.GetChildObjectCount(), Is.EqualTo(200));
+        }
     }
 }

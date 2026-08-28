@@ -99,7 +99,7 @@ namespace SpatialTreesTests
 
         // Renamed from "...SquareTangent_Passes": the search rectangle (0,0)-(1,1) and TestItem1's
         // bounding box (0.5,0.5)-(1.5,1.5) genuinely overlap over a 0.5x0.5 area, they don't just touch
-        // at an edge/corner. See QuadtreeGetCollidingItemsTangencyTests for true zero-area tangency cases.
+        // at an edge/corner. See QuadtreeCollisionTests for true zero-area tangency cases.
         [Test]
         [Category("Quadtree")]
         public void Quadtree_FindItemsBasicSquareOverlapping_Passes()
@@ -113,7 +113,7 @@ namespace SpatialTreesTests
 
         // Renamed from "...CircleTangent_Passes": the circle center (1,2)/radius 1 comes within 0.5 units
         // of TestItem1's bounding box, well inside the radius rather than exactly touching it.
-        // See QuadtreeGetCollidingItemsTangencyTests for true boundary-distance tangency.
+        // See QuadtreeCollisionTests for true boundary-distance tangency.
         [Test]
         [Category("Quadtree")]
         public void Quadtree_FindItemsBasicCircleOverlapping_Passes()

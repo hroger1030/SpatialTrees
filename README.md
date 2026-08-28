@@ -1,8 +1,9 @@
 # Spatial Trees
 
-This library lets you quickly build and search a quadtree (2D) or octree (3D) spatial index. Both are optimized for fast
-inserts and updates of objects, making them well suited to real-time game and physics applications. The octree mirrors the
-quadtree's design one dimension up — same API shape, same splitting behavior, just with a Z axis added.
+This library lets you quickly build and search a quadtree (2D) or octree (3D) spatial index. Both are tuned for real-time
+game and physics use: fast incremental inserts and moves, a one-shot bulk `Build` for the load-everything-up-front case, and
+collision queries that allocate nothing on the heap. The octree mirrors the quadtree's design one dimension up — same API
+shape, same splitting behavior, just with a Z axis added.
 
 ## Table of contents
 
@@ -13,6 +14,7 @@ quadtree's design one dimension up — same API shape, same splitting behavior, 
   - [Building and testing](#building-and-testing)
   - [Thread safety](#thread-safety)
   - [Creating a quadtree](#creating-a-quadtree)
+  - [Choosing MaxDepth](#choosing-maxdepth)
   - [Items](#items)
   - [Creating an octree](#creating-an-octree)
   - [Volume items](#volume-items)
@@ -44,16 +46,18 @@ SpatialTrees/
 │       ├── Octree.cs
 │       ├── OctreeNode.cs
 │       └── eOctant.cs
-└── SpatialTreeTests/          # NUnit test project
-    ├── SpatialTreeTests.csproj
-    ├── Quadtree/
-    │   ├── SpatialTreesTests.cs
-    │   ├── TestItem.cs
-    │   └── ...                # AddItem/MoveItem/RemoveItem/Clear/Resize/etc. test fixtures
-    └── Octree/
-        ├── OctreeCollisionTests.cs
-        ├── TestVolumeItem.cs
-        └── ...                # same fixture layout as Quadtree, one dimension up
+├── SpatialTreeTests/          # NUnit test project
+│   ├── SpatialTreeTests.csproj
+│   ├── Quadtree/
+│   │   ├── SpatialTreesTests.cs
+│   │   ├── TestItem.cs
+│   │   └── ...                # AddItem/MoveItem/RemoveItem/Build/Clear/Resize/etc. fixtures
+│   └── Octree/
+│       ├── OctreeCollisionTests.cs
+│       ├── TestVolumeItem.cs
+│       └── ...                # same fixture layout as Quadtree, one dimension up
+└── BenchMarks/                # BenchmarkDotNet perf suite (see BenchMarks/README.md)
+    └── BenchMarks.csproj
 ```
 
 ## Building and testing
@@ -64,6 +68,9 @@ dotnet test SpatialTrees.sln
 ```
 
 Unit tests are written with NUnit and live in the `SpatialTreeTests` project.
+
+The `BenchMarks` project is a BenchmarkDotNet suite for measuring insert, build, and query performance. Run it in Release:
+`dotnet run -c Release --project BenchMarks -- --filter *Quadtree*` (see `BenchMarks/README.md`).
 
 ## Thread safety
 
@@ -83,11 +90,18 @@ var tree = new Quadtree(boundingBox, maxDepth, maxObjects);
 
 - `boundingBox` is the outer boundary of the search space.
 - `maxDepth` is the number of levels of "resolution". The more levels you add, the more finely the space is subdivided, and the
-  more memory is consumed.
+  more memory is consumed. See [Choosing MaxDepth](#choosing-maxdepth) for how to pick it.
 - `maxObjects` is a per-node limit on how many objects a node holds before it splits. A query has to scan a node's items
   linearly before it can prune past that node, so keep this small (8–32); raise `maxDepth` instead if you need more capacity.
 
 The parameterless / bounding-box-only constructors default to `maxDepth = 8`, `maxObjects = 16`.
+
+A fourth optional argument, `expectedItemCount`, pre-sizes the internal item-to-node index so a large build doesn't
+repeatedly grow it:
+
+```csharp
+var tree = new Quadtree(boundingBox, maxDepth, maxObjects, expectedItemCount: 50_000);
+```
 
 If you have every item up front, build the tree in one pass instead of adding them one at a time:
 
@@ -98,20 +112,23 @@ var tree = Quadtree.Build(boundingBox, maxDepth, maxObjects, items); // items: I
 `Build` partitions the items one quadrant boundary at a time and assembles the nodes bottom-up, so it does none of the
 repeated leaf split-and-redistribute work the incremental path does and sizes the internal index and each leaf's item list
 exactly. It is materially faster and lighter for the build-once case; use `AddItem` for changes afterwards. Items must be
-distinct references and each must satisfy the same rules `AddItem` enforces.
+distinct references and each must satisfy the same rules `AddItem` enforces. There is also a `Quadtree.Build(boundingBox,
+items)` overload that uses the default depth and object limits.
 
-Searches use binary space partitioning, which is very fast. Objects are indexed internally, so moving them within the tree is
-also quick.
+Searches use binary space partitioning, which is very fast, and collision queries allocate nothing on the heap — the caller
+supplies the result list and it is reused. Objects are indexed internally, so moving them within the tree is also quick.
 
 The following methods are available on a `Quadtree`:
 
 ```
 static Build(Rectangle boundingBox, int maxDepth, int maxObjects, IReadOnlyCollection<IMapObject2d> items)
-    Builds a tree from all of its items in one bottom-up pass. Throws ArgumentException
-    for an item outside the world or with no object type bits, same as AddItem.
+static Build(Rectangle boundingBox, IReadOnlyCollection<IMapObject2d> items)
+    Builds a tree from all of its items in one bottom-up pass. The short overload uses
+    the default depth and object limits. Throws ArgumentException for an item outside
+    the world or with no object type bits, same as AddItem.
 
 Resize()
-    Doubles the outer bounding box by adding a new top-level node.
+    Doubles the outer bounding box by adding a new top-level node, and increments MaxDepth.
 
 AddItem(IMapObject2d item)
     Adds an item to the tree, or re-places it if it is already present. Throws
@@ -129,11 +146,67 @@ Clear()
     Removes all items from the tree. The world rectangle and MaxDepth are left as they are.
 
 GetCollidingItems(Rectangle collisionBox, int objectTypes, ref List<IMapObject2d> itemsFound)
-    Returns a list of unique items colliding with the given rectangle.
-
 GetCollidingItems(Circle collisionCircle, int objectTypes, ref List<IMapObject2d> itemsFound)
-    Returns a list of unique items colliding with the given circle.
+    Clears itemsFound, then fills it with every unique item whose bounding box overlaps the
+    query region and whose ObjectTypes shares a bit with objectTypes. Allocates a list only
+    if the caller passed null. Returns true if anything was found.
 ```
+
+`ObjectIndex`, `TopNode`, `WorldRectangle`, `MaxDepth`, and `MaxNodeObjects` are exposed as read-only properties for
+inspection.
+
+## Choosing MaxDepth
+
+Every level of the tree bisects each axis, so a leaf at depth *d* (the root is depth 1) spans `worldSize / 2^(d - 1)`
+per axis. To pick `maxDepth`, decide the **smallest cell** you want the tree to be able to resolve — usually the size of
+your smallest game object, or the grid resolution collision queries need — and work back from the ratio of the map to that
+cell:
+
+```
+maxDepth = ceil( log2( worldSize / smallestCell ) ) + 1
+```
+
+`worldSize` is the longer axis of a non-square map (cells stay square; the short axis just holds more of them). The same
+formula applies to the octree.
+
+| worldSize / smallestCell | maxDepth |
+| -----------------------: | :------: |
+| 1                        | 1        |
+| 2                        | 2        |
+| 3 – 4                    | 3        |
+| 5 – 8                    | 4        |
+| 9 – 16                   | 5        |
+| 17 – 32                  | 6        |
+| 33 – 64                  | 7        |
+| 65 – 128  *(default)*    | 8        |
+| 129 – 256                | 9        |
+| 257 – 512                | 10       |
+| 513 – 1,024              | 11       |
+| 1,025 – 2,048            | 12       |
+| 2,049 – 4,096            | 13       |
+| 4,097 – 8,192            | 14       |
+| 8,193 – 16,384           | 15       |
+| 16,385 – 32,768          | 16       |
+| 32,769 – 65,536          | 17       |
+
+Examples:
+
+| Map (per axis) | Smallest cell | maxDepth |
+| -------------: | ------------: | :------: |
+| 10,000         | 100           | 8        |
+| 10,000         | 10            | 11       |
+| 10,000         | 1             | 15       |
+| 4,096          | 1             | 13       |
+| 65,536         | 256           | 9        |
+
+Notes:
+
+- This is the depth cap for a **fully packed** region. A leaf also stops splitting once it holds no more than `maxObjects`
+  items, so sparse areas never reach `maxDepth` — it is only the worst-case floor on cell size.
+- Extra depth is cheap: interior nodes defer their item-list allocation and an empty quadrant costs nothing, so rounding
+  `maxDepth` up a level or two for headroom is fine.
+- `Resize()` adds a level on top and increments `maxDepth`, so the smallest resolvable cell stays the same size while the
+  world doubles.
 
 ## Items
 
@@ -166,7 +239,8 @@ var tree = new Octree(boundingBox, maxDepth, maxObjects);
 It exposes the same set of methods as `Quadtree` — `static Octree.Build(...)`, `Resize()`, `AddItem(IMapObject3d item)`,
 `MoveItem(IMapObject3d item)`, `RemoveItem(IMapObject3d item)`, `Clear()`, and two `GetCollidingItems` overloads (one for a
 `Cube` search volume, one for a `Sphere`). A node splits into 8 octants instead of 4 quadrants when it already holds
-`maxObjects` items and another one arrives.
+`maxObjects` items and another one arrives. [Choosing MaxDepth](#choosing-maxdepth) works the same way — the cell-size
+formula is identical, only the per-node child count differs.
 
 ## Volume items
 
