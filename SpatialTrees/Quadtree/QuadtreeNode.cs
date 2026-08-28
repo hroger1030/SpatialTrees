@@ -101,10 +101,12 @@ namespace SpatialTrees
             Parent = parent;
             Depth = (parent == null) ? 1 : parent.Depth + 1;
 
-            if (Leaves != null)
+            var leaves = Leaves;
+            if (leaves != null)
             {
-                foreach (var leaf in Leaves)
+                for (int i = 0; i < leaves.Length; i++)
                 {
+                    var leaf = leaves[i];
                     if (leaf != null)
                         leaf.Reparent(this);
                 }
@@ -271,10 +273,12 @@ namespace SpatialTrees
         {
             int total = NodeItems?.Count ?? 0;
 
-            if (Leaves != null)
+            var leaves = Leaves;
+            if (leaves != null)
             {
-                foreach (var leaf in Leaves)
+                for (int i = 0; i < leaves.Length; i++)
                 {
+                    var leaf = leaves[i];
                     if (leaf != null)
                         total += leaf.SubtreeCount;
                 }
@@ -288,10 +292,12 @@ namespace SpatialTrees
             NodeItems?.Clear();
             SubtreeCount = 0;
 
-            if (recursive && Leaves != null)
+            var leaves = Leaves;
+            if (recursive && leaves != null)
             {
-                foreach (var leaf in Leaves)
+                for (int i = 0; i < leaves.Length; i++)
                 {
+                    var leaf = leaves[i];
                     if (leaf != null)
                         leaf.RemoveAllLeafItems(true);
                 }
@@ -337,10 +343,12 @@ namespace SpatialTrees
                 }
             }
 
-            if (Leaves != null)
+            var leaves = Leaves;
+            if (leaves != null)
             {
-                foreach (var leaf in Leaves)
+                for (int i = 0; i < leaves.Length; i++)
                 {
+                    var leaf = leaves[i];
                     if (leaf != null)
                         leaf.GetCollidingItems(collisionBox, objectTypes, ref itemsFound);
                 }
@@ -375,10 +383,12 @@ namespace SpatialTrees
                 }
             }
 
-            if (Leaves != null)
+            var leaves = Leaves;
+            if (leaves != null)
             {
-                foreach (var leaf in Leaves)
+                for (int i = 0; i < leaves.Length; i++)
                 {
+                    var leaf = leaves[i];
                     if (leaf != null)
                         leaf.GetCollidingItems(collisionCircle, objectTypes, ref itemsFound);
                 }
@@ -403,10 +413,12 @@ namespace SpatialTrees
                 }
             }
 
-            if (Leaves != null)
+            var leaves = Leaves;
+            if (leaves != null)
             {
-                foreach (var leaf in Leaves)
+                for (int i = 0; i < leaves.Length; i++)
                 {
+                    var leaf = leaves[i];
                     if (leaf != null)
                         leaf.CollectAll(objectTypes, ref itemsFound);
                 }
@@ -568,8 +580,10 @@ namespace SpatialTrees
             if (Leaves == null)
                 return;
 
-            foreach (var leaf in Leaves)
+            var leaves = Leaves;
+            for (int i = 0; i < leaves.Length; i++)
             {
+                var leaf = leaves[i];
                 if (leaf != null)
                     leaf.MergeInto(this);
             }
@@ -583,21 +597,25 @@ namespace SpatialTrees
         /// </summary>
         public void MergeInto(QuadtreeNode ancestor)
         {
-            if (NodeItems != null)
+            var nodeItems = NodeItems;
+            if (nodeItems != null)
             {
-                foreach (var item in NodeItems)
+                for (int i = 0, n = nodeItems.Count; i < n; i++)
                 {
+                    var item = nodeItems[i];
                     (ancestor.NodeItems ??= new List<IMapObject2d>()).Add(item);
                     Quadtree.ObjectIndex[item] = ancestor;
                 }
 
-                NodeItems.Clear();
+                nodeItems.Clear();
             }
 
-            if (Leaves != null)
+            var leaves = Leaves;
+            if (leaves != null)
             {
-                foreach (var leaf in Leaves)
+                for (int i = 0; i < leaves.Length; i++)
                 {
+                    var leaf = leaves[i];
                     if (leaf != null)
                         leaf.MergeInto(ancestor);
                 }
