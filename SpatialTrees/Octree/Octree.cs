@@ -61,7 +61,10 @@ namespace SpatialTrees
             ArgumentOutOfRangeException.ThrowIfLessThan(maxObjects, 1);
             ArgumentOutOfRangeException.ThrowIfNegative(expectedItemCount);
 
-            ObjectIndex = new Dictionary<IMapObject3d, OctreeNode>(expectedItemCount > 0 ? expectedItemCount : DEFAULT_COLLECTION_SIZE);
+            // the tree keys items by reference identity (a bulk build even requires
+            // distinct references), so pin the comparer to reference equality instead of
+            // letting a caller's Equals/GetHashCode override run on every index operation.
+            ObjectIndex = new Dictionary<IMapObject3d, OctreeNode>(expectedItemCount > 0 ? expectedItemCount : DEFAULT_COLLECTION_SIZE, ReferenceEqualityComparer.Instance);
             TopNode = new OctreeNode(this, null, boundingBox);
             MaxDepth = maxDepth;
             MaxNodeObjects = maxObjects;
@@ -71,17 +74,18 @@ namespace SpatialTrees
         {
             ArgumentNullException.ThrowIfNull(items);
 
-            var tree = new Octree(boundingBox, maxDepth, maxObjects, expectedItemCount: items.Count);
+            int count = items.Count;
+            var tree = new Octree(boundingBox, maxDepth, maxObjects, expectedItemCount: count);
 
-            if (items.Count == 0)
+            if (count == 0)
                 return tree;
 
             // two ping-pong buffers (each level partitions one into the other) plus a
             // one-byte-per-item class cache so the scatter pass skips re-doing the
-            // geometry. 
-            var front = new IMapObject3d[items.Count];
-            var back = new IMapObject3d[items.Count];
-            var buckets = new byte[items.Count];
+            // geometry.
+            var front = new IMapObject3d[count];
+            var back = new IMapObject3d[count];
+            var buckets = new byte[count];
 
             int n = 0;
             foreach (var item in items)
@@ -159,10 +163,9 @@ namespace SpatialTrees
             var itemBox = item.BoundingBox;
             ValidateForInsert(item, itemBox);
 
-            if (ObjectIndex.ContainsKey(item))
-            {
-                DetachItem(item);
-            }
+            // DetachItem is a no-op (single TryGetValue) when the item is not already
+            // indexed, so it does not need a ContainsKey guard in front of it.
+            DetachItem(item);
 
             TopNode.AddItem(item, itemBox);
         }
@@ -174,9 +177,8 @@ namespace SpatialTrees
         /// </summary>
         public void MoveItem(IMapObject3d item)
         {
-            if (ObjectIndex.ContainsKey(item))
+            if (ObjectIndex.TryGetValue(item, out var current_node))
             {
-                var current_node = ObjectIndex[item];
                 var itemBox = item.BoundingBox;
 
                 if (current_node.BoundingBox.Contains(itemBox))

@@ -121,7 +121,8 @@ namespace SpatialTrees
         public void AddItem(IMapObject2d mapItem)
         {
             // read the item's bounding box once here and pass it down the routing
-            // recursion - BoundingBox is typically a fresh allocation on every access.
+            // recursion - BoundingBox is an interface call the implementer may compute
+            // fresh each time, so we don't want to re-read it at every level.
             AddItem(mapItem, mapItem.BoundingBox);
         }
 
@@ -237,10 +238,9 @@ namespace SpatialTrees
             (NodeItems ??= new List<IMapObject2d>()).Add(mapItem);
             AdjustSubtreeCount(1);
 
-            if (Quadtree.ObjectIndex.ContainsKey(mapItem))
-                Quadtree.ObjectIndex[mapItem] = this;
-            else
-                Quadtree.ObjectIndex.Add(mapItem, this);
+            // upsert: the indexer setter adds a new entry or repoints an existing one,
+            // so this is a single hash lookup whether or not the item was already indexed.
+            Quadtree.ObjectIndex[mapItem] = this;
         }
 
         /// <summary>
@@ -320,10 +320,11 @@ namespace SpatialTrees
         /// </summary>
         public void GetCollidingItems(Rectangle collisionBox, int objectTypes, ref List<IMapObject2d> itemsFound)
         {
-            if (!BoundingBox.Intersects(collisionBox))
+            var nodeBox = BoundingBox;
+            if (!nodeBox.Intersects(collisionBox))
                 return;
 
-            if (collisionBox.Contains(BoundingBox))
+            if (collisionBox.Contains(nodeBox))
             {
                 // the query region fully contains this node, so it contains this node's
                 // whole subtree - collect everything below with no further geometry tests.
@@ -360,10 +361,11 @@ namespace SpatialTrees
         /// </summary>
         public void GetCollidingItems(Circle collisionCircle, int objectTypes, ref List<IMapObject2d> itemsFound)
         {
-            if (!BoundingBox.Intersects(collisionCircle))
+            var nodeBox = BoundingBox;
+            if (!nodeBox.Intersects(collisionCircle))
                 return;
 
-            if (collisionCircle.Contains(BoundingBox))
+            if (collisionCircle.Contains(nodeBox))
             {
                 // the query region fully contains this node, so it contains this node's
                 // whole subtree - collect everything below with no further geometry tests.
