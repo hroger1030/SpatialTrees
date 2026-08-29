@@ -18,7 +18,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 using Geometry;
 using NUnit.Framework;
-using SpatialTrees;
+using SpatialTrees.Quadtrees;
 using System.Collections.Generic;
 
 namespace SpatialTreesTests

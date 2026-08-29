@@ -1,5 +1,5 @@
 ﻿using Geometry;
-using SpatialTrees;
+using SpatialTrees.Octrees;
 
 namespace BenchMarks
 {

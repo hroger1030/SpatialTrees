@@ -16,7 +16,7 @@ FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TOR
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-namespace SpatialTrees
+namespace SpatialTrees.Quadtrees
 {
     /// <summary>
     /// The quadrants are layed out starting from top right, and proceeding clockwise.

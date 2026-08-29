@@ -21,7 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 
-namespace SpatialTrees
+namespace SpatialTrees.Quadtrees
 {
     /// <summary>
     /// Quadtree represents a two dimensional tree structure, and all the
@@ -39,9 +39,9 @@ namespace SpatialTrees
     [DebuggerDisplay("Quadtree {WorldRectangle.Width} x {WorldRectangle.Height}, {ObjectIndex.Count} items")]
     public class Quadtree
     {
-        protected readonly static int DEFAULT_MAX_DEPTH = 8;
-        protected readonly static int DEFAULT_MAX_OBJECTS = 16;
-        protected readonly static int DEFAULT_COLLECTION_SIZE = 1000;
+        private const int DEFAULT_MAX_DEPTH = 8;
+        private const int DEFAULT_MAX_OBJECTS = 16;
+        private const int DEFAULT_COLLECTION_SIZE = 1000;
 
         public Dictionary<IMapObject2d, QuadtreeNode> ObjectIndex { get; protected set; }
         public QuadtreeNode TopNode { get; protected set; }

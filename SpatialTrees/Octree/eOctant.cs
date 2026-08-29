@@ -16,7 +16,7 @@ FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TOR
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-namespace SpatialTrees
+namespace SpatialTrees.Octrees
 {
     /// <summary>
     /// The octants reuse EQuadrant's X/Y layout (top right, clockwise) for the near half

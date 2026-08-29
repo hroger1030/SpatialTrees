@@ -23,7 +23,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
-namespace SpatialTrees
+namespace SpatialTrees.Octrees
 {
     [DebuggerDisplay("Node depth: {Depth}, Center: {BoundingBox.Center}, {GetChildObjectCount()} items")]
     public class OctreeNode

@@ -21,7 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 
-namespace SpatialTrees
+namespace SpatialTrees.Octrees
 {
     /// <summary>
     /// Octree represents a three dimensional tree structure, and all the
@@ -37,9 +37,9 @@ namespace SpatialTrees
     [DebuggerDisplay("Octree {WorldCube.Width} x {WorldCube.Height} x {WorldCube.Depth}, {ObjectIndex.Count} items")]
     public class Octree
     {
-        protected readonly static int DEFAULT_MAX_DEPTH = 8;
-        protected readonly static int DEFAULT_MAX_OBJECTS = 16;
-        protected readonly static int DEFAULT_COLLECTION_SIZE = 1000;
+        private const int DEFAULT_MAX_DEPTH = 8;
+        private const int DEFAULT_MAX_OBJECTS = 16;
+        private const int DEFAULT_COLLECTION_SIZE = 1000;
 
         public Dictionary<IMapObject3d, OctreeNode> ObjectIndex { get; protected set; }
         public OctreeNode TopNode { get; protected set; }

@@ -18,7 +18,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 using Geometry;
 
-namespace SpatialTrees
+namespace SpatialTrees.Octrees
 {
     /// <summary>
     /// An object the octree can index. The tree positions and range-checks items purely

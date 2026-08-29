@@ -18,7 +18,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 using Geometry;
 
-namespace SpatialTrees
+namespace SpatialTrees.Quadtrees
 {
     /// <summary>
     /// An object the quadtree can index. The tree positions and range-checks items purely
