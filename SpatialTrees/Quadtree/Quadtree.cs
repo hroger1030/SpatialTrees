@@ -53,7 +53,7 @@ namespace SpatialTrees.Quadtrees
             get { return TopNode.BoundingBox; }
         }
 
-        public Quadtree() : this(Rectangle.UnitRectangle, DEFAULT_MAX_DEPTH, DEFAULT_MAX_OBJECTS) { }
+        public Quadtree() : this(Rectangle.UNIT_RECTANGLE, DEFAULT_MAX_DEPTH, DEFAULT_MAX_OBJECTS) { }
 
         public Quadtree(Rectangle area) : this(area, DEFAULT_MAX_DEPTH, DEFAULT_MAX_OBJECTS) { }
 
@@ -110,7 +110,7 @@ namespace SpatialTrees.Quadtrees
         /// </summary>
         public void Resize()
         {
-            var newBoundingbox = new Rectangle(TopNode.BoundingBox * 2);
+            var newBoundingbox = TopNode.BoundingBox * 2;
             var oldTopNode = TopNode;
 
             TopNode = new QuadtreeNode(this, null, newBoundingbox);

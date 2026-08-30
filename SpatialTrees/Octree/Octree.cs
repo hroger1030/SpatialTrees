@@ -51,7 +51,7 @@ namespace SpatialTrees.Octrees
             get { return TopNode.BoundingBox; }
         }
 
-        public Octree() : this(Cube.UnitCube, DEFAULT_MAX_DEPTH, DEFAULT_MAX_OBJECTS) { }
+        public Octree() : this(Cube.UNIT_CUBE, DEFAULT_MAX_DEPTH, DEFAULT_MAX_OBJECTS) { }
 
         public Octree(Cube volume) : this(volume, DEFAULT_MAX_DEPTH, DEFAULT_MAX_OBJECTS) { }
 
@@ -108,7 +108,7 @@ namespace SpatialTrees.Octrees
         /// </summary>
         public void Resize()
         {
-            var newBoundingbox = new Cube(TopNode.BoundingBox * 2);
+            var newBoundingbox = TopNode.BoundingBox * 2;
             var oldTopNode = TopNode;
 
             TopNode = new OctreeNode(this, null, newBoundingbox);
