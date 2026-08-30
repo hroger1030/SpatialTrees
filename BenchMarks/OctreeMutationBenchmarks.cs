@@ -1,4 +1,5 @@
-﻿using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Engines;
 using Geometry;
 using SpatialTrees.Octrees;
@@ -7,9 +8,13 @@ namespace BenchMarks
 {
     /// <summary>
     /// Destructive Octree benchmarks - remove every item, or move every item once.
-    /// Same rebuild-per-iteration approach as <see cref="QuadtreeMutationBenchmarks"/>.
+    /// Same rebuild-per-iteration approach as <see cref="QuadtreeMutationBenchmarks"/>,
+    /// including the plain vs <see cref="MultiThreadOctree"/> (<c>Mt</c> suffix) category
+    /// pairs that measure the write-lock overhead the thread-safe facade adds per mutation.
     /// </summary>
     [MemoryDiagnoser]
+    [CategoriesColumn]
+    [GroupBenchmarksBy(BenchmarkLogicalGroupRule.ByCategory)]
     [SimpleJob(RunStrategy.Monitoring, iterationCount: 20, warmupCount: 3)]
     public class OctreeMutationBenchmarks
     {
@@ -19,6 +24,7 @@ namespace BenchMarks
         private Point3[] _positions;
         private BenchItem3d[] _items;
         private Octree _tree;
+        private MultiThreadOctree _treeMt;
 
         [GlobalSetup]
         public void GlobalSetup()
@@ -41,22 +47,52 @@ namespace BenchMarks
 
             foreach (var item in _items)
                 _tree.AddItem(item);
+
+            _treeMt?.Dispose();
+            _treeMt = new MultiThreadOctree(WorldData.World3d(),
+                                            OctreeBenchmarks.MaxDepth, OctreeBenchmarks.MaxObjects);
+
+            foreach (var item in _items)
+                _treeMt.AddItem(item);
         }
 
-        [Benchmark]
+        [GlobalCleanup]
+        public void GlobalCleanup()
+        {
+            _treeMt?.Dispose();
+        }
+
+        [Benchmark(Baseline = true), BenchmarkCategory("RemoveAll")]
         public void RemoveAll()
         {
             foreach (var item in _items)
                 _tree.RemoveItem(item);
         }
 
-        [Benchmark]
+        [Benchmark, BenchmarkCategory("RemoveAll")]
+        public void RemoveAllMt()
+        {
+            foreach (var item in _items)
+                _treeMt.RemoveItem(item);
+        }
+
+        [Benchmark(Baseline = true), BenchmarkCategory("MoveAll")]
         public void MoveAll()
         {
             foreach (var item in _items)
             {
                 item.Nudge();
                 _tree.MoveItem(item);
+            }
+        }
+
+        [Benchmark, BenchmarkCategory("MoveAll")]
+        public void MoveAllMt()
+        {
+            foreach (var item in _items)
+            {
+                item.Nudge();
+                _treeMt.MoveItem(item);
             }
         }
     }

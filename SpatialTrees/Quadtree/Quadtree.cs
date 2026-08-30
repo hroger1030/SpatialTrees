@@ -3,16 +3,16 @@ The MIT License (MIT)
 
 Copyright (c) 2017 Roger Hill
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files 
-(the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, 
-publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do 
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
+(the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge,
+publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do
 so, subject to the following conditions:
 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF 
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE 
-FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
@@ -63,9 +63,6 @@ namespace SpatialTrees.Quadtrees
             ArgumentOutOfRangeException.ThrowIfLessThan(maxObjects, 1);
             ArgumentOutOfRangeException.ThrowIfNegative(expectedItemCount);
 
-            // the tree keys items by reference identity (a bulk build even requires
-            // distinct references), so pin the comparer to reference equality instead of
-            // letting a caller's Equals/GetHashCode override run on every index operation.
             ObjectIndex = new Dictionary<IMapObject2d, QuadtreeNode>(expectedItemCount > 0 ? expectedItemCount : DEFAULT_COLLECTION_SIZE, ReferenceEqualityComparer.Instance);
             TopNode = new QuadtreeNode(this, null, boundingBox);
             MaxDepth = maxDepth;
@@ -82,9 +79,6 @@ namespace SpatialTrees.Quadtrees
             if (count == 0)
                 return tree;
 
-            // two ping-pong buffers (each level partitions one into the other) plus a
-            // one-byte-per-item class cache so the scatter pass skips re-doing the
-            // geometry.
             var front = new IMapObject2d[count];
             var back = new IMapObject2d[count];
             var buckets = new byte[count];
@@ -133,7 +127,9 @@ namespace SpatialTrees.Quadtrees
         /// bounding-box centre is outside the world, or it carries no object type bits
         /// (a zero mask matches no query, so the item would be invisible dead weight).
         /// Shared by AddItem and MoveItem so a rejected move can bail out before it has
-        /// touched the tree.
+        /// touched the tree. The bounding box is assumed to have ordered coordinates
+        /// (Left &lt;= Right, Top &lt;= Bottom); an inverted rectangle is not checked and
+        /// routes incorrectly.
         /// </summary>
         public void ValidateForInsert(IMapObject2d item)
         {
@@ -151,7 +147,7 @@ namespace SpatialTrees.Quadtrees
             if (!WorldRectangle.Contains(center))
                 throw new ArgumentException($"{center} is outside the quadtree world rectangle {WorldRectangle}", nameof(item));
 
-            if (item.ObjectTypes == 0)
+            if (item.ObjectType == QuadtreeNode.NO_BITS_SET)
                 throw new ArgumentException($"{item} has no object type flags set and could never be returned by a query", nameof(item));
         }
 
@@ -165,8 +161,6 @@ namespace SpatialTrees.Quadtrees
             var itemBox = item.BoundingBox;
             ValidateForInsert(item, itemBox);
 
-            // DetachItem is a no-op (single TryGetValue) when the item is not already
-            // indexed, so it does not need a ContainsKey guard in front of it.
             DetachItem(item);
 
             TopNode.AddItem(item, itemBox);
@@ -179,19 +173,19 @@ namespace SpatialTrees.Quadtrees
         /// </summary>
         public void MoveItem(IMapObject2d item)
         {
-            if (ObjectIndex.TryGetValue(item, out var current_node))
+            if (ObjectIndex.TryGetValue(item, out var currentNode))
             {
                 var itemBox = item.BoundingBox;
 
-                if (current_node.BoundingBox.Contains(itemBox))
+                if (currentNode.BoundingBox.Contains(itemBox))
                 {
-                    if (current_node.IsSplit)
+                    if (currentNode.IsSplit)
                     {
-                        var target_leaf = current_node.FindContainingLeaf(itemBox);
+                        var target_leaf = currentNode.FindContainingLeaf(itemBox);
 
                         if (target_leaf != null)
                         {
-                            current_node.RemoveStoredItem(item);
+                            currentNode.RemoveStoredItem(item);
                             target_leaf.AddItem(item, itemBox);
                         }
                     }
@@ -201,8 +195,8 @@ namespace SpatialTrees.Quadtrees
 
                 ValidateForInsert(item, itemBox);
                 ObjectIndex.Remove(item);
-                current_node.RemoveStoredItem(item);
-                current_node.CollapseUpward();
+                currentNode.RemoveStoredItem(item);
+                currentNode.CollapseUpward();
             }
 
             AddItem(item);
@@ -235,7 +229,6 @@ namespace SpatialTrees.Quadtrees
             }
             else
             {
-                // nothing found to remove
                 return false;
             }
         }
@@ -259,7 +252,9 @@ namespace SpatialTrees.Quadtrees
         /// <summary>
         /// Fills <paramref name="itemsFound"/> with every unique item whose bounding box
         /// overlaps <paramref name="collisionBox"/> and whose object type matches the mask.
-        /// Returns true if anything was found.
+        /// Returns true if anything was found. <paramref name="collisionBox"/> must have
+        /// ordered coordinates (Left &lt;= Right, Top &lt;= Bottom); an inverted rectangle is
+        /// not validated and produces wrong results.
         /// </summary>
         public bool GetCollidingItems(Rectangle collisionBox, int objectTypes, ref List<IMapObject2d> itemsFound)
         {

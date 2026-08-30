@@ -34,12 +34,12 @@ namespace SpatialTreesTests
         {
             _Octree = new Octree(new Cube(0, 0, 0, 100, 100, 100), 5, 10);
 
-            _Octree.AddItem(new TestVolumeItem() { Name = "TestItem1", Location = new Point3(1, 1, 1), ObjectTypes = (int)TestVolumeItem.Properties.Property1 });
-            _Octree.AddItem(new TestVolumeItem() { Name = "TestItem2", Location = new Point3(5, 5, 5), ObjectTypes = (int)TestVolumeItem.Properties.Property2 });
-            _Octree.AddItem(new TestVolumeItem() { Name = "TestItem3", Location = new Point3(25, 25, 25), ObjectTypes = (int)TestVolumeItem.Properties.Property2 });
-            _Octree.AddItem(new TestVolumeItem() { Name = "TestItem4", Location = new Point3(50, 50, 50), ObjectTypes = (int)TestVolumeItem.Properties.Property1 });
-            _Octree.AddItem(new TestVolumeItem() { Name = "TestItem5", Location = new Point3(75, 75, 75), ObjectTypes = (int)TestVolumeItem.Properties.Property3 });
-            _Octree.AddItem(new TestVolumeItem() { Name = "TestItem6", Location = new Point3(100, 100, 100), ObjectTypes = (int)TestVolumeItem.Properties.All });
+            _Octree.AddItem(new TestVolumeItem() { Name = "TestItem1", Location = new Point3(1, 1, 1), ObjectType = (int)TestVolumeItem.Properties.Property1 });
+            _Octree.AddItem(new TestVolumeItem() { Name = "TestItem2", Location = new Point3(5, 5, 5), ObjectType = (int)TestVolumeItem.Properties.Property2 });
+            _Octree.AddItem(new TestVolumeItem() { Name = "TestItem3", Location = new Point3(25, 25, 25), ObjectType = (int)TestVolumeItem.Properties.Property2 });
+            _Octree.AddItem(new TestVolumeItem() { Name = "TestItem4", Location = new Point3(50, 50, 50), ObjectType = (int)TestVolumeItem.Properties.Property1 });
+            _Octree.AddItem(new TestVolumeItem() { Name = "TestItem5", Location = new Point3(75, 75, 75), ObjectType = (int)TestVolumeItem.Properties.Property3 });
+            _Octree.AddItem(new TestVolumeItem() { Name = "TestItem6", Location = new Point3(100, 100, 100), ObjectType = (int)TestVolumeItem.Properties.All });
         }
 
         [Test]

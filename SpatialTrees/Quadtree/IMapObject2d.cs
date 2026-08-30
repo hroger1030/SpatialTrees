@@ -24,10 +24,12 @@ namespace SpatialTrees.Quadtrees
     /// An object the quadtree can index. The tree positions and range-checks items purely
     /// by <see cref="BoundingBox"/> (routing uses its center); <see cref="Location"/> is a
     /// caller convenience and should stay consistent with the box's center.
+    /// The <see cref="BoundingBox"/> must have ordered coordinates (Left &lt;= Right,
+    /// Top &lt;= Bottom); an inverted rectangle is not validated and routes incorrectly.
     /// </summary>
     public interface IMapObject2d
     {
-        int ObjectTypes { get; set; }
+        int ObjectType { get; set; }
         Point2 Location { get; set; }
         Rectangle BoundingBox { get; }
     }

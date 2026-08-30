@@ -39,11 +39,13 @@ SpatialTrees/
 │   ├── Quadtree/
 │   │   ├── IMapObject2d.cs
 │   │   ├── Quadtree.cs
+│   │   ├── MultiThreadQuadtree.cs
 │   │   ├── QuadtreeNode.cs
 │   │   └── eQuadrant.cs
 │   └── Octree/
 │       ├── IMapObject3d.cs
 │       ├── Octree.cs
+│       ├── MultiThreadOctree.cs
 │       ├── OctreeNode.cs
 │       └── eOctant.cs
 ├── SpatialTreeTests/          # NUnit test project
@@ -75,7 +77,31 @@ The `BenchMarks` project is a BenchmarkDotNet suite for measuring insert, build,
 ## Thread safety
 
 `Quadtree` and `Octree` are **not** thread safe. They are intended for single-threaded use; if you access one from more than
-one thread, you must serialize the calls yourself. Thread-safe variants of both structures are planned for a future release.
+one thread, you must serialize the calls yourself.
+
+For concurrent use, wrap the structure in `MultiThreadQuadtree` or `MultiThreadOctree`. Each is a thread-safe facade over
+one plain tree that serialises every operation through a `ReaderWriterLockSlim`: collision queries take a shared read lock
+(so they run in parallel), and mutations (`AddItem`, `MoveItem`, `RemoveItem`, `Clear`, `Resize`, ...) take the write lock
+exclusively. The lock is entered inline on every method, so the hot paths carry no extra delegate or allocation — the only
+cost over the plain tree is the lock itself.
+
+```csharp
+using var tree = new MultiThreadQuadtree(boundingBox, maxDepth, maxObjects);
+tree.AddItem(item);
+tree.GetCollidingItems(collisionBox, objectTypes, ref itemsFound);
+```
+
+- Construct from the same arguments as the plain tree, from an already-built instance
+  (`new MultiThreadQuadtree(quadtree)` — the test injection seam), or with `MultiThreadQuadtree.Build(...)` for the
+  bulk-load case.
+- `AddItems` / `MoveItems` apply a whole batch under a single lock acquisition.
+- The wrapped tree is never handed out for unsynchronised access. For an operation the facade does not expose directly,
+  call `Read(tree => ...)` / `Write(tree => ...)`, which run your delegate against the inner tree under the appropriate
+  lock. The lock is non-recursive, so a delegate must not call back into the facade, and tree-owned references (nodes, the
+  object index, the result list) must not escape the delegate.
+- Dispose the facade to release the lock. The caller must not share a result list between threads.
+
+`MultiThreadOctree` mirrors this exactly, one dimension up.
 
 ## Creating a quadtree
 
@@ -148,8 +174,9 @@ Clear()
 GetCollidingItems(Rectangle collisionBox, int objectTypes, ref List<IMapObject2d> itemsFound)
 GetCollidingItems(Circle collisionCircle, int objectTypes, ref List<IMapObject2d> itemsFound)
     Clears itemsFound, then fills it with every unique item whose bounding box overlaps the
-    query region and whose ObjectTypes shares a bit with objectTypes. Allocates a list only
-    if the caller passed null. Returns true if anything was found.
+    query region and whose ObjectType shares a bit with objectTypes. Allocates a list only
+    if the caller passed null. Returns true if anything was found. The query box must have
+    ordered coordinates (Left <= Right, Top <= Bottom); it is not validated.
 ```
 
 `ObjectIndex`, `TopNode`, `WorldRectangle`, `MaxDepth`, and `MaxNodeObjects` are exposed as read-only properties for
@@ -215,14 +242,18 @@ The quadtree works with any object that implements the `IMapObject2d` interface:
 ```csharp
 public interface IMapObject2d
 {
-    int ObjectTypes { get; set; }
+    int ObjectType { get; set; }
     Point2 Location { get; set; }
     Rectangle BoundingBox { get; }
 }
 ```
 
 As long as your objects implement these members, you can add anything you want to the structure with little effort. The
-`ObjectTypes` property lets you intermix different kinds of objects and selectively filter them in searches using bit flags.
+`ObjectType` property lets you intermix different kinds of objects and selectively filter them in searches using bit flags.
+
+`BoundingBox` is treated as an axis-aligned box with **ordered coordinates** (`Left <= Right`, `Top <= Bottom`). The tree
+does not validate this — an inverted or rotated rectangle is not detected and will route and range-check incorrectly.
+Normalise your boxes before handing them to the tree.
 
 ## Creating an octree
 
@@ -249,11 +280,14 @@ The octree works with any object that implements the `IMapObject3d` interface:
 ```csharp
 public interface IMapObject3d
 {
-    int ObjectTypes { get; set; }
+    int ObjectType { get; set; }
     Point3 Location { get; set; }
     Cube BoundingBox { get; }
 }
 ```
+
+As with the quadtree, `BoundingBox` must have **ordered coordinates** (`X1 <= X2`, `Y1 <= Y2`, `Z1 <= Z2`). The tree does
+not check this; an inverted cube routes incorrectly.
 
 ## License
 

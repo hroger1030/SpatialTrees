@@ -9,7 +9,7 @@ namespace BenchMarks
     /// </summary>
     public sealed class BenchItem3d : IMapObject3d
     {
-        public int ObjectTypes { get; set; } = 1;
+        public int ObjectType { get; set; } = 1;
 
         public Point3 Location { get; set; }
 

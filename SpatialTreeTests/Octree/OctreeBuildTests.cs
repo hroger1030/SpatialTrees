@@ -207,7 +207,7 @@ namespace SpatialTreesTests
             Assert.Multiple(() =>
             {
                 Assert.That(tree.TopNode.IsSplit, Is.False);
-                Assert.That(tree.TopNode.NodeItems, Is.EqualTo(new[] { only }));
+                Assert.That(tree.TopNode.NodeItems, Is.EqualTo([only]));
                 Assert.That(tree.TopNode.GetChildObjectCount(), Is.EqualTo(1));
                 Assert.That(tree.ObjectIndex[only], Is.EqualTo(tree.TopNode));
             });

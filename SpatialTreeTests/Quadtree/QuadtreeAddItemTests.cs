@@ -55,7 +55,7 @@ namespace SpatialTreesTests
         }
 
         [Test]
-        public void AddItem_ZeroObjectTypes_ThrowsArgumentException()
+        public void AddItem_ZeroObjectType_ThrowsArgumentException()
         {
             var item = new TestItem("NoType", 10, 10, 0);
 
@@ -111,7 +111,7 @@ namespace SpatialTreesTests
         {
             var item = new DivergentItem
             {
-                ObjectTypes = (int)TestItem.Properties.Property1,
+                ObjectType = (int)TestItem.Properties.Property1,
                 Location = new Point2(500, 500),                          // outside the world rectangle
                 BoundingBox = new Rectangle(new Point2(50, 50), 2f, 2f),  // center well inside it
             };
@@ -126,7 +126,7 @@ namespace SpatialTreesTests
         {
             var item = new DivergentItem
             {
-                ObjectTypes = (int)TestItem.Properties.Property1,
+                ObjectType = (int)TestItem.Properties.Property1,
                 Location = new Point2(50, 50),                              // inside the world rectangle
                 BoundingBox = new Rectangle(new Point2(500, 500), 2f, 2f),  // center outside it
             };
@@ -167,7 +167,7 @@ namespace SpatialTreesTests
         // the two to diverge.
         public class DivergentItem : IMapObject2d
         {
-            public int ObjectTypes { get; set; }
+            public int ObjectType { get; set; }
             public Point2 Location { get; set; }
             public Rectangle BoundingBox { get; set; }
         }

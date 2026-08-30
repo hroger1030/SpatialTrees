@@ -55,7 +55,7 @@ namespace SpatialTreesTests
         }
 
         [Test]
-        public void AddItem_ZeroObjectTypes_ThrowsArgumentException()
+        public void AddItem_ZeroObjectType_ThrowsArgumentException()
         {
             var item = new TestVolumeItem("NoType", 10, 10, 10, 0);
 
@@ -123,7 +123,7 @@ namespace SpatialTreesTests
         {
             var item = new DivergentVolumeItem
             {
-                ObjectTypes = (int)TestVolumeItem.Properties.Property1,
+                ObjectType = (int)TestVolumeItem.Properties.Property1,
                 Location = new Point3(500, 500, 500),                  // outside the world cube
                 BoundingBox = new Cube(49, 49, 49, 51, 51, 51),        // center well inside it
             };
@@ -138,7 +138,7 @@ namespace SpatialTreesTests
         {
             var item = new DivergentVolumeItem
             {
-                ObjectTypes = (int)TestVolumeItem.Properties.Property1,
+                ObjectType = (int)TestVolumeItem.Properties.Property1,
                 Location = new Point3(50, 50, 50),                     // inside the world cube
                 BoundingBox = new Cube(499, 499, 499, 501, 501, 501),  // center outside it
             };
@@ -179,7 +179,7 @@ namespace SpatialTreesTests
         // the two to diverge.
         public class DivergentVolumeItem : IMapObject3d
         {
-            public int ObjectTypes { get; set; }
+            public int ObjectType { get; set; }
             public Point3 Location { get; set; }
             public Cube BoundingBox { get; set; }
         }

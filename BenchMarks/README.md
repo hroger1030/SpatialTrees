@@ -30,11 +30,22 @@ or a tight `--filter` while developing.
 
 | Class | Kind | Benchmarks |
 |-------|------|-----------|
-| `QuadtreeBenchmarks` / `OctreeBenchmarks` | non-destructive, `[Params]` 1k/10k/50k items | `Build` (bulk insert), `QueryRectangle`/`QueryCube`, `QueryCircle`/`QuerySphere` (1000 small localised queries) |
+| `QuadtreeBenchmarks` / `OctreeBenchmarks` | non-destructive, `[Params]` 1k/10k/50k items | `Build`, `BuildBulk`, `QueryRectangle`/`QueryCube`, `QueryCircle`/`QuerySphere` (1000 small localised queries) |
 | `QuadtreeMutationBenchmarks` / `OctreeMutationBenchmarks` | destructive, 50k items, rebuilt each iteration | `RemoveAll`, `MoveAll` |
 
 All classes use `[MemoryDiagnoser]` - the **Allocated** column is the number we care
 about most right now.
+
+### Multi-thread facade overhead
+
+Every benchmark above has a plain variant and a `MultiThreadQuadtree` /
+`MultiThreadOctree` variant (method-name suffix `Mt`). The two share a
+`[BenchmarkCategory]`; the plain variant is `Baseline = true`, so the **Ratio** column
+is the cost the thread-safe facade's `ReaderWriterLockSlim` adds. These are
+single-threaded calls, so the ratio is *pure lock overhead* - it does not capture the
+facade's actual purpose, which is letting collision queries run in parallel. Use
+`--filter *Mt*` (plus the plain baselines are pulled in automatically by the category)
+or just run the whole class.
 
 ## Conventions
 

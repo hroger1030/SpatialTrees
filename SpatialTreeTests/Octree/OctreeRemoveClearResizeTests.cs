@@ -19,6 +19,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 using Geometry;
 using NUnit.Framework;
 using SpatialTrees.Octrees;
+using System;
 using System.Collections.Generic;
 
 namespace SpatialTreesTests
@@ -85,12 +86,12 @@ namespace SpatialTreesTests
 
             tree.RemoveItem(d); // 2 left - node collapses back to a leaf
 
-            Assert.Multiple((System.Action)(() =>
+            Assert.Multiple((() =>
             {
-                Assert.That((bool)tree.TopNode.IsSplit, Is.False);
-                Assert.That(tree.TopNode.NodeItems, Is.EquivalentTo(new[] { a, b }));
-                Assert.That(tree.ObjectIndex[a], Is.SameAs((OctreeNode)tree.TopNode));
-                Assert.That(tree.ObjectIndex[b], Is.SameAs((OctreeNode)tree.TopNode));
+                Assert.That(tree.TopNode.IsSplit, Is.False);
+                Assert.That(tree.TopNode.NodeItems, Is.EquivalentTo([a, b]));
+                Assert.That(tree.ObjectIndex[a], Is.SameAs(tree.TopNode));
+                Assert.That(tree.ObjectIndex[b], Is.SameAs(tree.TopNode));
             }));
         }
     }
@@ -132,10 +133,10 @@ namespace SpatialTreesTests
 
             tree.Clear();
 
-            Assert.Multiple((System.Action)(() =>
+            Assert.Multiple((() =>
             {
-                Assert.That((bool)tree.TopNode.IsSplit, Is.False);
-                Assert.That((int)tree.TopNode.GetChildObjectCount(), Is.EqualTo(0));
+                Assert.That(tree.TopNode.IsSplit, Is.False);
+                Assert.That(tree.TopNode.GetChildObjectCount(), Is.EqualTo(0));
             }));
         }
     }

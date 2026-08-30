@@ -25,7 +25,7 @@ namespace SpatialTrees.Octrees
 {
     /// <summary>
     /// Octree represents a three dimensional tree structure, and all the
-    /// objects that it contains. 
+    /// objects that it contains.
     ///
     /// The octants are numbered using EQuadrant's X/Y layout (top right, clockwise)
     /// for the near half (Z below center), then the same four for the far half.
@@ -61,9 +61,6 @@ namespace SpatialTrees.Octrees
             ArgumentOutOfRangeException.ThrowIfLessThan(maxObjects, 1);
             ArgumentOutOfRangeException.ThrowIfNegative(expectedItemCount);
 
-            // the tree keys items by reference identity (a bulk build even requires
-            // distinct references), so pin the comparer to reference equality instead of
-            // letting a caller's Equals/GetHashCode override run on every index operation.
             ObjectIndex = new Dictionary<IMapObject3d, OctreeNode>(expectedItemCount > 0 ? expectedItemCount : DEFAULT_COLLECTION_SIZE, ReferenceEqualityComparer.Instance);
             TopNode = new OctreeNode(this, null, boundingBox);
             MaxDepth = maxDepth;
@@ -80,9 +77,6 @@ namespace SpatialTrees.Octrees
             if (count == 0)
                 return tree;
 
-            // two ping-pong buffers (each level partitions one into the other) plus a
-            // one-byte-per-item class cache so the scatter pass skips re-doing the
-            // geometry.
             var front = new IMapObject3d[count];
             var back = new IMapObject3d[count];
             var buckets = new byte[count];
@@ -131,7 +125,9 @@ namespace SpatialTrees.Octrees
         /// bounding-box centre is outside the world, or it carries no object type bits
         /// (a zero mask matches no query, so the item would be invisible dead weight).
         /// Shared by AddItem and MoveItem so a rejected move can bail out before it has
-        /// touched the tree.
+        /// touched the tree. The bounding box is assumed to have ordered coordinates
+        /// (X1 &lt;= X2, Y1 &lt;= Y2, Z1 &lt;= Z2); an inverted cube is not checked and
+        /// routes incorrectly.
         /// </summary>
         public void ValidateForInsert(IMapObject3d item)
         {
@@ -149,7 +145,7 @@ namespace SpatialTrees.Octrees
             if (!WorldCube.Contains(center))
                 throw new ArgumentException($"{center} is outside the octree world cube {WorldCube}", nameof(item));
 
-            if (item.ObjectTypes == 0)
+            if (item.ObjectType == OctreeNode.NO_BITS_SET)
                 throw new ArgumentException($"{item} has no object type flags set and could never be returned by a query", nameof(item));
         }
 
@@ -163,8 +159,6 @@ namespace SpatialTrees.Octrees
             var itemBox = item.BoundingBox;
             ValidateForInsert(item, itemBox);
 
-            // DetachItem is a no-op (single TryGetValue) when the item is not already
-            // indexed, so it does not need a ContainsKey guard in front of it.
             DetachItem(item);
 
             TopNode.AddItem(item, itemBox);
@@ -177,19 +171,19 @@ namespace SpatialTrees.Octrees
         /// </summary>
         public void MoveItem(IMapObject3d item)
         {
-            if (ObjectIndex.TryGetValue(item, out var current_node))
+            if (ObjectIndex.TryGetValue(item, out var currentNode))
             {
                 var itemBox = item.BoundingBox;
 
-                if (current_node.BoundingBox.Contains(itemBox))
+                if (currentNode.BoundingBox.Contains(itemBox))
                 {
-                    if (current_node.IsSplit)
+                    if (currentNode.IsSplit)
                     {
-                        var target_leaf = current_node.FindContainingLeaf(itemBox);
+                        var target_leaf = currentNode.FindContainingLeaf(itemBox);
 
                         if (target_leaf != null)
                         {
-                            current_node.RemoveStoredItem(item);
+                            currentNode.RemoveStoredItem(item);
                             target_leaf.AddItem(item, itemBox);
                         }
                     }
@@ -198,8 +192,8 @@ namespace SpatialTrees.Octrees
 
                 ValidateForInsert(item, itemBox);
                 ObjectIndex.Remove(item);
-                current_node.RemoveStoredItem(item);
-                current_node.CollapseUpward();
+                currentNode.RemoveStoredItem(item);
+                currentNode.CollapseUpward();
             }
 
             AddItem(item);
@@ -255,7 +249,9 @@ namespace SpatialTrees.Octrees
         /// <summary>
         /// Fills <paramref name="itemsFound"/> with every unique item whose bounding box
         /// overlaps <paramref name="collisionBox"/> and whose object type matches the mask.
-        /// Returns true if anything was found.
+        /// Returns true if anything was found. <paramref name="collisionBox"/> must have
+        /// ordered coordinates (X1 &lt;= X2, Y1 &lt;= Y2, Z1 &lt;= Z2); an inverted cube is not
+        /// validated and produces wrong results.
         /// </summary>
         public bool GetCollidingItems(Cube collisionBox, int objectTypes, ref List<IMapObject3d> itemsFound)
         {

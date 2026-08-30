@@ -24,10 +24,12 @@ namespace SpatialTrees.Octrees
     /// An object the octree can index. The tree positions and range-checks items purely
     /// by <see cref="BoundingBox"/> (routing uses its center); <see cref="Location"/> is a
     /// caller convenience and should stay consistent with the box's center.
+    /// The <see cref="BoundingBox"/> must have ordered coordinates (X1 &lt;= X2, Y1 &lt;= Y2,
+    /// Z1 &lt;= Z2); an inverted cube is not validated and routes incorrectly.
     /// </summary>
     public interface IMapObject3d
     {
-        int ObjectTypes { get; set; }
+        int ObjectType { get; set; }
         Point3 Location { get; set; }
         Cube BoundingBox { get; }
     }

@@ -34,12 +34,12 @@ namespace SpatialTreesTests
         {
             _Quadtree = new Quadtree(new Rectangle(0, 0, 100, 100), 5, 10);
 
-            _Quadtree.AddItem(new TestItem() { Name = "TestItem1", Location = new Point2(1, 1), ObjectTypes = (int)TestItem.Properties.Property1 });
-            _Quadtree.AddItem(new TestItem() { Name = "TestItem2", Location = new Point2(5, 5), ObjectTypes = (int)TestItem.Properties.Property2 });
-            _Quadtree.AddItem(new TestItem() { Name = "TestItem3", Location = new Point2(25, 25), ObjectTypes = (int)TestItem.Properties.Property2 });
-            _Quadtree.AddItem(new TestItem() { Name = "TestItem4", Location = new Point2(50, 50), ObjectTypes = (int)TestItem.Properties.Property1 });
-            _Quadtree.AddItem(new TestItem() { Name = "TestItem5", Location = new Point2(75, 75), ObjectTypes = (int)TestItem.Properties.Property3 });
-            _Quadtree.AddItem(new TestItem() { Name = "TestItem6", Location = new Point2(100, 100), ObjectTypes = (int)TestItem.Properties.All });
+            _Quadtree.AddItem(new TestItem() { Name = "TestItem1", Location = new Point2(1, 1), ObjectType = (int)TestItem.Properties.Property1 });
+            _Quadtree.AddItem(new TestItem() { Name = "TestItem2", Location = new Point2(5, 5), ObjectType = (int)TestItem.Properties.Property2 });
+            _Quadtree.AddItem(new TestItem() { Name = "TestItem3", Location = new Point2(25, 25), ObjectType = (int)TestItem.Properties.Property2 });
+            _Quadtree.AddItem(new TestItem() { Name = "TestItem4", Location = new Point2(50, 50), ObjectType = (int)TestItem.Properties.Property1 });
+            _Quadtree.AddItem(new TestItem() { Name = "TestItem5", Location = new Point2(75, 75), ObjectType = (int)TestItem.Properties.Property3 });
+            _Quadtree.AddItem(new TestItem() { Name = "TestItem6", Location = new Point2(100, 100), ObjectType = (int)TestItem.Properties.All });
         }
 
         [Test]

@@ -10,7 +10,7 @@ namespace BenchMarks
     /// </summary>
     public sealed class BenchItem2d : IMapObject2d
     {
-        public int ObjectTypes { get; set; } = 1;
+        public int ObjectType { get; set; } = 1;
 
         public Point2 Location { get; set; }
 

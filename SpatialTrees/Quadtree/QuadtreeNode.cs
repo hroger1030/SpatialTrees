@@ -1,18 +1,18 @@
-﻿/*
+/*
 The MIT License (MIT)
 
 Copyright (c) 2017 Roger Hill
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files 
-(the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, 
-publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do 
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
+(the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge,
+publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do
 so, subject to the following conditions:
 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF 
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE 
-FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
@@ -29,6 +29,7 @@ namespace SpatialTrees.Quadtrees
     public class QuadtreeNode
     {
         public const int LEAVES = 4;
+        public const int NO_BITS_SET = 0;
 
         public Quadtree Quadtree { get; protected set; }
         public QuadtreeNode Parent { get; protected set; }
@@ -36,14 +37,7 @@ namespace SpatialTrees.Quadtrees
         public Rectangle BoundingBox { get; protected set; }
         public List<IMapObject2d> NodeItems { get; protected set; }
         public int Depth { get; protected set; }
-
-        // number of items held anywhere in this node's subtree (this node's NodeItems
-        // plus every descendant's). Maintained incrementally by StoreItem / RemoveStoredItem
-        // so CollapseUpward does not have to re-walk the subtree on every remove.
         public int SubtreeCount { get; protected set; }
-
-        // bounding-box centre, cached at construction so routing does not recompute it
-        // on every level of every insert.
         public Point2 Center { get; protected set; }
 
         /// <summary>
@@ -80,15 +74,14 @@ namespace SpatialTrees.Quadtrees
             }
         }
 
-        public QuadtreeNode(Quadtree quadtree, QuadtreeNode parent, Rectangle bounding_box)
+        public QuadtreeNode(Quadtree quadtree, QuadtreeNode parent, Rectangle boundingBox)
         {
             Quadtree = quadtree;
             Parent = parent;
             Depth = (parent == null) ? 1 : parent.Depth + 1;
             Leaves = null;
-            BoundingBox = bounding_box;
-            Center = bounding_box.Center;
-            // NodeItems stays null until StoreItem actually puts something here
+            BoundingBox = boundingBox;
+            Center = boundingBox.Center;
         }
 
         /// <summary>
@@ -100,15 +93,14 @@ namespace SpatialTrees.Quadtrees
         {
             Parent = parent;
             Depth = (parent == null) ? 1 : parent.Depth + 1;
-
             var leaves = Leaves;
+
             if (leaves != null)
             {
                 for (int i = 0; i < leaves.Length; i++)
                 {
-                    var leaf = leaves[i];
-                    if (leaf != null)
-                        leaf.Reparent(this);
+                    if (leaves[i] != null)
+                        leaves[i].Reparent(this);
                 }
             }
         }
@@ -120,9 +112,6 @@ namespace SpatialTrees.Quadtrees
         /// </summary>
         public void AddItem(IMapObject2d mapItem)
         {
-            // read the item's bounding box once here and pass it down the routing
-            // recursion - BoundingBox is an interface call the implementer may compute
-            // fresh each time, so we don't want to re-read it at every level.
             AddItem(mapItem, mapItem.BoundingBox);
         }
 
@@ -133,38 +122,22 @@ namespace SpatialTrees.Quadtrees
         /// </summary>
         public void AddItem(IMapObject2d mapItem, Rectangle itemBox)
         {
-            // no dup guard here: Quadtree.AddItem already does ContainsKey -> DetachItem,
-            // so a routed item is never already somewhere in the tree by the time it
-            // reaches a node. The redistribute path below only re-routes items it just
-            // pulled off this node, so those cannot collide either.
-
             if (Leaves == null)
             {
-                // split once this node is already holding MaxNodeObjects and another item
-                // is arriving - so a leaf tops out at exactly MaxNodeObjects, not Max + 1.
-                if ((NodeItems?.Count ?? 0) >= Quadtree.MaxNodeObjects && this.Depth < Quadtree.MaxDepth)
+                if ((NodeItems?.Count ?? 0) >= Quadtree.MaxNodeObjects && Depth < Quadtree.MaxDepth)
                 {
                     Split();
 
-                    // redistribute existing items into the new leaves. An item whose
-                    // bounding box does not fit entirely inside a single child straddles
-                    // a quadrant boundary and has to stay on this node, so pull everything
-                    // off first and let RouteItem decide where each one lands. The scratch
-                    // array is pooled so a bulk build's many splits don't each allocate.
                     int moved = NodeItems.Count;
                     IMapObject2d[] scratch = ArrayPool<IMapObject2d>.Shared.Rent(moved);
                     NodeItems.CopyTo(scratch);
                     NodeItems.Clear();
-                    // these items are about to be re-stored (on a child, or back here if
-                    // they straddle); drop them from the running totals first so the
-                    // per-item StoreItem calls below re-add them exactly once.
                     AdjustSubtreeCount(-moved);
 
                     for (int i = 0; i < moved; i++)
                         RouteItem(scratch[i], scratch[i].BoundingBox);
 
                     ArrayPool<IMapObject2d>.Shared.Return(scratch, clearArray: true);
-
                     RouteItem(mapItem, itemBox);
                 }
                 else
@@ -238,14 +211,12 @@ namespace SpatialTrees.Quadtrees
             (NodeItems ??= new List<IMapObject2d>()).Add(mapItem);
             AdjustSubtreeCount(1);
 
-            // upsert: the indexer setter adds a new entry or repoints an existing one,
-            // so this is a single hash lookup whether or not the item was already indexed.
             Quadtree.ObjectIndex[mapItem] = this;
         }
 
         /// <summary>
         /// Removes an item stored directly on this node and keeps the subtree counts in
-        /// step. Returns false if the item was not held here. 
+        /// step. Returns false if the item was not held here.
         /// </summary>
         public bool RemoveStoredItem(IMapObject2d mapItem)
         {
@@ -273,14 +244,12 @@ namespace SpatialTrees.Quadtrees
         {
             int total = NodeItems?.Count ?? 0;
 
-            var leaves = Leaves;
-            if (leaves != null)
+            if (Leaves != null)
             {
-                for (int i = 0; i < leaves.Length; i++)
+                for (int i = 0; i < Leaves.Length; i++)
                 {
-                    var leaf = leaves[i];
-                    if (leaf != null)
-                        total += leaf.SubtreeCount;
+                    if (Leaves[i] != null)
+                        total += Leaves[i].SubtreeCount;
                 }
             }
 
@@ -291,15 +260,14 @@ namespace SpatialTrees.Quadtrees
         {
             NodeItems?.Clear();
             SubtreeCount = 0;
-
             var leaves = Leaves;
+
             if (recursive && leaves != null)
             {
                 for (int i = 0; i < leaves.Length; i++)
                 {
-                    var leaf = leaves[i];
-                    if (leaf != null)
-                        leaf.RemoveAllLeafItems(true);
+                    if (leaves[i] != null)
+                        leaves[i].RemoveAllLeafItems(true);
                 }
             }
         }
@@ -307,12 +275,12 @@ namespace SpatialTrees.Quadtrees
         /// <summary>
         /// Object-type filter for collision queries. An item matches when it carries at
         /// least one of the requested type bits, so a query mask combining several types
-        /// returns items of any of those types. A mask of 0 matches nothing.
+        /// returns items of any of those types. A NO_BITS_SET mask matches nothing.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool MatchesObjectTypes(int queryMask, int itemObjectTypes)
         {
-            return (queryMask & itemObjectTypes) != 0;
+            return (queryMask & itemObjectTypes) != NO_BITS_SET;
         }
 
         /// <summary>
@@ -320,38 +288,34 @@ namespace SpatialTrees.Quadtrees
         /// </summary>
         public void GetCollidingItems(Rectangle collisionBox, int objectTypes, ref List<IMapObject2d> itemsFound)
         {
-            var nodeBox = BoundingBox;
-            if (!nodeBox.Intersects(collisionBox))
+            if (!BoundingBox.Intersects(collisionBox))
                 return;
 
-            if (collisionBox.Contains(nodeBox))
+            if (collisionBox.Contains(BoundingBox))
             {
-                // the query region fully contains this node, so it contains this node's
-                // whole subtree - collect everything below with no further geometry tests.
                 CollectAll(objectTypes, ref itemsFound);
                 return;
             }
 
             var items = NodeItems;
+
             if (items != null)
             {
-                // test each item in this node - cheap type mask first, then the geometry
                 for (int i = 0, n = items.Count; i < n; i++)
                 {
-                    var item = items[i];
-                    if (MatchesObjectTypes(objectTypes, item.ObjectTypes) && collisionBox.Intersects(item.BoundingBox))
-                        itemsFound.Add(item);
+                    if (MatchesObjectTypes(objectTypes, items[i].ObjectType) && collisionBox.Intersects(items[i].BoundingBox))
+                        itemsFound.Add(items[i]);
                 }
             }
 
             var leaves = Leaves;
+
             if (leaves != null)
             {
                 for (int i = 0; i < leaves.Length; i++)
                 {
-                    var leaf = leaves[i];
-                    if (leaf != null)
-                        leaf.GetCollidingItems(collisionBox, objectTypes, ref itemsFound);
+                    if (leaves[i] != null)
+                        leaves[i].GetCollidingItems(collisionBox, objectTypes, ref itemsFound);
                 }
             }
         }
@@ -361,38 +325,34 @@ namespace SpatialTrees.Quadtrees
         /// </summary>
         public void GetCollidingItems(Circle collisionCircle, int objectTypes, ref List<IMapObject2d> itemsFound)
         {
-            var nodeBox = BoundingBox;
-            if (!nodeBox.Intersects(collisionCircle))
+            if (!BoundingBox.Intersects(collisionCircle))
                 return;
 
-            if (collisionCircle.Contains(nodeBox))
+            if (collisionCircle.Contains(BoundingBox))
             {
-                // the query region fully contains this node, so it contains this node's
-                // whole subtree - collect everything below with no further geometry tests.
                 CollectAll(objectTypes, ref itemsFound);
                 return;
             }
 
             var items = NodeItems;
+
             if (items != null)
             {
-                // test each item in this node - cheap type mask first, then the geometry
                 for (int i = 0, n = items.Count; i < n; i++)
                 {
-                    var item = items[i];
-                    if (MatchesObjectTypes(objectTypes, item.ObjectTypes) && collisionCircle.Intersects(item.BoundingBox))
-                        itemsFound.Add(item);
+                    if (MatchesObjectTypes(objectTypes, items[i].ObjectType) && collisionCircle.Intersects(items[i].BoundingBox))
+                        itemsFound.Add(items[i]);
                 }
             }
 
             var leaves = Leaves;
+
             if (leaves != null)
             {
                 for (int i = 0; i < leaves.Length; i++)
                 {
-                    var leaf = leaves[i];
-                    if (leaf != null)
-                        leaf.GetCollidingItems(collisionCircle, objectTypes, ref itemsFound);
+                    if (leaves[i] != null)
+                        leaves[i].GetCollidingItems(collisionCircle, objectTypes, ref itemsFound);
                 }
             }
         }
@@ -405,24 +365,24 @@ namespace SpatialTrees.Quadtrees
         public void CollectAll(int objectTypes, ref List<IMapObject2d> itemsFound)
         {
             var items = NodeItems;
+
             if (items != null)
             {
                 for (int i = 0, n = items.Count; i < n; i++)
                 {
-                    var item = items[i];
-                    if (MatchesObjectTypes(objectTypes, item.ObjectTypes))
-                        itemsFound.Add(item);
+                    if (MatchesObjectTypes(objectTypes, items[i].ObjectType))
+                        itemsFound.Add(items[i]);
                 }
             }
 
             var leaves = Leaves;
+
             if (leaves != null)
             {
                 for (int i = 0; i < leaves.Length; i++)
                 {
-                    var leaf = leaves[i];
-                    if (leaf != null)
-                        leaf.CollectAll(objectTypes, ref itemsFound);
+                    if (leaves[i] != null)
+                        leaves[i].CollectAll(objectTypes, ref itemsFound);
                 }
             }
         }
@@ -432,8 +392,6 @@ namespace SpatialTrees.Quadtrees
             if (Leaves != null)
                 throw new Exception("Node already split");
 
-            // child nodes are materialised lazily by FindContainingLeaf as items route
-            // into each quadrant; an empty quadrant costs only its null array slot.
             Leaves = new QuadtreeNode[LEAVES];
         }
 
@@ -447,8 +405,6 @@ namespace SpatialTrees.Quadtrees
         public int BulkLoad(IMapObject2d[] src, IMapObject2d[] dst, byte[] buckets, int lo, int hi)
         {
             int count = hi - lo;
-
-            // bucket 0 = straddles a quadrant line (stays here); 1..LEAVES = fits that child
             Span<int> counts = stackalloc int[LEAVES + 1];
 
             for (int i = lo; i < hi; i++)
@@ -458,7 +414,6 @@ namespace SpatialTrees.Quadtrees
                 counts[bucket]++;
             }
 
-            // leaf: under the cap, at the depth limit, or nothing a split could separate
             if (count <= Quadtree.MaxNodeObjects || Depth >= Quadtree.MaxDepth || counts[0] == count)
             {
                 if (count > 0)
@@ -475,7 +430,6 @@ namespace SpatialTrees.Quadtrees
 
             Split();
 
-            // counting sort src[lo..hi) -> dst[lo..hi): straddlers, then one run per quadrant
             Span<int> runStart = stackalloc int[LEAVES + 1];
             runStart[0] = lo;
 
@@ -488,7 +442,6 @@ namespace SpatialTrees.Quadtrees
             for (int i = lo; i < hi; i++)
                 dst[cursor[buckets[i]]++] = src[i];
 
-            // straddlers stay on this node
             int total = counts[0];
 
             if (counts[0] > 0)
@@ -498,7 +451,6 @@ namespace SpatialTrees.Quadtrees
                     StoreForBulk(dst[i]);
             }
 
-            // recurse into each non-empty child, src/dst swapped
             for (int q = 0; q < LEAVES; q++)
             {
                 int childCount = counts[q + 1];
@@ -559,8 +511,6 @@ namespace SpatialTrees.Quadtrees
             {
                 if (cursor.Leaves != null)
                 {
-                    // counts only grow as we move up, so once a node is over the limit
-                    // no ancestor of it can be collapsible either.
                     if (cursor.GetChildObjectCount() <= Quadtree.MaxNodeObjects)
                         target = cursor;
                     else
@@ -585,9 +535,8 @@ namespace SpatialTrees.Quadtrees
             var leaves = Leaves;
             for (int i = 0; i < leaves.Length; i++)
             {
-                var leaf = leaves[i];
-                if (leaf != null)
-                    leaf.MergeInto(this);
+                if (leaves[i] != null)
+                    leaves[i].MergeInto(this);
             }
 
             Leaves = null;
@@ -617,9 +566,8 @@ namespace SpatialTrees.Quadtrees
             {
                 for (int i = 0; i < leaves.Length; i++)
                 {
-                    var leaf = leaves[i];
-                    if (leaf != null)
-                        leaf.MergeInto(ancestor);
+                    if (leaves[i] != null)
+                        leaves[i].MergeInto(ancestor);
                 }
 
                 Leaves = null;

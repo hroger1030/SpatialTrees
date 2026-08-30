@@ -30,12 +30,12 @@ namespace SpatialTreesTests
             Property1 = 1,
             Property2 = 2,
             Property3 = 4,
-            All = int.MaxValue,
+            All = ~0,
         }
 
         public string Name { get; set; }
 
-        public int ObjectTypes { get; set; }
+        public int ObjectType { get; set; }
 
         public Point2 Location { get; set; }
 
@@ -55,7 +55,7 @@ namespace SpatialTreesTests
         {
             Name = name;
             Location = new Point2(x, y);
-            ObjectTypes = objectTypes;
+            ObjectType = objectTypes;
         }
 
         public TestItem(string name, float x, float y, float width, float height, int objectTypes)
@@ -64,7 +64,7 @@ namespace SpatialTreesTests
             Location = new Point2(x, y);
             Width = width;
             Height = height;
-            ObjectTypes = objectTypes;
+            ObjectType = objectTypes;
         }
     }
 }
