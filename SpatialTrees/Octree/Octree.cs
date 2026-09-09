@@ -239,11 +239,8 @@ namespace SpatialTrees.Octrees
         {
             ObjectIndex.Clear();
 
-            if (TopNode != null)
-            {
-                TopNode.RemoveAllLeafItems(true);
-                TopNode.Collapse();
-            }
+            TopNode.RemoveAllLeafItems(true);
+            TopNode.Collapse();
         }
 
         /// <summary>
@@ -293,7 +290,7 @@ namespace SpatialTrees.Octrees
         {
             var itemsFound = new List<IMapObject3d>();
 
-            TopNode.GetCollidingItems(collisionBox, objectTypes, itemsFound);
+            GetCollidingItems(collisionBox, objectTypes, itemsFound);
 
             return itemsFound;
         }
@@ -307,7 +304,7 @@ namespace SpatialTrees.Octrees
         {
             var itemsFound = new List<IMapObject3d>();
 
-            TopNode.GetCollidingItems(collisionSphere, objectTypes, itemsFound);
+            GetCollidingItems(collisionSphere, objectTypes, itemsFound);
 
             return itemsFound;
         }

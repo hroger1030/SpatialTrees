@@ -242,11 +242,8 @@ namespace SpatialTrees.Quadtrees
         {
             ObjectIndex.Clear();
 
-            if (TopNode != null)
-            {
-                TopNode.RemoveAllLeafItems(true);
-                TopNode.Collapse();
-            }
+            TopNode.RemoveAllLeafItems(true);
+            TopNode.Collapse();
         }
 
         /// <summary>
@@ -262,7 +259,8 @@ namespace SpatialTrees.Quadtrees
         {
             ArgumentNullException.ThrowIfNull(itemsFound);
 
-            itemsFound.Clear();
+            if (itemsFound.Count != 0)
+                itemsFound.Clear();
 
             TopNode.GetCollidingItems(collisionBox, objectTypes, itemsFound);
 
@@ -279,7 +277,8 @@ namespace SpatialTrees.Quadtrees
         {
             ArgumentNullException.ThrowIfNull(itemsFound);
 
-            itemsFound.Clear();
+            if (itemsFound.Count != 0)
+                itemsFound.Clear();
 
             TopNode.GetCollidingItems(collisionCircle, objectTypes, itemsFound);
 
@@ -296,7 +295,7 @@ namespace SpatialTrees.Quadtrees
         {
             var itemsFound = new List<IMapObject2d>();
 
-            TopNode.GetCollidingItems(collisionBox, objectTypes, itemsFound);
+            GetCollidingItems(collisionBox, objectTypes, itemsFound);
 
             return itemsFound;
         }
@@ -310,7 +309,7 @@ namespace SpatialTrees.Quadtrees
         {
             var itemsFound = new List<IMapObject2d>();
 
-            TopNode.GetCollidingItems(collisionCircle, objectTypes, itemsFound);
+            GetCollidingItems(collisionCircle, objectTypes, itemsFound);
 
             return itemsFound;
         }
