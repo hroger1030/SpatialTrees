@@ -284,16 +284,19 @@ namespace SpatialTrees.Quadtrees
         }
 
         /// <summary>
-        /// returns a list of unique items that are colliding with the item that is passed in.
+        /// Appends every type-matching item in this subtree whose bounding box overlaps
+        /// <paramref name="collisionBox"/> to <paramref name="itemsFound"/>. Recurses into
+        /// child quadrants; prunes any that the box does not touch and short-circuits via
+        /// CollectAll for any the box fully contains. The caller owns and clears the list.
         /// </summary>
-        public void GetCollidingItems(Rectangle collisionBox, int objectTypes, ref List<IMapObject2d> itemsFound)
+        public void GetCollidingItems(Rectangle collisionBox, int objectTypes, List<IMapObject2d> itemsFound)
         {
             if (!BoundingBox.Intersects(collisionBox))
                 return;
 
             if (collisionBox.Contains(BoundingBox))
             {
-                CollectAll(objectTypes, ref itemsFound);
+                CollectAll(objectTypes, itemsFound);
                 return;
             }
 
@@ -315,22 +318,24 @@ namespace SpatialTrees.Quadtrees
                 for (int i = 0; i < leaves.Length; i++)
                 {
                     if (leaves[i] != null)
-                        leaves[i].GetCollidingItems(collisionBox, objectTypes, ref itemsFound);
+                        leaves[i].GetCollidingItems(collisionBox, objectTypes, itemsFound);
                 }
             }
         }
 
         /// <summary>
-        /// returns a list of unique items that are colliding with the item that is passed in.
+        /// Appends every type-matching item in this subtree whose bounding box overlaps
+        /// <paramref name="collisionCircle"/> to <paramref name="itemsFound"/>. Same pruning
+        /// and CollectAll short-circuit as the rectangle overload. The caller owns the list.
         /// </summary>
-        public void GetCollidingItems(Circle collisionCircle, int objectTypes, ref List<IMapObject2d> itemsFound)
+        public void GetCollidingItems(Circle collisionCircle, int objectTypes, List<IMapObject2d> itemsFound)
         {
             if (!BoundingBox.Intersects(collisionCircle))
                 return;
 
             if (collisionCircle.Contains(BoundingBox))
             {
-                CollectAll(objectTypes, ref itemsFound);
+                CollectAll(objectTypes, itemsFound);
                 return;
             }
 
@@ -352,7 +357,7 @@ namespace SpatialTrees.Quadtrees
                 for (int i = 0; i < leaves.Length; i++)
                 {
                     if (leaves[i] != null)
-                        leaves[i].GetCollidingItems(collisionCircle, objectTypes, ref itemsFound);
+                        leaves[i].GetCollidingItems(collisionCircle, objectTypes, itemsFound);
                 }
             }
         }
@@ -362,7 +367,7 @@ namespace SpatialTrees.Quadtrees
         /// with no spatial tests. Used by GetCollidingItems once a query region is known
         /// to fully contain this node.
         /// </summary>
-        public void CollectAll(int objectTypes, ref List<IMapObject2d> itemsFound)
+        public void CollectAll(int objectTypes, List<IMapObject2d> itemsFound)
         {
             var items = NodeItems;
 
@@ -382,7 +387,7 @@ namespace SpatialTrees.Quadtrees
                 for (int i = 0; i < leaves.Length; i++)
                 {
                     if (leaves[i] != null)
-                        leaves[i].CollectAll(objectTypes, ref itemsFound);
+                        leaves[i].CollectAll(objectTypes, itemsFound);
                 }
             }
         }

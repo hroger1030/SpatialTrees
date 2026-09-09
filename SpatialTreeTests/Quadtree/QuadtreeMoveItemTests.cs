@@ -56,7 +56,7 @@ namespace SpatialTreesTests
             _Quadtree.MoveItem(item);
 
             var itemsFound = new List<IMapObject2d>();
-            _Quadtree.GetCollidingItems(new Rectangle(19, 19, 2, 2), (int)TestItem.Properties.Property1, ref itemsFound);
+            _Quadtree.GetCollidingItems(new Rectangle(19, 19, 2, 2), (int)TestItem.Properties.Property1, itemsFound);
 
             Assert.That(itemsFound, Does.Contain(item));
         }

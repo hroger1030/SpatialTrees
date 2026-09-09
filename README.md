@@ -88,7 +88,7 @@ cost over the plain tree is the lock itself.
 ```csharp
 using var tree = new MultiThreadQuadtree(boundingBox, maxDepth, maxObjects);
 tree.AddItem(item);
-tree.GetCollidingItems(collisionBox, objectTypes, ref itemsFound);
+tree.GetCollidingItems(collisionBox, objectTypes, itemsFound);
 ```
 
 - Construct from the same arguments as the plain tree, from an already-built instance
@@ -171,12 +171,18 @@ RemoveItem(IMapObject2d item)
 Clear()
     Removes all items from the tree. The world rectangle and MaxDepth are left as they are.
 
-GetCollidingItems(Rectangle collisionBox, int objectTypes, ref List<IMapObject2d> itemsFound)
-GetCollidingItems(Circle collisionCircle, int objectTypes, ref List<IMapObject2d> itemsFound)
+GetCollidingItems(Rectangle collisionBox, int objectTypes, List<IMapObject2d> itemsFound)
+GetCollidingItems(Circle collisionCircle, int objectTypes, List<IMapObject2d> itemsFound)
     Clears itemsFound, then fills it with every unique item whose bounding box overlaps the
-    query region and whose ObjectType shares a bit with objectTypes. Allocates a list only
-    if the caller passed null. Returns true if anything was found. The query box must have
-    ordered coordinates (Left <= Right, Top <= Bottom); it is not validated.
+    query region and whose ObjectType shares a bit with objectTypes. Allocates nothing; the
+    caller owns the list and reuses it, so it must not be null (ArgumentNullException).
+    Returns true if anything was found. The query box must have ordered coordinates
+    (Left <= Right, Top <= Bottom); it is not validated.
+
+List<IMapObject2d> GetCollidingItems(Rectangle collisionBox, int objectTypes)
+List<IMapObject2d> GetCollidingItems(Circle collisionCircle, int objectTypes)
+    Allocating convenience overloads for one-off queries: return a fresh list of the hits.
+    On a hot path, keep a list and use the overload above instead.
 ```
 
 `ObjectIndex`, `TopNode`, `WorldRectangle`, `MaxDepth`, and `MaxNodeObjects` are exposed as read-only properties for
@@ -268,8 +274,8 @@ var tree = new Octree(boundingBox, maxDepth, maxObjects);
 ```
 
 It exposes the same set of methods as `Quadtree` — `static Octree.Build(...)`, `Resize()`, `AddItem(IMapObject3d item)`,
-`MoveItem(IMapObject3d item)`, `RemoveItem(IMapObject3d item)`, `Clear()`, and two `GetCollidingItems` overloads (one for a
-`Cube` search volume, one for a `Sphere`). A node splits into 8 octants instead of 4 quadrants when it already holds
+`MoveItem(IMapObject3d item)`, `RemoveItem(IMapObject3d item)`, `Clear()`, and the `GetCollidingItems` overloads (a
+`Cube` and a `Sphere` search volume, each with a fill-a-list and an allocating form). A node splits into 8 octants instead of 4 quadrants when it already holds
 `maxObjects` items and another one arrives. [Choosing MaxDepth](#choosing-maxdepth) works the same way — the cell-size
 formula is identical, only the per-node child count differs.
 

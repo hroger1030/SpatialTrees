@@ -46,7 +46,7 @@ namespace SpatialTreesTests
             var itemsFound = new List<IMapObject3d>();
             var searchArea = new Cube(7.5f, 9.5f, 9.5f, 9.5f, 10.5f, 10.5f); // right face at x=9.5, spans the full y/z-range of the item's box
 
-            _Octree.GetCollidingItems(searchArea, (int)TestVolumeItem.Properties.Property1, ref itemsFound);
+            _Octree.GetCollidingItems(searchArea, (int)TestVolumeItem.Properties.Property1, itemsFound);
 
             Assert.That(itemsFound, Does.Contain(_Item));
         }
@@ -57,7 +57,7 @@ namespace SpatialTreesTests
             var itemsFound = new List<IMapObject3d>();
             var searchArea = new Cube(7.5f, 9.5f, 9.5f, 9.499f, 10.5f, 10.5f); // right face at x=9.499, just short of the item's left face
 
-            _Octree.GetCollidingItems(searchArea, (int)TestVolumeItem.Properties.Property1, ref itemsFound);
+            _Octree.GetCollidingItems(searchArea, (int)TestVolumeItem.Properties.Property1, itemsFound);
 
             Assert.That(itemsFound, Is.Empty);
         }
@@ -68,7 +68,7 @@ namespace SpatialTreesTests
             var itemsFound = new List<IMapObject3d>();
             var searchArea = new Sphere(new Point3(8.5f, 10f, 10f), 1f); // closest point on item's box is (9.5,10,10): exactly 1 unit away
 
-            _Octree.GetCollidingItems(searchArea, (int)TestVolumeItem.Properties.Property1, ref itemsFound);
+            _Octree.GetCollidingItems(searchArea, (int)TestVolumeItem.Properties.Property1, itemsFound);
 
             Assert.That(itemsFound, Does.Contain(_Item));
         }
@@ -79,7 +79,7 @@ namespace SpatialTreesTests
             var itemsFound = new List<IMapObject3d>();
             var searchArea = new Sphere(new Point3(8.499f, 10f, 10f), 1f); // closest point is just over 1 unit away
 
-            _Octree.GetCollidingItems(searchArea, (int)TestVolumeItem.Properties.Property1, ref itemsFound);
+            _Octree.GetCollidingItems(searchArea, (int)TestVolumeItem.Properties.Property1, itemsFound);
 
             Assert.That(itemsFound, Is.Empty);
         }

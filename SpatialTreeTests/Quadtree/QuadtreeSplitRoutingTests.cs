@@ -92,7 +92,7 @@ namespace SpatialTreesTests
             tree.AddItem(new TestItem("D", 90, 40, (int)TestItem.Properties.Property1));
 
             var itemsFound = new List<IMapObject2d>();
-            tree.GetCollidingItems(new Rectangle(89, 9, 2, 2), (int)TestItem.Properties.Property1, ref itemsFound);
+            tree.GetCollidingItems(new Rectangle(89, 9, 2, 2), (int)TestItem.Properties.Property1, itemsFound);
 
             Assert.That(itemsFound, Does.Contain(target));
         }
@@ -132,7 +132,7 @@ namespace SpatialTreesTests
             // search box sits entirely inside the lower-right quadrant but overlaps the
             // straddling item. Before routing accounted for extent this returned nothing.
             var itemsFound = new List<IMapObject2d>();
-            tree.GetCollidingItems(new Rectangle(55, 55, 3, 3), (int)TestItem.Properties.Property1, ref itemsFound);
+            tree.GetCollidingItems(new Rectangle(55, 55, 3, 3), (int)TestItem.Properties.Property1, itemsFound);
 
             Assert.That(itemsFound, Does.Contain(straddle));
         }

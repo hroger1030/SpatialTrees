@@ -74,8 +74,8 @@ namespace SpatialTreesTests
             {
                 var box = new Rectangle(rng.Next(0, 900), rng.Next(0, 900), rng.Next(1, 200), rng.Next(1, 200));
 
-                bulk.GetCollidingItems(box, (int)TestItem.Properties.All, ref bulkHits);
-                incremental.GetCollidingItems(box, (int)TestItem.Properties.All, ref incHits);
+                bulk.GetCollidingItems(box, (int)TestItem.Properties.All, bulkHits);
+                incremental.GetCollidingItems(box, (int)TestItem.Properties.All, incHits);
 
                 Assert.That(
                     bulkHits.OrderBy(NameOf),
@@ -178,7 +178,7 @@ namespace SpatialTreesTests
 
             var hits = new List<IMapObject2d>();
             tree.GetCollidingItems(new Rectangle(mover.Location.X - 2, mover.Location.Y - 2, 4, 4),
-                (int)TestItem.Properties.All, ref hits);
+                (int)TestItem.Properties.All, hits);
             Assert.That(hits, Does.Contain(mover));
         }
 

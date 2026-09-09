@@ -77,8 +77,8 @@ namespace SpatialTreesTests
                 float z = rng.Next(0, 900);
                 var box = new Cube(x, y, z, x + rng.Next(1, 200), y + rng.Next(1, 200), z + rng.Next(1, 200));
 
-                bulk.GetCollidingItems(box, (int)TestVolumeItem.Properties.All, ref bulkHits);
-                incremental.GetCollidingItems(box, (int)TestVolumeItem.Properties.All, ref incHits);
+                bulk.GetCollidingItems(box, (int)TestVolumeItem.Properties.All, bulkHits);
+                incremental.GetCollidingItems(box, (int)TestVolumeItem.Properties.All, incHits);
 
                 Assert.That(
                     bulkHits.OrderBy(NameOf),
@@ -180,7 +180,7 @@ namespace SpatialTreesTests
             tree.GetCollidingItems(
                 new Cube(mover.Location.X - 2, mover.Location.Y - 2, mover.Location.Z - 2,
                          mover.Location.X + 2, mover.Location.Y + 2, mover.Location.Z + 2),
-                (int)TestVolumeItem.Properties.All, ref hits);
+                (int)TestVolumeItem.Properties.All, hits);
             Assert.That(hits, Does.Contain(mover));
         }
 

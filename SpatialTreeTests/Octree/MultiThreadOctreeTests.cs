@@ -84,8 +84,8 @@ namespace SpatialTreesTests
             tree.AddItem(target);
             tree.AddItem(new TestVolumeItem("miss", 900, 900, 900, (int)TestVolumeItem.Properties.Property1));
 
-            List<IMapObject3d> found = null;
-            bool any = tree.GetCollidingItems(new Cube(95, 95, 95, 105, 105, 105), (int)TestVolumeItem.Properties.All, ref found);
+            var found = new List<IMapObject3d>();
+            bool any = tree.GetCollidingItems(new Cube(95, 95, 95, 105, 105, 105), (int)TestVolumeItem.Properties.All, found);
 
             Assert.Multiple(() =>
             {
@@ -126,13 +126,13 @@ namespace SpatialTreesTests
             var readers = Enumerable.Range(0, 4).Select(_ => Task.Run(() =>
             {
                 var rng = new Random(Environment.CurrentManagedThreadId);
-                List<IMapObject3d> found = null;
+                var found = new List<IMapObject3d>();
                 while (!cts.IsCancellationRequested)
                 {
                     float x = rng.Next(0, 1000);
                     float y = rng.Next(0, 1000);
                     float z = rng.Next(0, 1000);
-                    tree.GetCollidingItems(new Cube(x, y, z, x + 40, y + 40, z + 40), (int)TestVolumeItem.Properties.All, ref found);
+                    tree.GetCollidingItems(new Cube(x, y, z, x + 40, y + 40, z + 40), (int)TestVolumeItem.Properties.All, found);
                 }
             }));
 

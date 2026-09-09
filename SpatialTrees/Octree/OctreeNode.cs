@@ -288,16 +288,19 @@ namespace SpatialTrees.Octrees
         }
 
         /// <summary>
-        /// returns a list of unique items that are colliding with the item that is passed in.
+        /// Appends every type-matching item in this subtree whose bounding box overlaps
+        /// <paramref name="collisionBox"/> to <paramref name="itemsFound"/>. Recurses into
+        /// child octants; prunes any that the box does not touch and short-circuits via
+        /// CollectAll for any the box fully contains. The caller owns and clears the list.
         /// </summary>
-        public void GetCollidingItems(Cube collisionBox, int objectTypes, ref List<IMapObject3d> itemsFound)
+        public void GetCollidingItems(Cube collisionBox, int objectTypes, List<IMapObject3d> itemsFound)
         {
             if (!BoundingBox.Intersects(collisionBox))
                 return;
 
             if (collisionBox.Contains(BoundingBox))
             {
-                CollectAll(objectTypes, ref itemsFound);
+                CollectAll(objectTypes, itemsFound);
                 return;
             }
 
@@ -319,22 +322,24 @@ namespace SpatialTrees.Octrees
                 for (int i = 0; i < leaves.Length; i++)
                 {
                     if (leaves[i] != null)
-                        leaves[i].GetCollidingItems(collisionBox, objectTypes, ref itemsFound);
+                        leaves[i].GetCollidingItems(collisionBox, objectTypes, itemsFound);
                 }
             }
         }
 
         /// <summary>
-        /// returns a list of unique items that are colliding with the item that is passed in.
+        /// Appends every type-matching item in this subtree whose bounding box overlaps
+        /// <paramref name="collisionSphere"/> to <paramref name="itemsFound"/>. Same pruning
+        /// and CollectAll short-circuit as the cube overload. The caller owns the list.
         /// </summary>
-        public void GetCollidingItems(Sphere collisionSphere, int objectTypes, ref List<IMapObject3d> itemsFound)
+        public void GetCollidingItems(Sphere collisionSphere, int objectTypes, List<IMapObject3d> itemsFound)
         {
             if (!BoundingBox.Intersects(collisionSphere))
                 return;
 
             if (collisionSphere.Contains(BoundingBox))
             {
-                CollectAll(objectTypes, ref itemsFound);
+                CollectAll(objectTypes, itemsFound);
                 return;
             }
 
@@ -356,7 +361,7 @@ namespace SpatialTrees.Octrees
                 for (int i = 0; i < leaves.Length; i++)
                 {
                     if (leaves[i] != null)
-                        leaves[i].GetCollidingItems(collisionSphere, objectTypes, ref itemsFound);
+                        leaves[i].GetCollidingItems(collisionSphere, objectTypes, itemsFound);
                 }
             }
         }
@@ -366,7 +371,7 @@ namespace SpatialTrees.Octrees
         /// with no spatial tests. Used by GetCollidingItems once a query region is known
         /// to fully contain this node.
         /// </summary>
-        public void CollectAll(int objectTypes, ref List<IMapObject3d> itemsFound)
+        public void CollectAll(int objectTypes, List<IMapObject3d> itemsFound)
         {
             var items = NodeItems;
 
@@ -386,7 +391,7 @@ namespace SpatialTrees.Octrees
                 for (int i = 0; i < leaves.Length; i++)
                 {
                     if (leaves[i] != null)
-                        leaves[i].CollectAll(objectTypes, ref itemsFound);
+                        leaves[i].CollectAll(objectTypes, itemsFound);
                 }
             }
         }

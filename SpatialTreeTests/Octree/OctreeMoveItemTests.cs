@@ -56,7 +56,7 @@ namespace SpatialTreesTests
             _Octree.MoveItem(item);
 
             var itemsFound = new List<IMapObject3d>();
-            _Octree.GetCollidingItems(new Cube(19, 19, 19, 21, 21, 21), (int)TestVolumeItem.Properties.Property1, ref itemsFound);
+            _Octree.GetCollidingItems(new Cube(19, 19, 19, 21, 21, 21), (int)TestVolumeItem.Properties.Property1, itemsFound);
 
             Assert.That(itemsFound, Does.Contain(item));
         }

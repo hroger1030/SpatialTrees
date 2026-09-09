@@ -106,7 +106,7 @@ namespace BenchMarks
 
             foreach (var query in _cubeQueries)
             {
-                _prebuilt.GetCollidingItems(query, WorldData.AllTypes, ref results);
+                _prebuilt.GetCollidingItems(query, WorldData.AllTypes, results);
                 hits += results.Count;
             }
 
@@ -121,7 +121,7 @@ namespace BenchMarks
 
             foreach (var query in _cubeQueries)
             {
-                _prebuiltMt.GetCollidingItems(query, WorldData.AllTypes, ref results);
+                _prebuiltMt.GetCollidingItems(query, WorldData.AllTypes, results);
                 hits += results.Count;
             }
 
@@ -136,7 +136,7 @@ namespace BenchMarks
 
             foreach (var query in _sphereQueries)
             {
-                _prebuilt.GetCollidingItems(query, WorldData.AllTypes, ref results);
+                _prebuilt.GetCollidingItems(query, WorldData.AllTypes, results);
                 hits += results.Count;
             }
 
@@ -151,7 +151,7 @@ namespace BenchMarks
 
             foreach (var query in _sphereQueries)
             {
-                _prebuiltMt.GetCollidingItems(query, WorldData.AllTypes, ref results);
+                _prebuiltMt.GetCollidingItems(query, WorldData.AllTypes, results);
                 hits += results.Count;
             }
 

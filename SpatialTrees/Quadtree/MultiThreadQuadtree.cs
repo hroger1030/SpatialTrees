@@ -293,17 +293,18 @@ namespace SpatialTrees.Quadtrees
         }
 
         /// <summary>
-        /// Thread-safe <see cref="Quadtree.GetCollidingItems(Rectangle, int, ref List{IMapObject2d})"/>.
+        /// Thread-safe <see cref="Quadtree.GetCollidingItems(Rectangle, int, List{IMapObject2d})"/>.
         /// Runs under a shared read lock, so concurrent queries proceed in parallel. The
-        /// caller must not share <paramref name="itemsFound"/> between threads.
+        /// caller must not share <paramref name="itemsFound"/> between threads, and it must
+        /// not be null.
         /// </summary>
-        public bool GetCollidingItems(Rectangle collisionBox, int objectTypes, ref List<IMapObject2d> itemsFound)
+        public bool GetCollidingItems(Rectangle collisionBox, int objectTypes, List<IMapObject2d> itemsFound)
         {
             _Lock.EnterReadLock();
 
             try
             {
-                return _Tree.GetCollidingItems(collisionBox, objectTypes, ref itemsFound);
+                return _Tree.GetCollidingItems(collisionBox, objectTypes, itemsFound);
             }
             finally
             {
@@ -312,15 +313,50 @@ namespace SpatialTrees.Quadtrees
         }
 
         /// <summary>
-        /// Thread-safe <see cref="Quadtree.GetCollidingItems(Circle, int, ref List{IMapObject2d})"/>.
+        /// Thread-safe <see cref="Quadtree.GetCollidingItems(Circle, int, List{IMapObject2d})"/>.
         /// </summary>
-        public bool GetCollidingItems(Circle collisionCircle, int objectTypes, ref List<IMapObject2d> itemsFound)
+        public bool GetCollidingItems(Circle collisionCircle, int objectTypes, List<IMapObject2d> itemsFound)
         {
             _Lock.EnterReadLock();
 
             try
             {
-                return _Tree.GetCollidingItems(collisionCircle, objectTypes, ref itemsFound);
+                return _Tree.GetCollidingItems(collisionCircle, objectTypes, itemsFound);
+            }
+            finally
+            {
+                _Lock.ExitReadLock();
+            }
+        }
+
+        /// <summary>
+        /// Thread-safe, allocating <see cref="Quadtree.GetCollidingItems(Rectangle, int)"/>.
+        /// Returns a fresh list; on a hot path keep one and use the overload that fills it.
+        /// </summary>
+        public List<IMapObject2d> GetCollidingItems(Rectangle collisionBox, int objectTypes)
+        {
+            _Lock.EnterReadLock();
+
+            try
+            {
+                return _Tree.GetCollidingItems(collisionBox, objectTypes);
+            }
+            finally
+            {
+                _Lock.ExitReadLock();
+            }
+        }
+
+        /// <summary>
+        /// Thread-safe, allocating <see cref="Quadtree.GetCollidingItems(Circle, int)"/>.
+        /// </summary>
+        public List<IMapObject2d> GetCollidingItems(Circle collisionCircle, int objectTypes)
+        {
+            _Lock.EnterReadLock();
+
+            try
+            {
+                return _Tree.GetCollidingItems(collisionCircle, objectTypes);
             }
             finally
             {

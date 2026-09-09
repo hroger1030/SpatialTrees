@@ -45,7 +45,7 @@ namespace SpatialTreesTests
             var result = _Octree.RemoveItem(item);
 
             var itemsFound = new List<IMapObject3d>();
-            _Octree.GetCollidingItems(new Cube(0, 0, 0, 100, 100, 100), (int)TestVolumeItem.Properties.Property1, ref itemsFound);
+            _Octree.GetCollidingItems(new Cube(0, 0, 0, 100, 100, 100), (int)TestVolumeItem.Properties.Property1, itemsFound);
 
             Assert.Multiple(() =>
             {
@@ -110,7 +110,7 @@ namespace SpatialTreesTests
             tree.Clear();
 
             var itemsFound = new List<IMapObject3d>();
-            var anyFound = tree.GetCollidingItems(new Cube(0, 0, 0, 100, 100, 100), (int)TestVolumeItem.Properties.Property1, ref itemsFound);
+            var anyFound = tree.GetCollidingItems(new Cube(0, 0, 0, 100, 100, 100), (int)TestVolumeItem.Properties.Property1, itemsFound);
 
             Assert.Multiple(() =>
             {
@@ -171,7 +171,7 @@ namespace SpatialTreesTests
             tree.Resize();
 
             var itemsFound = new List<IMapObject3d>();
-            tree.GetCollidingItems(new Cube(9, 9, 9, 11, 11, 11), (int)TestVolumeItem.Properties.Property1, ref itemsFound);
+            tree.GetCollidingItems(new Cube(9, 9, 9, 11, 11, 11), (int)TestVolumeItem.Properties.Property1, itemsFound);
 
             Assert.That(itemsFound, Does.Contain(item));
         }

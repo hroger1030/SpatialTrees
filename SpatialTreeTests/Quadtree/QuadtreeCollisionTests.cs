@@ -46,7 +46,7 @@ namespace SpatialTreesTests
             var itemsFound = new List<IMapObject2d>();
             var searchArea = new Rectangle(7.5f, 9.5f, 2f, 1f); // right edge at x=9.5, spans the full y-range of the item's box
 
-            _Quadtree.GetCollidingItems(searchArea, (int)TestItem.Properties.Property1, ref itemsFound);
+            _Quadtree.GetCollidingItems(searchArea, (int)TestItem.Properties.Property1, itemsFound);
 
             Assert.That(itemsFound, Does.Contain(_Item));
         }
@@ -57,7 +57,7 @@ namespace SpatialTreesTests
             var itemsFound = new List<IMapObject2d>();
             var searchArea = new Rectangle(7.5f, 9.5f, 1.999f, 1f); // right edge at x=9.499, just short of the item's left edge
 
-            _Quadtree.GetCollidingItems(searchArea, (int)TestItem.Properties.Property1, ref itemsFound);
+            _Quadtree.GetCollidingItems(searchArea, (int)TestItem.Properties.Property1, itemsFound);
 
             Assert.That(itemsFound, Is.Empty);
         }
@@ -68,7 +68,7 @@ namespace SpatialTreesTests
             var itemsFound = new List<IMapObject2d>();
             var searchArea = new Circle(8.5f, 10f, 1f); // closest point on item's box is (9.5,10): exactly 1 unit away
 
-            _Quadtree.GetCollidingItems(searchArea, (int)TestItem.Properties.Property1, ref itemsFound);
+            _Quadtree.GetCollidingItems(searchArea, (int)TestItem.Properties.Property1, itemsFound);
 
             Assert.That(itemsFound, Does.Contain(_Item));
         }
@@ -79,7 +79,7 @@ namespace SpatialTreesTests
             var itemsFound = new List<IMapObject2d>();
             var searchArea = new Circle(8.499f, 10f, 1f); // closest point is just over 1 unit away
 
-            _Quadtree.GetCollidingItems(searchArea, (int)TestItem.Properties.Property1, ref itemsFound);
+            _Quadtree.GetCollidingItems(searchArea, (int)TestItem.Properties.Property1, itemsFound);
 
             Assert.That(itemsFound, Is.Empty);
         }

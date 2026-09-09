@@ -250,39 +250,69 @@ namespace SpatialTrees.Quadtrees
         }
 
         /// <summary>
-        /// Fills <paramref name="itemsFound"/> with every unique item whose bounding box
-        /// overlaps <paramref name="collisionBox"/> and whose object type matches the mask.
-        /// Returns true if anything was found. <paramref name="collisionBox"/> must have
-        /// ordered coordinates (Left &lt;= Right, Top &lt;= Bottom); an inverted rectangle is
-        /// not validated and produces wrong results.
+        /// Clears <paramref name="itemsFound"/>, then fills it with every unique item whose
+        /// bounding box overlaps <paramref name="collisionBox"/> and whose object type
+        /// matches the mask. Returns true if anything was found. The caller owns
+        /// <paramref name="itemsFound"/> and is expected to reuse it across queries, so it
+        /// must not be null - use the allocating overload for a throwaway result.
+        /// <paramref name="collisionBox"/> must have ordered coordinates (Left &lt;= Right,
+        /// Top &lt;= Bottom); an inverted rectangle is not validated and produces wrong results.
         /// </summary>
-        public bool GetCollidingItems(Rectangle collisionBox, int objectTypes, ref List<IMapObject2d> itemsFound)
+        public bool GetCollidingItems(Rectangle collisionBox, int objectTypes, List<IMapObject2d> itemsFound)
         {
-            if (itemsFound == null)
-                itemsFound = new List<IMapObject2d>();
-            else
-                itemsFound.Clear();
+            ArgumentNullException.ThrowIfNull(itemsFound);
 
-            TopNode.GetCollidingItems(collisionBox, objectTypes, ref itemsFound);
+            itemsFound.Clear();
+
+            TopNode.GetCollidingItems(collisionBox, objectTypes, itemsFound);
 
             return itemsFound.Count > 0;
         }
 
         /// <summary>
-        /// Fills <paramref name="itemsFound"/> with every unique item whose bounding box
-        /// overlaps <paramref name="collisionCircle"/> and whose object type matches the
-        /// mask. Returns true if anything was found.
+        /// Clears <paramref name="itemsFound"/>, then fills it with every unique item whose
+        /// bounding box overlaps <paramref name="collisionCircle"/> and whose object type
+        /// matches the mask. Returns true if anything was found. <paramref name="itemsFound"/>
+        /// must not be null - use the allocating overload for a throwaway result.
         /// </summary>
-        public bool GetCollidingItems(Circle collisionCircle, int objectTypes, ref List<IMapObject2d> itemsFound)
+        public bool GetCollidingItems(Circle collisionCircle, int objectTypes, List<IMapObject2d> itemsFound)
         {
-            if (itemsFound == null)
-                itemsFound = new List<IMapObject2d>();
-            else
-                itemsFound.Clear();
+            ArgumentNullException.ThrowIfNull(itemsFound);
 
-            TopNode.GetCollidingItems(collisionCircle, objectTypes, ref itemsFound);
+            itemsFound.Clear();
+
+            TopNode.GetCollidingItems(collisionCircle, objectTypes, itemsFound);
 
             return itemsFound.Count > 0;
+        }
+
+        /// <summary>
+        /// Allocates a fresh list and returns every unique item whose bounding box overlaps
+        /// <paramref name="collisionBox"/> and whose object type matches the mask. Convenience
+        /// wrapper over <see cref="GetCollidingItems(Rectangle, int, List{IMapObject2d})"/> for
+        /// one-off queries; on a hot path, keep a list and use that overload instead.
+        /// </summary>
+        public List<IMapObject2d> GetCollidingItems(Rectangle collisionBox, int objectTypes)
+        {
+            var itemsFound = new List<IMapObject2d>();
+
+            TopNode.GetCollidingItems(collisionBox, objectTypes, itemsFound);
+
+            return itemsFound;
+        }
+
+        /// <summary>
+        /// Allocates a fresh list and returns every unique item whose bounding box overlaps
+        /// <paramref name="collisionCircle"/> and whose object type matches the mask.
+        /// Convenience wrapper over <see cref="GetCollidingItems(Circle, int, List{IMapObject2d})"/>.
+        /// </summary>
+        public List<IMapObject2d> GetCollidingItems(Circle collisionCircle, int objectTypes)
+        {
+            var itemsFound = new List<IMapObject2d>();
+
+            TopNode.GetCollidingItems(collisionCircle, objectTypes, itemsFound);
+
+            return itemsFound;
         }
 
         public override string ToString()

@@ -292,17 +292,18 @@ namespace SpatialTrees.Octrees
         }
 
         /// <summary>
-        /// Thread-safe <see cref="Octree.GetCollidingItems(Cube, int, ref List{IMapObject3d})"/>.
+        /// Thread-safe <see cref="Octree.GetCollidingItems(Cube, int, List{IMapObject3d})"/>.
         /// Runs under a shared read lock, so concurrent queries proceed in parallel. The
-        /// caller must not share <paramref name="itemsFound"/> between threads.
+        /// caller must not share <paramref name="itemsFound"/> between threads, and it must
+        /// not be null.
         /// </summary>
-        public bool GetCollidingItems(Cube collisionBox, int objectTypes, ref List<IMapObject3d> itemsFound)
+        public bool GetCollidingItems(Cube collisionBox, int objectTypes, List<IMapObject3d> itemsFound)
         {
             _Lock.EnterReadLock();
 
             try
             {
-                return _Tree.GetCollidingItems(collisionBox, objectTypes, ref itemsFound);
+                return _Tree.GetCollidingItems(collisionBox, objectTypes, itemsFound);
             }
             finally
             {
@@ -311,15 +312,50 @@ namespace SpatialTrees.Octrees
         }
 
         /// <summary>
-        /// Thread-safe <see cref="Octree.GetCollidingItems(Sphere, int, ref List{IMapObject3d})"/>.
+        /// Thread-safe <see cref="Octree.GetCollidingItems(Sphere, int, List{IMapObject3d})"/>.
         /// </summary>
-        public bool GetCollidingItems(Sphere collisionSphere, int objectTypes, ref List<IMapObject3d> itemsFound)
+        public bool GetCollidingItems(Sphere collisionSphere, int objectTypes, List<IMapObject3d> itemsFound)
         {
             _Lock.EnterReadLock();
 
             try
             {
-                return _Tree.GetCollidingItems(collisionSphere, objectTypes, ref itemsFound);
+                return _Tree.GetCollidingItems(collisionSphere, objectTypes, itemsFound);
+            }
+            finally
+            {
+                _Lock.ExitReadLock();
+            }
+        }
+
+        /// <summary>
+        /// Thread-safe, allocating <see cref="Octree.GetCollidingItems(Cube, int)"/>.
+        /// Returns a fresh list; on a hot path keep one and use the overload that fills it.
+        /// </summary>
+        public List<IMapObject3d> GetCollidingItems(Cube collisionBox, int objectTypes)
+        {
+            _Lock.EnterReadLock();
+
+            try
+            {
+                return _Tree.GetCollidingItems(collisionBox, objectTypes);
+            }
+            finally
+            {
+                _Lock.ExitReadLock();
+            }
+        }
+
+        /// <summary>
+        /// Thread-safe, allocating <see cref="Octree.GetCollidingItems(Sphere, int)"/>.
+        /// </summary>
+        public List<IMapObject3d> GetCollidingItems(Sphere collisionSphere, int objectTypes)
+        {
+            _Lock.EnterReadLock();
+
+            try
+            {
+                return _Tree.GetCollidingItems(collisionSphere, objectTypes);
             }
             finally
             {

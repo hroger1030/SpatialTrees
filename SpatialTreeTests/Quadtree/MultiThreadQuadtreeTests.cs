@@ -84,8 +84,8 @@ namespace SpatialTreesTests
             tree.AddItem(target);
             tree.AddItem(new TestItem("miss", 900, 900, (int)TestItem.Properties.Property1));
 
-            List<IMapObject2d> found = null;
-            bool any = tree.GetCollidingItems(new Rectangle(95, 95, 10, 10), (int)TestItem.Properties.All, ref found);
+            var found = new List<IMapObject2d>();
+            bool any = tree.GetCollidingItems(new Rectangle(95, 95, 10, 10), (int)TestItem.Properties.All, found);
 
             Assert.Multiple(() =>
             {
@@ -126,12 +126,12 @@ namespace SpatialTreesTests
             var readers = Enumerable.Range(0, 4).Select(_ => Task.Run(() =>
             {
                 var rng = new Random(Environment.CurrentManagedThreadId);
-                List<IMapObject2d> found = null;
+                var found = new List<IMapObject2d>();
                 while (!cts.IsCancellationRequested)
                 {
                     float x = rng.Next(0, 1000);
                     float y = rng.Next(0, 1000);
-                    tree.GetCollidingItems(new Rectangle(x, y, 40, 40), (int)TestItem.Properties.All, ref found);
+                    tree.GetCollidingItems(new Rectangle(x, y, 40, 40), (int)TestItem.Properties.All, found);
                 }
             }));
 

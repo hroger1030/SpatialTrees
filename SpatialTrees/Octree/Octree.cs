@@ -247,39 +247,69 @@ namespace SpatialTrees.Octrees
         }
 
         /// <summary>
-        /// Fills <paramref name="itemsFound"/> with every unique item whose bounding box
-        /// overlaps <paramref name="collisionBox"/> and whose object type matches the mask.
-        /// Returns true if anything was found. <paramref name="collisionBox"/> must have
-        /// ordered coordinates (X1 &lt;= X2, Y1 &lt;= Y2, Z1 &lt;= Z2); an inverted cube is not
-        /// validated and produces wrong results.
+        /// Clears <paramref name="itemsFound"/>, then fills it with every unique item whose
+        /// bounding box overlaps <paramref name="collisionBox"/> and whose object type
+        /// matches the mask. Returns true if anything was found. The caller owns
+        /// <paramref name="itemsFound"/> and is expected to reuse it across queries, so it
+        /// must not be null - use the allocating overload for a throwaway result.
+        /// <paramref name="collisionBox"/> must have ordered coordinates (X1 &lt;= X2,
+        /// Y1 &lt;= Y2, Z1 &lt;= Z2); an inverted cube is not validated and produces wrong results.
         /// </summary>
-        public bool GetCollidingItems(Cube collisionBox, int objectTypes, ref List<IMapObject3d> itemsFound)
+        public bool GetCollidingItems(Cube collisionBox, int objectTypes, List<IMapObject3d> itemsFound)
         {
-            if (itemsFound == null)
-                itemsFound = new List<IMapObject3d>();
-            else
-                itemsFound.Clear();
+            ArgumentNullException.ThrowIfNull(itemsFound);
 
-            TopNode.GetCollidingItems(collisionBox, objectTypes, ref itemsFound);
+            itemsFound.Clear();
+
+            TopNode.GetCollidingItems(collisionBox, objectTypes, itemsFound);
 
             return itemsFound.Count > 0;
         }
 
         /// <summary>
-        /// Fills <paramref name="itemsFound"/> with every unique item whose bounding box
-        /// overlaps <paramref name="collisionSphere"/> and whose object type matches the
-        /// mask. Returns true if anything was found.
+        /// Clears <paramref name="itemsFound"/>, then fills it with every unique item whose
+        /// bounding box overlaps <paramref name="collisionSphere"/> and whose object type
+        /// matches the mask. Returns true if anything was found. <paramref name="itemsFound"/>
+        /// must not be null - use the allocating overload for a throwaway result.
         /// </summary>
-        public bool GetCollidingItems(Sphere collisionSphere, int objectTypes, ref List<IMapObject3d> itemsFound)
+        public bool GetCollidingItems(Sphere collisionSphere, int objectTypes, List<IMapObject3d> itemsFound)
         {
-            if (itemsFound == null)
-                itemsFound = new List<IMapObject3d>();
-            else
-                itemsFound.Clear();
+            ArgumentNullException.ThrowIfNull(itemsFound);
 
-            TopNode.GetCollidingItems(collisionSphere, objectTypes, ref itemsFound);
+            itemsFound.Clear();
+
+            TopNode.GetCollidingItems(collisionSphere, objectTypes, itemsFound);
 
             return itemsFound.Count > 0;
+        }
+
+        /// <summary>
+        /// Allocates a fresh list and returns every unique item whose bounding box overlaps
+        /// <paramref name="collisionBox"/> and whose object type matches the mask. Convenience
+        /// wrapper over <see cref="GetCollidingItems(Cube, int, List{IMapObject3d})"/> for
+        /// one-off queries; on a hot path, keep a list and use that overload instead.
+        /// </summary>
+        public List<IMapObject3d> GetCollidingItems(Cube collisionBox, int objectTypes)
+        {
+            var itemsFound = new List<IMapObject3d>();
+
+            TopNode.GetCollidingItems(collisionBox, objectTypes, itemsFound);
+
+            return itemsFound;
+        }
+
+        /// <summary>
+        /// Allocates a fresh list and returns every unique item whose bounding box overlaps
+        /// <paramref name="collisionSphere"/> and whose object type matches the mask.
+        /// Convenience wrapper over <see cref="GetCollidingItems(Sphere, int, List{IMapObject3d})"/>.
+        /// </summary>
+        public List<IMapObject3d> GetCollidingItems(Sphere collisionSphere, int objectTypes)
+        {
+            var itemsFound = new List<IMapObject3d>();
+
+            TopNode.GetCollidingItems(collisionSphere, objectTypes, itemsFound);
+
+            return itemsFound;
         }
 
         public override string ToString()

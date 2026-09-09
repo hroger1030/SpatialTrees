@@ -74,7 +74,7 @@ namespace SpatialTreesTests
             Assert.That(_Octree.ObjectIndex.Count, Is.EqualTo(1));
 
             var itemsFound = new List<IMapObject3d>();
-            _Octree.GetCollidingItems(new Cube(0, 0, 0, 100, 100, 100), (int)TestVolumeItem.Properties.Property1, ref itemsFound);
+            _Octree.GetCollidingItems(new Cube(0, 0, 0, 100, 100, 100), (int)TestVolumeItem.Properties.Property1, itemsFound);
 
             Assert.That(itemsFound, Has.Count.EqualTo(1));
         }
