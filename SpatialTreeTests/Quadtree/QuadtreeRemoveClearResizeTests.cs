@@ -32,7 +32,7 @@ namespace SpatialTreesTests
         [SetUp]
         public void Setup()
         {
-            _Quadtree = new Quadtree(new Rectangle(0, 0, 100, 100), 5, 10);
+            _Quadtree = new Quadtree(new AARectangle(0, 0, 100, 100), 5, 10);
         }
 
         [Test]
@@ -44,7 +44,7 @@ namespace SpatialTreesTests
             var result = _Quadtree.RemoveItem(item);
 
             var itemsFound = new List<IMapObject2d>();
-            _Quadtree.GetCollidingItems(new Rectangle(0, 0, 100, 100), (int)TestItem.Properties.Property1, itemsFound);
+            _Quadtree.GetCollidingItems(new AARectangle(0, 0, 100, 100), (int)TestItem.Properties.Property1, itemsFound);
 
             Assert.Multiple(() =>
             {
@@ -67,7 +67,7 @@ namespace SpatialTreesTests
         [Test]
         public void RemoveItem_DroppingSubtreeToMaxObjects_CollapsesTheSplitNode()
         {
-            var tree = new Quadtree(new Rectangle(0, 0, 100, 100), 5, 2);
+            var tree = new Quadtree(new AARectangle(0, 0, 100, 100), 5, 2);
 
             var a = new TestItem("a", 10, 10, (int)TestItem.Properties.Property1);
             var b = new TestItem("b", 90, 10, (int)TestItem.Properties.Property1);
@@ -97,7 +97,7 @@ namespace SpatialTreesTests
         [Test]
         public void MoveItem_EmptyingADeepSubtree_CollapsesItButLeavesTheRootSplit()
         {
-            var tree = new Quadtree(new Rectangle(0, 0, 100, 100), 5, 2);
+            var tree = new Quadtree(new AARectangle(0, 0, 100, 100), 5, 2);
 
             // e/f/g keep the root split; p/q/r/s force the upper-left child to split too
             tree.AddItem(new TestItem("e", 90, 10, (int)TestItem.Properties.Property1));
@@ -121,7 +121,7 @@ namespace SpatialTreesTests
             tree.MoveItem(s); // upper-left child down to 2 - it collapses
 
             var itemsFound = new List<IMapObject2d>();
-            tree.GetCollidingItems(new Rectangle(0, 0, 100, 100), (int)TestItem.Properties.Property1, itemsFound);
+            tree.GetCollidingItems(new AARectangle(0, 0, 100, 100), (int)TestItem.Properties.Property1, itemsFound);
 
             Assert.Multiple(() =>
             {
@@ -140,14 +140,14 @@ namespace SpatialTreesTests
         [Test]
         public void Clear_RemovesAllItemsFromIndexAndSearchResults()
         {
-            var tree = new Quadtree(new Rectangle(0, 0, 100, 100), 5, 10);
+            var tree = new Quadtree(new AARectangle(0, 0, 100, 100), 5, 10);
             tree.AddItem(new TestItem("A", 10, 10, (int)TestItem.Properties.Property1));
             tree.AddItem(new TestItem("B", 50, 50, (int)TestItem.Properties.Property1));
 
             tree.Clear();
 
             var itemsFound = new List<IMapObject2d>();
-            var anyFound = tree.GetCollidingItems(new Rectangle(0, 0, 100, 100), (int)TestItem.Properties.Property1, itemsFound);
+            var anyFound = tree.GetCollidingItems(new AARectangle(0, 0, 100, 100), (int)TestItem.Properties.Property1, itemsFound);
 
             Assert.Multiple(() =>
             {
@@ -160,7 +160,7 @@ namespace SpatialTreesTests
         [Test]
         public void Clear_CollapsesTheSubdivisionBackToASingleLeaf()
         {
-            var tree = new Quadtree(new Rectangle(0, 0, 100, 100), 5, 2);
+            var tree = new Quadtree(new AARectangle(0, 0, 100, 100), 5, 2);
             tree.AddItem(new TestItem("a", 10, 10, (int)TestItem.Properties.Property1));
             tree.AddItem(new TestItem("b", 90, 10, (int)TestItem.Properties.Property1));
             tree.AddItem(new TestItem("c", 10, 90, (int)TestItem.Properties.Property1));
@@ -185,7 +185,7 @@ namespace SpatialTreesTests
         [Test]
         public void Resize_DoublesWorldRectangleAndIncrementsMaxDepth()
         {
-            var tree = new Quadtree(new Rectangle(0, 0, 100, 100), 5, 10);
+            var tree = new Quadtree(new AARectangle(0, 0, 100, 100), 5, 10);
 
             tree.Resize();
 
@@ -200,14 +200,14 @@ namespace SpatialTreesTests
         [Test]
         public void Resize_PreservesAbilityToFindPreviouslyAddedItems()
         {
-            var tree = new Quadtree(new Rectangle(0, 0, 100, 100), 5, 10);
+            var tree = new Quadtree(new AARectangle(0, 0, 100, 100), 5, 10);
             var item = new TestItem("Survivor", 10, 10, (int)TestItem.Properties.Property1);
             tree.AddItem(item);
 
             tree.Resize();
 
             var itemsFound = new List<IMapObject2d>();
-            tree.GetCollidingItems(new Rectangle(9, 9, 2, 2), (int)TestItem.Properties.Property1, itemsFound);
+            tree.GetCollidingItems(new AARectangle(9, 9, 2, 2), (int)TestItem.Properties.Property1, itemsFound);
 
             Assert.That(itemsFound, Does.Contain(item));
         }
@@ -215,7 +215,7 @@ namespace SpatialTreesTests
         [Test]
         public void Resize_RestampsCachedDepthOfThePushedDownSubtree()
         {
-            var tree = new Quadtree(new Rectangle(0, 0, 100, 100), 5, 2);
+            var tree = new Quadtree(new AARectangle(0, 0, 100, 100), 5, 2);
             tree.AddItem(new TestItem("a", 10, 10, (int)TestItem.Properties.Property1));
             tree.AddItem(new TestItem("b", 90, 10, (int)TestItem.Properties.Property1));
             tree.AddItem(new TestItem("c", 10, 90, (int)TestItem.Properties.Property1));

@@ -30,7 +30,7 @@ namespace SpatialTreesTests
         [Test]
         public void Indexer_IndexBelowZero_ThrowsIndexOutOfRangeException()
         {
-            var tree = new Quadtree(new Rectangle(0, 0, 100, 100), 5, 10);
+            var tree = new Quadtree(new AARectangle(0, 0, 100, 100), 5, 10);
 
             Assert.Throws<IndexOutOfRangeException>(() => { var _ = tree.TopNode[-1]; });
         }
@@ -38,7 +38,7 @@ namespace SpatialTreesTests
         [Test]
         public void Indexer_IndexAtLeafCount_ThrowsIndexOutOfRangeException()
         {
-            var tree = new Quadtree(new Rectangle(0, 0, 100, 100), 5, 10);
+            var tree = new Quadtree(new AARectangle(0, 0, 100, 100), 5, 10);
 
             Assert.Throws<IndexOutOfRangeException>(() => { var _ = tree.TopNode[QuadtreeNode.LEAVES]; });
         }
@@ -48,7 +48,7 @@ namespace SpatialTreesTests
         {
             // documents current behavior: a node's leaves array is only allocated by Split(),
             // so indexing an in-range quadrant on an unsplit node throws instead of returning null.
-            var tree = new Quadtree(new Rectangle(0, 0, 100, 100), 5, 10);
+            var tree = new Quadtree(new AARectangle(0, 0, 100, 100), 5, 10);
 
             Assert.Throws<NullReferenceException>(() => { var _ = tree.TopNode[(int)eQuadrant.UpperRightQuadrant]; });
         }
@@ -56,7 +56,7 @@ namespace SpatialTreesTests
         [Test]
         public void Split_CalledTwiceOnSameNode_Throws()
         {
-            var tree = new Quadtree(new Rectangle(0, 0, 100, 100), 5, 10);
+            var tree = new Quadtree(new AARectangle(0, 0, 100, 100), 5, 10);
             tree.TopNode.Split();
 
             Assert.Throws<Exception>(() => tree.TopNode.Split());
@@ -66,7 +66,7 @@ namespace SpatialTreesTests
         [Test]
         public void AddItem_LeafFillsToMaxNodeObjectsThenSplitsOnTheNext()
         {
-            var tree = new Quadtree(new Rectangle(0, 0, 100, 100), 5, 3);
+            var tree = new Quadtree(new AARectangle(0, 0, 100, 100), 5, 3);
 
             tree.AddItem(new TestItem("1", 25, 25, (int)TestItem.Properties.Property1));
             tree.AddItem(new TestItem("2", 75, 25, (int)TestItem.Properties.Property1));
@@ -86,7 +86,7 @@ namespace SpatialTreesTests
         [Test]
         public void Depth_RootNodeIsOne()
         {
-            var tree = new Quadtree(new Rectangle(0, 0, 100, 100), 5, 10);
+            var tree = new Quadtree(new AARectangle(0, 0, 100, 100), 5, 10);
 
             Assert.That(tree.TopNode.Depth, Is.EqualTo(1));
         }
@@ -94,7 +94,7 @@ namespace SpatialTreesTests
         [Test]
         public void Depth_ChildOfRootIsTwo()
         {
-            var tree = new Quadtree(new Rectangle(0, 0, 100, 100), 5, 2);
+            var tree = new Quadtree(new AARectangle(0, 0, 100, 100), 5, 2);
 
             // two items in the upper-right quadrant plus one elsewhere fills the root and
             // splits it; the upper-right child is materialised as those two route into it.
@@ -108,7 +108,7 @@ namespace SpatialTreesTests
         [Test]
         public void GetChildObjectCount_CountsItemsAcrossAllLeaves()
         {
-            var tree = new Quadtree(new Rectangle(0, 0, 100, 100), 5, 2);
+            var tree = new Quadtree(new AARectangle(0, 0, 100, 100), 5, 2);
 
             tree.AddItem(new TestItem("UR", 75, 25, (int)TestItem.Properties.Property1));
             tree.AddItem(new TestItem("LR", 75, 75, (int)TestItem.Properties.Property1));
@@ -121,7 +121,7 @@ namespace SpatialTreesTests
         [Test]
         public void AddItem_AtMaxDepth_NeverSplitsEvenWhenExceedingMaxObjects()
         {
-            var tree = new Quadtree(new Rectangle(0, 0, 100, 100), 1, 1);
+            var tree = new Quadtree(new AARectangle(0, 0, 100, 100), 1, 1);
 
             tree.AddItem(new TestItem("A", 10, 10, (int)TestItem.Properties.Property1));
             tree.AddItem(new TestItem("B", 11, 11, (int)TestItem.Properties.Property1));
@@ -139,13 +139,13 @@ namespace SpatialTreesTests
         [Test]
         public void Equality_UsesReferenceIdentity_NotBoundingBox()
         {
-            var a = new Quadtree(new Rectangle(0, 0, 100, 100), 5, 10);
-            var b = new Quadtree(new Rectangle(0, 0, 100, 100), 5, 10);
+            var a = new Quadtree(new AARectangle(0, 0, 100, 100), 5, 10);
+            var b = new Quadtree(new AARectangle(0, 0, 100, 100), 5, 10);
             b.AddItem(new TestItem("only-in-b", 10, 10, (int)TestItem.Properties.Property1));
 
             Assert.Multiple(() =>
             {
-                Assert.That(a.Equals(b), Is.False);          // same world, different contents
+                Assert.That(a.Equals(b), Is.False); // same world, different contents
                 Assert.That(a.Equals(a), Is.True);
                 Assert.That(a.TopNode.Equals(b.TopNode), Is.False);
                 Assert.That(a.TopNode.Equals(a.TopNode), Is.True);

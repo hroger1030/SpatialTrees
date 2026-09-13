@@ -44,9 +44,9 @@ namespace SpatialTreesTests
         public float Width { get; set; } = 1f;
         public float Height { get; set; } = 1f;
 
-        public Rectangle BoundingBox
+        public AARectangle BoundingBox
         {
-            get { return new Rectangle(Location, Width, Height); }
+            get { return new AARectangle(Location, Width, Height); }
         }
 
         public TestItem() { }

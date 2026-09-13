@@ -48,16 +48,16 @@ namespace SpatialTrees.Quadtrees
         public int MaxDepth { get; protected set; }
         public int MaxNodeObjects { get; protected set; }
 
-        public Rectangle WorldRectangle
+        public AARectangle WorldRectangle
         {
             get { return TopNode.BoundingBox; }
         }
 
-        public Quadtree() : this(Rectangle.UNIT_RECTANGLE, DEFAULT_MAX_DEPTH, DEFAULT_MAX_OBJECTS) { }
+        public Quadtree() : this(AARectangle.UNIT_AARECTANGLE, DEFAULT_MAX_DEPTH, DEFAULT_MAX_OBJECTS) { }
 
-        public Quadtree(Rectangle area) : this(area, DEFAULT_MAX_DEPTH, DEFAULT_MAX_OBJECTS) { }
+        public Quadtree(AARectangle area) : this(area, DEFAULT_MAX_DEPTH, DEFAULT_MAX_OBJECTS) { }
 
-        public Quadtree(Rectangle boundingBox, int maxDepth, int maxObjects, int expectedItemCount = 0)
+        public Quadtree(AARectangle boundingBox, int maxDepth, int maxObjects, int expectedItemCount = 0)
         {
             ArgumentOutOfRangeException.ThrowIfLessThan(maxDepth, 1);
             ArgumentOutOfRangeException.ThrowIfLessThan(maxObjects, 1);
@@ -69,7 +69,7 @@ namespace SpatialTrees.Quadtrees
             MaxNodeObjects = maxObjects;
         }
 
-        public static Quadtree Build(Rectangle boundingBox, int maxDepth, int maxObjects, IReadOnlyCollection<IMapObject2d> items)
+        public static Quadtree Build(AARectangle boundingBox, int maxDepth, int maxObjects, IReadOnlyCollection<IMapObject2d> items)
         {
             ArgumentNullException.ThrowIfNull(items);
 
@@ -99,7 +99,7 @@ namespace SpatialTrees.Quadtrees
         /// As <see cref="Build(Rectangle, int, int, IReadOnlyCollection{IMapObject2d})"/>
         /// using the default depth and per-node object limits.
         /// </summary>
-        public static Quadtree Build(Rectangle boundingBox, IReadOnlyCollection<IMapObject2d> items)
+        public static Quadtree Build(AARectangle boundingBox, IReadOnlyCollection<IMapObject2d> items)
         {
             return Build(boundingBox, DEFAULT_MAX_DEPTH, DEFAULT_MAX_OBJECTS, items);
         }
@@ -140,7 +140,7 @@ namespace SpatialTrees.Quadtrees
         /// As <see cref="ValidateForInsert(IMapObject2d)"/>, but takes the item's bounding
         /// box so a caller that already has it does not re-read the property.
         /// </summary>
-        public void ValidateForInsert(IMapObject2d item, Rectangle itemBox)
+        public void ValidateForInsert(IMapObject2d item, AARectangle itemBox)
         {
             var center = itemBox.Center;
 
@@ -255,7 +255,7 @@ namespace SpatialTrees.Quadtrees
         /// <paramref name="collisionBox"/> must have ordered coordinates (Left &lt;= Right,
         /// Top &lt;= Bottom); an inverted rectangle is not validated and produces wrong results.
         /// </summary>
-        public bool GetCollidingItems(Rectangle collisionBox, int objectTypes, List<IMapObject2d> itemsFound)
+        public bool GetCollidingItems(AARectangle collisionBox, int objectTypes, List<IMapObject2d> itemsFound)
         {
             ArgumentNullException.ThrowIfNull(itemsFound);
 
@@ -291,7 +291,7 @@ namespace SpatialTrees.Quadtrees
         /// wrapper over <see cref="GetCollidingItems(Rectangle, int, List{IMapObject2d})"/> for
         /// one-off queries; on a hot path, keep a list and use that overload instead.
         /// </summary>
-        public List<IMapObject2d> GetCollidingItems(Rectangle collisionBox, int objectTypes)
+        public List<IMapObject2d> GetCollidingItems(AARectangle collisionBox, int objectTypes)
         {
             var itemsFound = new List<IMapObject2d>();
 

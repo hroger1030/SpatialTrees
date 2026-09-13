@@ -18,7 +18,7 @@ namespace BenchMarks
 
         public float Height { get; set; } = 1f;
 
-        public Rectangle BoundingBox => new Rectangle(Location, Width, Height);
+        public AARectangle BoundingBox => new(Location, Width, Height);
 
         public BenchItem2d(float x, float y)
         {

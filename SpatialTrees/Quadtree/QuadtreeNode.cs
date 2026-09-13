@@ -34,7 +34,7 @@ namespace SpatialTrees.Quadtrees
         public Quadtree Quadtree { get; protected set; }
         public QuadtreeNode Parent { get; protected set; }
         public QuadtreeNode[] Leaves { get; protected set; }
-        public Rectangle BoundingBox { get; protected set; }
+        public AARectangle BoundingBox { get; protected set; }
         public List<IMapObject2d> NodeItems { get; protected set; }
         public int Depth { get; protected set; }
         public int SubtreeCount { get; protected set; }
@@ -74,7 +74,7 @@ namespace SpatialTrees.Quadtrees
             }
         }
 
-        public QuadtreeNode(Quadtree quadtree, QuadtreeNode parent, Rectangle boundingBox)
+        public QuadtreeNode(Quadtree quadtree, QuadtreeNode parent, AARectangle boundingBox)
         {
             Quadtree = quadtree;
             Parent = parent;
@@ -120,7 +120,7 @@ namespace SpatialTrees.Quadtrees
         /// bounding box as a parameter so a multi-level insert reads the property once
         /// instead of once (or twice) per level.
         /// </summary>
-        public void AddItem(IMapObject2d mapItem, Rectangle itemBox)
+        public void AddItem(IMapObject2d mapItem, AARectangle itemBox)
         {
             if (Leaves == null)
             {
@@ -157,7 +157,7 @@ namespace SpatialTrees.Quadtrees
         /// stored on this node instead, so that collision queries touching only one of the
         /// neighbouring quadrants still find it. Assumes this node has been split.
         /// </summary>
-        public void RouteItem(IMapObject2d mapItem, Rectangle itemBox)
+        public void RouteItem(IMapObject2d mapItem, AARectangle itemBox)
         {
             QuadtreeNode leaf = FindContainingLeaf(itemBox);
 
@@ -172,12 +172,13 @@ namespace SpatialTrees.Quadtrees
         /// creating that child if it does not exist yet, or null when the box straddles a
         /// quadrant boundary (in which case no child is created). Assumes this node has been split.
         /// </summary>
-        public QuadtreeNode FindContainingLeaf(Rectangle itemBox)
+        public QuadtreeNode FindContainingLeaf(AARectangle itemBox)
         {
             eQuadrant quadrant = FindQuadrant(Center, itemBox.Center);
             QuadtreeNode leaf = Leaves[(int)quadrant];
 
-            Rectangle childBox = leaf != null ? leaf.BoundingBox : ChildBox(quadrant);
+            var childBox = leaf != null ? leaf.BoundingBox : ChildBox(quadrant);
+
             if (!childBox.Contains(itemBox))
                 return null;
 
@@ -188,17 +189,17 @@ namespace SpatialTrees.Quadtrees
         /// The bounding box of child quadrant <paramref name="quadrant"/>, computed from this
         /// node's bounds whether or not that child has been created yet.
         /// </summary>
-        protected Rectangle ChildBox(eQuadrant quadrant)
+        protected AARectangle ChildBox(eQuadrant quadrant)
         {
             float halfWidth = BoundingBox.Width * 0.5f;
             float halfHeight = BoundingBox.Height * 0.5f;
 
             return quadrant switch
             {
-                eQuadrant.UpperRightQuadrant => new Rectangle(Center.X, BoundingBox.Top, halfWidth, halfHeight),
-                eQuadrant.LowerRightQuadrant => new Rectangle(Center.X, Center.Y, halfWidth, halfHeight),
-                eQuadrant.LowerLeftQuadrant => new Rectangle(BoundingBox.Left, Center.Y, halfWidth, halfHeight),
-                _ => new Rectangle(BoundingBox.Left, BoundingBox.Top, halfWidth, halfHeight),
+                eQuadrant.UpperRightQuadrant => new AARectangle(Center.X, BoundingBox.Top, halfWidth, halfHeight),
+                eQuadrant.LowerRightQuadrant => new AARectangle(Center.X, Center.Y, halfWidth, halfHeight),
+                eQuadrant.LowerLeftQuadrant => new AARectangle(BoundingBox.Left, Center.Y, halfWidth, halfHeight),
+                _ => new AARectangle(BoundingBox.Left, BoundingBox.Top, halfWidth, halfHeight),
             };
         }
 
@@ -289,7 +290,7 @@ namespace SpatialTrees.Quadtrees
         /// child quadrants; prunes any that the box does not touch and short-circuits via
         /// CollectAll for any the box fully contains. The caller owns and clears the list.
         /// </summary>
-        public void GetCollidingItems(Rectangle collisionBox, int objectTypes, List<IMapObject2d> itemsFound)
+        public void GetCollidingItems(AARectangle collisionBox, int objectTypes, List<IMapObject2d> itemsFound)
         {
             if (!BoundingBox.Intersects(collisionBox))
                 return;
@@ -476,7 +477,7 @@ namespace SpatialTrees.Quadtrees
         /// Bulk-load classifier: 0 if <paramref name="itemBox"/> straddles a quadrant
         /// boundary (stays on this node), else the 1-based index of the child that contains it.
         /// </summary>
-        public int BulkBucket(Rectangle itemBox)
+        public int BulkBucket(AARectangle itemBox)
         {
             eQuadrant quadrant = FindQuadrant(Center, itemBox.Center);
             return ChildBox(quadrant).Contains(itemBox) ? (int)quadrant + 1 : 0;

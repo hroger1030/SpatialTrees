@@ -53,9 +53,9 @@ namespace SpatialTrees.Quadtrees
 
         public MultiThreadQuadtree() : this(new Quadtree()) { }
 
-        public MultiThreadQuadtree(Rectangle area) : this(new Quadtree(area)) { }
+        public MultiThreadQuadtree(AARectangle area) : this(new Quadtree(area)) { }
 
-        public MultiThreadQuadtree(Rectangle boundingBox, int maxDepth, int maxObjects, int expectedItemCount = 0)
+        public MultiThreadQuadtree(AARectangle boundingBox, int maxDepth, int maxObjects, int expectedItemCount = 0)
             : this(new Quadtree(boundingBox, maxDepth, maxObjects, expectedItemCount)) { }
 
         /// <summary>
@@ -76,7 +76,7 @@ namespace SpatialTrees.Quadtrees
         /// Builds a bulk-loaded tree (see <see cref="Quadtree.Build(Rectangle, int, int, IReadOnlyCollection{IMapObject2d})"/>)
         /// and returns it wrapped for thread-safe use.
         /// </summary>
-        public static MultiThreadQuadtree Build(Rectangle boundingBox, int maxDepth, int maxObjects, IReadOnlyCollection<IMapObject2d> items)
+        public static MultiThreadQuadtree Build(AARectangle boundingBox, int maxDepth, int maxObjects, IReadOnlyCollection<IMapObject2d> items)
         {
             return new MultiThreadQuadtree(Quadtree.Build(boundingBox, maxDepth, maxObjects, items));
         }
@@ -85,13 +85,13 @@ namespace SpatialTrees.Quadtrees
         /// As <see cref="Build(Rectangle, int, int, IReadOnlyCollection{IMapObject2d})"/>
         /// using the default depth and per-node object limits.
         /// </summary>
-        public static MultiThreadQuadtree Build(Rectangle boundingBox, IReadOnlyCollection<IMapObject2d> items)
+        public static MultiThreadQuadtree Build(AARectangle boundingBox, IReadOnlyCollection<IMapObject2d> items)
         {
             return new MultiThreadQuadtree(Quadtree.Build(boundingBox, items));
         }
 
         /// <summary>The world rectangle. Only changes under an exclusive lock via <see cref="Resize"/>.</summary>
-        public Rectangle WorldRectangle
+        public AARectangle WorldRectangle
         {
             get
             {
@@ -298,7 +298,7 @@ namespace SpatialTrees.Quadtrees
         /// caller must not share <paramref name="itemsFound"/> between threads, and it must
         /// not be null.
         /// </summary>
-        public bool GetCollidingItems(Rectangle collisionBox, int objectTypes, List<IMapObject2d> itemsFound)
+        public bool GetCollidingItems(AARectangle collisionBox, int objectTypes, List<IMapObject2d> itemsFound)
         {
             _Lock.EnterReadLock();
 
@@ -333,7 +333,7 @@ namespace SpatialTrees.Quadtrees
         /// Thread-safe, allocating <see cref="Quadtree.GetCollidingItems(Rectangle, int)"/>.
         /// Returns a fresh list; on a hot path keep one and use the overload that fills it.
         /// </summary>
-        public List<IMapObject2d> GetCollidingItems(Rectangle collisionBox, int objectTypes)
+        public List<IMapObject2d> GetCollidingItems(AARectangle collisionBox, int objectTypes)
         {
             _Lock.EnterReadLock();
 

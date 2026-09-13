@@ -16,9 +16,9 @@ namespace BenchMarks
         /// <summary>Object-type mask that matches every benchmark item.</summary>
         public const int AllTypes = ~0;
 
-        public static Rectangle World2d()
+        public static AARectangle World2d()
         {
-            return new Rectangle(0f, 0f, WorldSize, WorldSize);
+            return new AARectangle(0f, 0f, WorldSize, WorldSize);
         }
 
         public static Cube World3d()
@@ -48,13 +48,13 @@ namespace BenchMarks
             return points;
         }
 
-        public static Rectangle[] QueryRects(int count, float size)
+        public static AARectangle[] QueryRects(int count, float size)
         {
             var rng = new Random(Seed + 1);
-            var rects = new Rectangle[count];
+            var rects = new AARectangle[count];
 
             for (int i = 0; i < count; i++)
-                rects[i] = new Rectangle(NextOrigin(rng, size), NextOrigin(rng, size), size, size);
+                rects[i] = new AARectangle(NextOrigin(rng, size), NextOrigin(rng, size), size, size);
 
             return rects;
         }

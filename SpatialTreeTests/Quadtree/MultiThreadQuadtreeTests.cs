@@ -31,7 +31,7 @@ namespace SpatialTreesTests
     [Category("Quadtree")]
     public class MultiThreadQuadtreeTests
     {
-        private static readonly Rectangle World = new Rectangle(0, 0, 1000, 1000);
+        private static readonly AARectangle World = new AARectangle(0, 0, 1000, 1000);
 
         [Test]
         public void Constructor_NullInnerTree_Throws()
@@ -85,7 +85,7 @@ namespace SpatialTreesTests
             tree.AddItem(new TestItem("miss", 900, 900, (int)TestItem.Properties.Property1));
 
             var found = new List<IMapObject2d>();
-            bool any = tree.GetCollidingItems(new Rectangle(95, 95, 10, 10), (int)TestItem.Properties.All, found);
+            bool any = tree.GetCollidingItems(new AARectangle(95, 95, 10, 10), (int)TestItem.Properties.All, found);
 
             Assert.Multiple(() =>
             {
@@ -131,7 +131,7 @@ namespace SpatialTreesTests
                 {
                     float x = rng.Next(0, 1000);
                     float y = rng.Next(0, 1000);
-                    tree.GetCollidingItems(new Rectangle(x, y, 40, 40), (int)TestItem.Properties.All, found);
+                    tree.GetCollidingItems(new AARectangle(x, y, 40, 40), (int)TestItem.Properties.All, found);
                 }
             }));
 

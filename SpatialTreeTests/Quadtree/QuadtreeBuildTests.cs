@@ -29,7 +29,7 @@ namespace SpatialTreesTests
     [Category("Quadtree")]
     public class QuadtreeBuildTests
     {
-        private static readonly Rectangle World = new Rectangle(0, 0, 1000, 1000);
+        private static readonly AARectangle World = new AARectangle(0, 0, 1000, 1000);
 
         [Test]
         public void Build_IndexesEveryItem()
@@ -72,7 +72,7 @@ namespace SpatialTreesTests
 
             for (int q = 0; q < 200; q++)
             {
-                var box = new Rectangle(rng.Next(0, 900), rng.Next(0, 900), rng.Next(1, 200), rng.Next(1, 200));
+                var box = new AARectangle(rng.Next(0, 900), rng.Next(0, 900), rng.Next(1, 200), rng.Next(1, 200));
 
                 bulk.GetCollidingItems(box, (int)TestItem.Properties.All, bulkHits);
                 incremental.GetCollidingItems(box, (int)TestItem.Properties.All, incHits);
@@ -177,7 +177,7 @@ namespace SpatialTreesTests
             tree.MoveItem(mover);
 
             var hits = new List<IMapObject2d>();
-            tree.GetCollidingItems(new Rectangle(mover.Location.X - 2, mover.Location.Y - 2, 4, 4),
+            tree.GetCollidingItems(new AARectangle(mover.Location.X - 2, mover.Location.Y - 2, 4, 4),
                 (int)TestItem.Properties.All, hits);
             Assert.That(hits, Does.Contain(mover));
         }
@@ -205,7 +205,7 @@ namespace SpatialTreesTests
             Assert.Multiple(() =>
             {
                 Assert.That(tree.TopNode.IsSplit, Is.False);
-                Assert.That(tree.TopNode.NodeItems, Is.EqualTo(new[] { only }));
+                Assert.That(tree.TopNode.NodeItems, Is.EqualTo([only]));
                 Assert.That(tree.TopNode.GetChildObjectCount(), Is.EqualTo(1));
                 Assert.That(tree.ObjectIndex[only], Is.EqualTo(tree.TopNode));
             });

@@ -33,7 +33,7 @@ namespace SpatialTreesTests
         [SetUp]
         public void Setup()
         {
-            _Quadtree = new Quadtree(new Rectangle(0, 0, 100, 100), 5, 10);
+            _Quadtree = new Quadtree(new AARectangle(0, 0, 100, 100), 5, 10);
         }
 
         [Test]
@@ -56,7 +56,7 @@ namespace SpatialTreesTests
             _Quadtree.MoveItem(item);
 
             var itemsFound = new List<IMapObject2d>();
-            _Quadtree.GetCollidingItems(new Rectangle(19, 19, 2, 2), (int)TestItem.Properties.Property1, itemsFound);
+            _Quadtree.GetCollidingItems(new AARectangle(19, 19, 2, 2), (int)TestItem.Properties.Property1, itemsFound);
 
             Assert.That(itemsFound, Does.Contain(item));
         }
@@ -75,7 +75,7 @@ namespace SpatialTreesTests
         [Test]
         public void MoveItem_ItemShrinksToFitAChildOfItsCurrentNode_IsPushedDown()
         {
-            var tree = new Quadtree(new Rectangle(0, 0, 100, 100), 5, 2);
+            var tree = new Quadtree(new AARectangle(0, 0, 100, 100), 5, 2);
 
             // force the root to split, then add a large item that straddles the root's
             // quadrant boundary so it is stored on the (now split) root itself.

@@ -33,7 +33,7 @@ namespace SpatialTreesTests
         [SetUp]
         public void Setup()
         {
-            _Quadtree = new Quadtree(new Rectangle(0, 0, 100, 100), 5, 10);
+            _Quadtree = new Quadtree(new AARectangle(0, 0, 100, 100), 5, 10);
         }
 
         [Test]
@@ -74,7 +74,7 @@ namespace SpatialTreesTests
             Assert.That(_Quadtree.ObjectIndex.Count, Is.EqualTo(1));
 
             var itemsFound = new List<IMapObject2d>();
-            _Quadtree.GetCollidingItems(new Rectangle(0, 0, 100, 100), (int)TestItem.Properties.Property1, itemsFound);
+            _Quadtree.GetCollidingItems(new AARectangle(0, 0, 100, 100), (int)TestItem.Properties.Property1, itemsFound);
 
             Assert.That(itemsFound, Has.Count.EqualTo(1));
         }
@@ -82,7 +82,7 @@ namespace SpatialTreesTests
         [Test]
         public void AddItem_ExceedingMaxObjects_SplitsRootIntoQuadrantsWithCorrectMembership()
         {
-            var tree = new Quadtree(new Rectangle(0, 0, 100, 100), 5, 2);
+            var tree = new Quadtree(new AARectangle(0, 0, 100, 100), 5, 2);
 
             var upperRight = new TestItem("UR", 75, 25, (int)TestItem.Properties.Property1);
             var lowerRight = new TestItem("LR", 75, 75, (int)TestItem.Properties.Property1);
@@ -112,8 +112,8 @@ namespace SpatialTreesTests
             var item = new DivergentItem
             {
                 ObjectType = (int)TestItem.Properties.Property1,
-                Location = new Point2(500, 500),                          // outside the world rectangle
-                BoundingBox = new Rectangle(new Point2(50, 50), 2f, 2f),  // center well inside it
+                Location = new Point2(500, 500), // outside the world rectangle
+                BoundingBox = new AARectangle(new Point2(50, 50), 2f, 2f), // center well inside it
             };
 
             _Quadtree.AddItem(item);
@@ -127,8 +127,8 @@ namespace SpatialTreesTests
             var item = new DivergentItem
             {
                 ObjectType = (int)TestItem.Properties.Property1,
-                Location = new Point2(50, 50),                              // inside the world rectangle
-                BoundingBox = new Rectangle(new Point2(500, 500), 2f, 2f),  // center outside it
+                Location = new Point2(50, 50), // inside the world rectangle
+                BoundingBox = new AARectangle(new Point2(500, 500), 2f, 2f), // center outside it
             };
 
             Assert.Throws<ArgumentException>(() => _Quadtree.AddItem(item));
@@ -139,7 +139,7 @@ namespace SpatialTreesTests
         [Test]
         public void AddItem_ReAddKnownItemAtNewLocation_ObjectIndexPointsAtHoldingNode()
         {
-            var tree = new Quadtree(new Rectangle(0, 0, 100, 100), 5, 2);
+            var tree = new Quadtree(new AARectangle(0, 0, 100, 100), 5, 2);
 
             tree.AddItem(new TestItem("a", 10, 10, (int)TestItem.Properties.Property1));
             tree.AddItem(new TestItem("b", 90, 10, (int)TestItem.Properties.Property1));
@@ -169,7 +169,7 @@ namespace SpatialTreesTests
         {
             public int ObjectType { get; set; }
             public Point2 Location { get; set; }
-            public Rectangle BoundingBox { get; set; }
+            public AARectangle BoundingBox { get; set; }
         }
     }
 }

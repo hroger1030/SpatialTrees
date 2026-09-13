@@ -44,7 +44,7 @@ namespace SpatialTreesTests
         [Test]
         public void Constructor_WithAreaOnly_UsesDefaultDepthAndObjectLimit()
         {
-            var tree = new Quadtree(new Rectangle(0, 0, 50, 25));
+            var tree = new Quadtree(new AARectangle(0, 0, 50, 25));
 
             Assert.Multiple(() =>
             {
@@ -58,7 +58,7 @@ namespace SpatialTreesTests
         [Test]
         public void Constructor_WithAllArguments_UsesProvidedValues()
         {
-            var boundingBox = new Rectangle(0, 0, 200, 200);
+            var boundingBox = new AARectangle(0, 0, 200, 200);
             var tree = new Quadtree(boundingBox, 3, 7);
 
             Assert.Multiple(() =>
@@ -72,25 +72,25 @@ namespace SpatialTreesTests
         [Test]
         public void Constructor_MaxDepthLessThanOne_ThrowsArgumentOutOfRangeException()
         {
-            Assert.Throws<ArgumentOutOfRangeException>(() => new Quadtree(new Rectangle(0, 0, 100, 100), 0, 10));
+            Assert.Throws<ArgumentOutOfRangeException>(() => new Quadtree(new AARectangle(0, 0, 100, 100), 0, 10));
         }
 
         [Test]
         public void Constructor_MaxObjectsLessThanOne_ThrowsArgumentOutOfRangeException()
         {
-            Assert.Throws<ArgumentOutOfRangeException>(() => new Quadtree(new Rectangle(0, 0, 100, 100), 5, 0));
+            Assert.Throws<ArgumentOutOfRangeException>(() => new Quadtree(new AARectangle(0, 0, 100, 100), 5, 0));
         }
 
         [Test]
         public void Constructor_NegativeExpectedItemCount_ThrowsArgumentOutOfRangeException()
         {
-            Assert.Throws<ArgumentOutOfRangeException>(() => new Quadtree(new Rectangle(0, 0, 100, 100), 5, 10, -1));
+            Assert.Throws<ArgumentOutOfRangeException>(() => new Quadtree(new AARectangle(0, 0, 100, 100), 5, 10, -1));
         }
 
         [Test]
         public void Constructor_ExpectedItemCountHint_ProducesAWorkingTree()
         {
-            var tree = new Quadtree(new Rectangle(0, 0, 100, 100), 5, 4, expectedItemCount: 500);
+            var tree = new Quadtree(new AARectangle(0, 0, 100, 100), 5, 4, expectedItemCount: 500);
 
             for (int i = 0; i < 200; i++)
                 tree.AddItem(new TestItem($"i{i}", i % 100, (i * 7) % 100, (int)TestItem.Properties.Property1));

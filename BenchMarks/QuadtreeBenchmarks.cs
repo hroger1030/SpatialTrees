@@ -38,7 +38,7 @@ namespace BenchMarks
 
         private Point2[] _positions;
         private BenchItem2d[] _items;
-        private Rectangle[] _rectQueries;
+        private AARectangle[] _rectQueries;
         private Circle[] _circleQueries;
         private Quadtree _prebuilt;
         private MultiThreadQuadtree _prebuiltMt;

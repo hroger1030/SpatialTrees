@@ -32,7 +32,7 @@ namespace SpatialTreesTests
         [OneTimeSetUp]
         public void Init()
         {
-            _Quadtree = new Quadtree(new Rectangle(0, 0, 100, 100), 5, 10);
+            _Quadtree = new Quadtree(new AARectangle(0, 0, 100, 100), 5, 10);
 
             _Quadtree.AddItem(new TestItem() { Name = "TestItem1", Location = new Point2(1, 1), ObjectType = (int)TestItem.Properties.Property1 });
             _Quadtree.AddItem(new TestItem() { Name = "TestItem2", Location = new Point2(5, 5), ObjectType = (int)TestItem.Properties.Property2 });
@@ -47,7 +47,7 @@ namespace SpatialTreesTests
         public void Quadtree_FindItemsBasicSquare_Passes()
         {
             var itemsFound = new List<IMapObject2d>();
-            var searchArea = new Rectangle(1, 1, 1, 1);
+            var searchArea = new AARectangle(1, 1, 1, 1);
             _Quadtree.GetCollidingItems(searchArea, (int)TestItem.Properties.Property1, itemsFound);
 
             Assert.That(itemsFound.Count == 1, Is.True);
@@ -58,7 +58,7 @@ namespace SpatialTreesTests
         public void Quadtree_FindItemsBasicSquareOversized_Passes()
         {
             var itemsFound = new List<IMapObject2d>();
-            var searchArea = new Rectangle(-1, -1, 102, 102);
+            var searchArea = new AARectangle(-1, -1, 102, 102);
             _Quadtree.GetCollidingItems(searchArea, (int)TestItem.Properties.Property1, itemsFound);
 
             Assert.That(itemsFound.Count == 3, Is.True);
@@ -105,7 +105,7 @@ namespace SpatialTreesTests
         public void Quadtree_FindItemsBasicSquareOverlapping_Passes()
         {
             var itemsFound = new List<IMapObject2d>();
-            var searchArea = new Rectangle(0, 0, 1, 1);
+            var searchArea = new AARectangle(0, 0, 1, 1);
             _Quadtree.GetCollidingItems(searchArea, (int)TestItem.Properties.Property1, itemsFound);
 
             Assert.That(itemsFound.Count == 1, Is.True);
@@ -130,7 +130,7 @@ namespace SpatialTreesTests
         public void Quadtree_FindItemsRectangle_NoIntersection_ReturnsFalseAndEmptySet()
         {
             var itemsFound = new List<IMapObject2d>();
-            var searchArea = new Rectangle(40, 0, 5, 5); // clear of every seeded item
+            var searchArea = new AARectangle(40, 0, 5, 5); // clear of every seeded item
             var result = _Quadtree.GetCollidingItems(searchArea, (int)TestItem.Properties.All, itemsFound);
 
             Assert.Multiple(() =>
@@ -160,7 +160,7 @@ namespace SpatialTreesTests
         public void Quadtree_FindItems_ReturnValueTrueWhenAnyItemFound()
         {
             var itemsFound = new List<IMapObject2d>();
-            var searchArea = new Rectangle(1, 1, 1, 1);
+            var searchArea = new AARectangle(1, 1, 1, 1);
             var result = _Quadtree.GetCollidingItems(searchArea, (int)TestItem.Properties.Property1, itemsFound);
 
             Assert.That(result, Is.True);
@@ -174,7 +174,7 @@ namespace SpatialTreesTests
         public void Quadtree_ObjectTypeMask_PartialOverlapSearch_IncludesItemWithAllFlagsSet()
         {
             var itemsFound = new List<IMapObject2d>();
-            var searchArea = new Rectangle(99, 99, 2, 2); // overlaps TestItem6 only, far smaller than the world rectangle
+            var searchArea = new AARectangle(99, 99, 2, 2); // overlaps TestItem6 only, far smaller than the world rectangle
             _Quadtree.GetCollidingItems(searchArea, (int)TestItem.Properties.Property1, itemsFound);
 
             Assert.That(itemsFound, Has.Some.Property(nameof(TestItem.Name)).EqualTo("TestItem6"));
@@ -185,7 +185,7 @@ namespace SpatialTreesTests
         public void Quadtree_ObjectTypeMask_SearchAreaContainsWholeNode_IncludesItemWithAllFlagsSet()
         {
             var itemsFound = new List<IMapObject2d>();
-            var searchArea = new Rectangle(-1, -1, 102, 102); // contains the entire world rectangle
+            var searchArea = new AARectangle(-1, -1, 102, 102); // contains the entire world rectangle
             _Quadtree.GetCollidingItems(searchArea, (int)TestItem.Properties.Property1, itemsFound);
 
             Assert.That(itemsFound, Has.Some.Property(nameof(TestItem.Name)).EqualTo("TestItem6"));
@@ -198,7 +198,7 @@ namespace SpatialTreesTests
         public void Quadtree_ObjectTypeMask_CombinedMask_MatchesItemsOfEitherType()
         {
             var itemsFound = new List<IMapObject2d>();
-            var searchArea = new Rectangle(-1, -1, 102, 102); // contains the entire world rectangle
+            var searchArea = new AARectangle(-1, -1, 102, 102); // contains the entire world rectangle
             int mask = (int)TestItem.Properties.Property2 | (int)TestItem.Properties.Property3;
             _Quadtree.GetCollidingItems(searchArea, mask, itemsFound);
 
@@ -211,7 +211,7 @@ namespace SpatialTreesTests
         public void Quadtree_ObjectTypeMask_MaskDisjointFromItem_ExcludesItem()
         {
             var itemsFound = new List<IMapObject2d>();
-            var searchArea = new Rectangle(4, 4, 3, 3); // overlaps TestItem2 (Property2) only
+            var searchArea = new AARectangle(4, 4, 3, 3); // overlaps TestItem2 (Property2) only
             _Quadtree.GetCollidingItems(searchArea, (int)TestItem.Properties.Property1, itemsFound);
 
             Assert.That(itemsFound, Is.Empty);
@@ -226,7 +226,7 @@ namespace SpatialTreesTests
             Assert.Multiple(() =>
             {
                 Assert.Throws<System.ArgumentNullException>(
-                    () => _Quadtree.GetCollidingItems(new Rectangle(1, 1, 1, 1), (int)TestItem.Properties.Property1, null));
+                    () => _Quadtree.GetCollidingItems(new AARectangle(1, 1, 1, 1), (int)TestItem.Properties.Property1, null));
                 Assert.Throws<System.ArgumentNullException>(
                     () => _Quadtree.GetCollidingItems(new Circle(1, 1, 1), (int)TestItem.Properties.Property1, null));
             });
@@ -236,7 +236,7 @@ namespace SpatialTreesTests
         [Category("Quadtree")]
         public void Quadtree_GetCollidingItems_AllocatingOverloads_ReturnHits()
         {
-            var rectHits = _Quadtree.GetCollidingItems(new Rectangle(-1, -1, 102, 102), (int)TestItem.Properties.Property1);
+            var rectHits = _Quadtree.GetCollidingItems(new AARectangle(-1, -1, 102, 102), (int)TestItem.Properties.Property1);
             var circleHits = _Quadtree.GetCollidingItems(new Circle(1, 1, 1), (int)TestItem.Properties.Property1);
 
             Assert.Multiple(() =>

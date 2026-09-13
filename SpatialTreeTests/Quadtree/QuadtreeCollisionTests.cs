@@ -35,7 +35,7 @@ namespace SpatialTreesTests
         [OneTimeSetUp]
         public void Init()
         {
-            _Quadtree = new Quadtree(new Rectangle(0, 0, 100, 100), 5, 10);
+            _Quadtree = new Quadtree(new AARectangle(0, 0, 100, 100), 5, 10);
             _Item = new TestItem("Target", 10, 10, (int)TestItem.Properties.Property1); // bounding box (9.5,9.5)-(10.5,10.5)
             _Quadtree.AddItem(_Item);
         }
@@ -44,7 +44,7 @@ namespace SpatialTreesTests
         public void Rectangle_TouchingExactlyOnRightEdge_IsFound()
         {
             var itemsFound = new List<IMapObject2d>();
-            var searchArea = new Rectangle(7.5f, 9.5f, 2f, 1f); // right edge at x=9.5, spans the full y-range of the item's box
+            var searchArea = new AARectangle(7.5f, 9.5f, 2f, 1f); // right edge at x=9.5, spans the full y-range of the item's box
 
             _Quadtree.GetCollidingItems(searchArea, (int)TestItem.Properties.Property1, itemsFound);
 
@@ -55,7 +55,7 @@ namespace SpatialTreesTests
         public void Rectangle_JustShortOfTouching_IsNotFound()
         {
             var itemsFound = new List<IMapObject2d>();
-            var searchArea = new Rectangle(7.5f, 9.5f, 1.999f, 1f); // right edge at x=9.499, just short of the item's left edge
+            var searchArea = new AARectangle(7.5f, 9.5f, 1.999f, 1f); // right edge at x=9.499, just short of the item's left edge
 
             _Quadtree.GetCollidingItems(searchArea, (int)TestItem.Properties.Property1, itemsFound);
 

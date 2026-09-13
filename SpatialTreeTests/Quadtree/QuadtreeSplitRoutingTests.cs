@@ -30,7 +30,7 @@ namespace SpatialTreesTests
         [Test]
         public void AddItem_OffOriginWorldRectangle_RoutesToCorrectQuadrant()
         {
-            var tree = new Quadtree(new Rectangle(50, 50, 100, 100), 5, 2); // world spans (50,50)-(150,150)
+            var tree = new Quadtree(new AARectangle(50, 50, 100, 100), 5, 2); // world spans (50,50)-(150,150)
 
             var upperRight = new TestItem("UR", 125, 75, (int)TestItem.Properties.Property1);
             var lowerRight = new TestItem("LR", 125, 125, (int)TestItem.Properties.Property1);
@@ -54,7 +54,7 @@ namespace SpatialTreesTests
         [Test]
         public void AddItem_ItemsConcentratedInOneQuadrant_SplitsThatQuadrantAgain()
         {
-            var tree = new Quadtree(new Rectangle(0, 0, 100, 100), 5, 2);
+            var tree = new Quadtree(new AARectangle(0, 0, 100, 100), 5, 2);
 
             // all in the upper-right quadrant (x>50, y<50), forcing a second-level split within it
             var a = new TestItem("A", 60, 10, (int)TestItem.Properties.Property1);
@@ -83,7 +83,7 @@ namespace SpatialTreesTests
         [Test]
         public void GetCollidingItems_AfterMultiLevelSplit_StillFindsItemAtItsTrueLocation()
         {
-            var tree = new Quadtree(new Rectangle(0, 0, 100, 100), 5, 2);
+            var tree = new Quadtree(new AARectangle(0, 0, 100, 100), 5, 2);
 
             var target = new TestItem("Target", 90, 10, (int)TestItem.Properties.Property1);
             tree.AddItem(new TestItem("A", 60, 10, (int)TestItem.Properties.Property1));
@@ -92,7 +92,7 @@ namespace SpatialTreesTests
             tree.AddItem(new TestItem("D", 90, 40, (int)TestItem.Properties.Property1));
 
             var itemsFound = new List<IMapObject2d>();
-            tree.GetCollidingItems(new Rectangle(89, 9, 2, 2), (int)TestItem.Properties.Property1, itemsFound);
+            tree.GetCollidingItems(new AARectangle(89, 9, 2, 2), (int)TestItem.Properties.Property1, itemsFound);
 
             Assert.That(itemsFound, Does.Contain(target));
         }
@@ -100,7 +100,7 @@ namespace SpatialTreesTests
         [Test]
         public void AddItem_ItemStraddlingQuadrantBoundary_StaysOnParentNode()
         {
-            var tree = new Quadtree(new Rectangle(0, 0, 100, 100), 5, 2);
+            var tree = new Quadtree(new AARectangle(0, 0, 100, 100), 5, 2);
 
             // one small item per quadrant, plus a large item centered on the root split
             // point whose 20x20 box overlaps all four children and fits inside none.
@@ -121,7 +121,7 @@ namespace SpatialTreesTests
         [Test]
         public void GetCollidingItems_StraddlingItem_FoundFromNeighbouringQuadrantOnly()
         {
-            var tree = new Quadtree(new Rectangle(0, 0, 100, 100), 5, 2);
+            var tree = new Quadtree(new AARectangle(0, 0, 100, 100), 5, 2);
 
             var straddle = new TestItem("Straddle", 50, 50, 20f, 20f, (int)TestItem.Properties.Property1); // box (40,40)-(60,60)
             tree.AddItem(new TestItem("A", 25, 25, (int)TestItem.Properties.Property1));
@@ -132,7 +132,7 @@ namespace SpatialTreesTests
             // search box sits entirely inside the lower-right quadrant but overlaps the
             // straddling item. Before routing accounted for extent this returned nothing.
             var itemsFound = new List<IMapObject2d>();
-            tree.GetCollidingItems(new Rectangle(55, 55, 3, 3), (int)TestItem.Properties.Property1, itemsFound);
+            tree.GetCollidingItems(new AARectangle(55, 55, 3, 3), (int)TestItem.Properties.Property1, itemsFound);
 
             Assert.That(itemsFound, Does.Contain(straddle));
         }

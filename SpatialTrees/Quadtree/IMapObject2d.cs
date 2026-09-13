@@ -31,6 +31,6 @@ namespace SpatialTrees.Quadtrees
     {
         int ObjectType { get; set; }
         Point2 Location { get; set; }
-        Rectangle BoundingBox { get; }
+        AARectangle BoundingBox { get; }
     }
 }
