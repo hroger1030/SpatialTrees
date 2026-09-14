@@ -1,4 +1,4 @@
-﻿using Geometry;
+﻿using FastG;
 using SpatialTrees.Quadtrees;
 
 namespace BenchMarks

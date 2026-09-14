@@ -16,8 +16,8 @@ FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TOR
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+using FastG;
 using SpatialTrees.Octrees;
-using Geometry;
 using System;
 
 namespace SpatialTreesTests

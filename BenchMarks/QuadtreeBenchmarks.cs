@@ -1,8 +1,8 @@
-using System.Collections.Generic;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
-using Geometry;
+using FastG;
 using SpatialTrees.Quadtrees;
+using System.Collections.Generic;
 
 namespace BenchMarks
 {

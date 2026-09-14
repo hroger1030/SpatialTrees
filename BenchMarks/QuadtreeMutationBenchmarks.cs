@@ -1,7 +1,7 @@
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Engines;
-using Geometry;
+using FastG;
 using SpatialTrees.Quadtrees;
 
 namespace BenchMarks

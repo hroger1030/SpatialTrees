@@ -16,7 +16,7 @@ FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TOR
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-using Geometry;
+using FastG;
 using NUnit.Framework;
 using SpatialTrees.Quadtrees;
 using System.Collections.Generic;

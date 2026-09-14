@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Geometry\GeometryLib\Geometry.csproj" />
+    <ProjectReference Include="..\..\FastG\FastG\FastG.csproj" />
   </ItemGroup>
 
 </Project>

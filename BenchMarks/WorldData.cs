@@ -1,5 +1,5 @@
-﻿using System;
-using Geometry;
+﻿using FastG;
+using System;
 
 namespace BenchMarks
 {

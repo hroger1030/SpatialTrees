@@ -20,14 +20,14 @@ shape, same splitting behavior, just with a Z axis added.
   - [Volume items](#volume-items)
   - [License](#license)
 
-The project references another library of mine, `Geometry`, which provides basic geometric primitives (points, rectangles,
-circles, etc.) and is available on this same GitHub account. Clone the `Geometry` repository as a sibling of this one — e.g.
-`../Geometry` relative to this repo's root — and the solution will build without any further changes.
+The project references another library of mine, `FastG`, which provides basic geometric primitives (points, rectangles,
+circles, etc.) and is available on this same GitHub account. Clone the `FastG` repository as a sibling of this one — e.g.
+`../FastG` relative to this repo's root — and the solution will build without any further changes.
 
 ## Requirements
 
 - .NET 10 SDK
-- The `Geometry` library, cloned next to this repository (see above)
+- The `FastG` library, cloned next to this repository (see above)
 
 ## Project layout
 
